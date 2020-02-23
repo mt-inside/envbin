@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"math"
@@ -11,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	sigar "github.com/cloudfoundry/gosigar"
@@ -283,25 +285,46 @@ func main() {
 						ms := new(runtime.MemStats)
 						runtime.ReadMemStats(ms)
 
-						var b strings.Builder
-						fmt.Fprintf(&b, "envbin %s, %s\n", version, runtime.Version())
-						fmt.Fprintf(&b, "Started at %s\n", startTime.Format("2006-01-02 15:04:05"))
-						fmt.Fprintf(&b, "\n")
-						fmt.Fprintf(&b, "Host: %s %s, uptime %s\n", runtime.GOOS, "1.2.3", uptime.Format())
-						fmt.Fprintf(&b, "Evnironment: PID: %d, U/GID: %d/%d\n", os.Getpid(), os.Getuid(), os.Getgid())
-						fmt.Fprintf(&b, "Hardware: %s, %s, %d/%d cores, %s RAM\n", runtime.GOARCH, cpuid.CPU.BrandName, cpuid.CPU.PhysicalCores, cpuid.CPU.LogicalCores, formatPow2(mem.Total))
-						fmt.Fprintf(&b, "Procs: %d procs\n", len(procs.List))
-						fmt.Fprintf(&b, "Network: %s, %s\n", hostname, getDefaultIp())
-						fmt.Fprintf(&b, "\n")
-						fmt.Fprintf(&b, "Memory: %d virtual\n", ms.Sys)
-						fmt.Fprintf(&b, "CPU: time TODO\n")
-						fmt.Fprintf(&b, "\n")
-						fmt.Fprintf(&b, "Health: %t\n", s.health)
-						fmt.Fprintf(&b, "Liveness: %t\n", s.liveness)
-						fmt.Fprintf(&b, "Latency: %d\n", s.delay)
-						fmt.Fprintf(&b, "Bandwidth: %d\n", s.bandwidth)
+						data := make(map[string]string) //TODO: strongly type me with a struct. Esp for (optional) sections
+						data["Version"] = version
+						data["GoVersion"] = runtime.Version()
+						data["StartTime"] = startTime.Format("2006-01-02 15:04:05")
+						data["OsType"] = runtime.GOOS
+						data["OsVersion"] = "TODO"
+						data["OsUptime"] = uptime.Format()
+						data["Pid"] = strconv.Itoa(os.Getpid())
+						data["Uid"] = strconv.Itoa(os.Getuid())
+						data["Gid"] = strconv.Itoa(os.Getgid())
+						data["Arch"] = runtime.GOARCH
+						data["CpuName"] = cpuid.CPU.BrandName
+						data["PhysCores"] = strconv.Itoa(cpuid.CPU.PhysicalCores)
+						data["VirtCores"] = strconv.Itoa(cpuid.CPU.LogicalCores)
+						data["MemTotal"] = formatPow2(mem.Total)
+						data["ProcCount"] = strconv.Itoa(len(procs.List))
+						data["Hostname"] = hostname
+						data["Ip"] = getDefaultIp()
+						data["MemUseVirtual"] = strconv.Itoa(int(ms.Sys))
+						data["MemUsePhysical"] = "TODO"
+						data["CpuSelfTime"] = "TODO"
+						data["SettingHealth"] = strconv.FormatBool(s.health)
+						data["SettingLiveness"] = strconv.FormatBool(s.liveness)
+						data["SettingLatency"] = strconv.Itoa(int(s.delay))
+						data["SettingBandwidth"] = strconv.Itoa(int(s.bandwidth))
 
-						bs := []byte(b.String())
+						/* This does the application/text output quite nicely, but for a fancy HTML page we probably want:
+						* - gorilla mux SPA example
+						* - SPA (react etc) which can be made elsewhere and loaded with gobindata (to avoid the complexity of hosting it behing a separate web server. Or maybe we do, in the same container / Pod?)
+						* - JSON api for this struct (make it a struct and JSON serialse it) so it can be read by the SPA
+						 */
+
+						// Templates can be executed straight into writers, so we could pump the template into the httpResponseWriter. Problem is, it only flushes on the boundaries into and out of {{}} template substitutions, which makes the output sporadic. So we dump into a string and write that one byte at a time.
+						var b bytes.Buffer
+						t, err := template.ParseFiles("text.tpl")
+						if err != nil {
+							log.Fatalf("TODO")
+						}
+						t.Execute(&b, data)
+						bs := b.Bytes()
 
 						for i := 0; i < len(bs); i++ {
 							w.Write(bs[i : i+1])

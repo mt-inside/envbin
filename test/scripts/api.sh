@@ -1,4 +1,4 @@
 source common.sh
 
 set -x
-curl -X POST ${base_url}/api/foo
+curl ${base_url}/api/foo

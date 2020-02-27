@@ -1,16 +1,21 @@
+== {{.SessionName}} ==
+Request: {{.RequestNumber}}
 envbin {{.Version}}, {{.GoVersion}}
-Started at {{.StartTime}}
+Started at {{.StartTime}}, up {{.RunTime}}
 
 Host: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
-Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}
+Virtualisation: {{.Virt}}
 Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
 Procs: {{.ProcCount}} procs
+Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}
 Network: {{.Hostname}}, {{.Ip}}
 
 Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical
 CPU: time {{.CpuSelfTime}}
 
-Health: {{.SettingHealth}}
 Liveness: {{.SettingLiveness}}
+Readiness: {{.SettingReadiness}}
 Latency: {{.SettingLatency}}
 Bandwidth: {{.SettingBandwidth}}
+Error rate: {{.SettingErrorRate}}
+Cpu Use: {{.SettingCpuUse}}

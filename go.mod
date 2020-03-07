@@ -13,6 +13,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/procfs v0.0.10
 	github.com/shirou/gopsutil v2.20.1+incompatible
 	golang.org/x/sys v0.0.0-20200217220822-9197077df867 // indirect
 )

@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/klauspost/cpuid"
 	"github.com/mxk/go-flowrate/flowrate"
+	"github.com/prometheus/procfs"
 	"github.com/shirou/gopsutil/host"
 )
 
@@ -187,6 +188,14 @@ func getData(s *Settings) map[string]string {
 	ms := new(runtime.MemStats)
 	runtime.ReadMemStats(ms)
 	is, _ := host.Info()
+	proc, err := procfs.Self()
+	if err != nil {
+		log.Fatalf("Can't get proc info: %v", err)
+	}
+	stat, err := proc.NewStat()
+	if err != nil {
+		log.Fatalf("Can't get proc stat: %v", err)
+	}
 
 	data := make(map[string]string) //TODO: strongly type me with a struct. Esp for (optional) sections
 	data["SessionName"] = s.name
@@ -210,9 +219,13 @@ func getData(s *Settings) map[string]string {
 	data["ProcCount"] = strconv.Itoa(len(procs.List))
 	data["Hostname"] = hostname
 	data["Ip"] = getDefaultIp()
-	data["MemUseVirtual"] = units.BytesSize(float64(ms.Sys))
-	data["MemUsePhysical"] = "TODO"
-	data["CpuSelfTime"] = "TODO"
+	data["MemUseVirtual"] = fmt.Sprintf("%s (of which %s golang runtime)",
+		units.BytesSize(float64(stat.VirtualMemory())),
+		units.BytesSize(float64(ms.Sys)),
+	)
+	data["MemUsePhysical"] = units.BytesSize(float64(stat.ResidentMemory()))
+	data["GcRuns"] = fmt.Sprintf("%d (%d forced)", ms.NumGC, ms.NumForcedGC)
+	data["CpuSelfTime"] = strconv.FormatFloat(stat.CPUTime(), 'f', 2, 64) + "s"
 	data["SettingLiveness"] = strconv.FormatBool(s.liveness)
 	data["SettingReadiness"] = strconv.FormatBool(s.readiness)
 	data["SettingLatency"] = strconv.Itoa(int(s.delay))

@@ -11,6 +11,7 @@ Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}
 Network: {{.Hostname}}, {{.Ip}}
 
 Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical
+GC Runs: {{.GcRuns}}
 CPU: time {{.CpuSelfTime}}
 
 Liveness: {{.SettingLiveness}}

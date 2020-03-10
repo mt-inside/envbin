@@ -18,4 +18,6 @@ run:
 image: build-docker
 	docker build -t mtinside/envbin:latest .
 image-run: image
-	docker run -p8088:8088 mtinside/envbin:latest
+	docker run -p8080 mtinside/envbin:latest
+image-push: image
+	docker push mtinside/envbin

@@ -19,7 +19,7 @@ Network: {{.Hostname}}, {{.Ip}}<br>
 
 <p>
 Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical<br>
-GC Runs: {{.GcRuns}}
+GC Runs: {{.GcRuns}}<br>
 CPU: time {{.CpuSelfTime}}<br>
 </p>
 

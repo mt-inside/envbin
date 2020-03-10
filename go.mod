@@ -1,4 +1,4 @@
-module github.com/mt-inside/envbin2
+module github.com/mt-inside/envbin
 
 go 1.13
 

@@ -7,15 +7,15 @@ lint:
 	golangci-lint run
 
 build:
-	go build $(FLAGS) cmd/envbin2.go
+	go build $(FLAGS) cmd/envbin.go
 
 build-docker:
-	GOOS=linux go build -o envbin2-docker $(FLAGS) cmd/envbin2.go
+	GOOS=linux go build -o envbin-docker $(FLAGS) cmd/envbin.go
 
 run:
-	go run $(FLAGS) cmd/envbin2.go
+	go run $(FLAGS) cmd/envbin.go
 
 image: build-docker
-	docker build -t mtinside/envbin2:latest .
+	docker build -t mtinside/envbin:latest .
 image-run: image
-	docker run -p8088:8088 mtinside/envbin2:latest
+	docker run -p8088:8088 mtinside/envbin:latest

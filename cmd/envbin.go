@@ -451,8 +451,8 @@ func main() {
 
 	})
 
-	log.Print("Listening on :8088")
-	log.Fatal(http.ListenAndServe(":8088", root_mux))
+	log.Print("Listening on :8080")
+	log.Fatal(http.ListenAndServe(":8080", root_mux))
 }
 
 func getDefaultIp() string {

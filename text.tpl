@@ -1,7 +1,8 @@
-== {{.SessionName}} ==
-Request: {{.RequestNumber}}
 envbin {{.Version}}, {{.GoVersion}}
 Started at {{.StartTime}}, up {{.RunTime}}
+
+Session: {{.SessionName}}
+Request: {{.RequestNumber}}
 
 Host: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
 Virtualisation: {{.Virt}}

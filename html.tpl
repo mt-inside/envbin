@@ -1,11 +1,15 @@
 <html>
 <head></head>
 <body>
-<h1>{{.SessionName}}</h1>
+<h1>envbin</h1>
 <p>
-Request: {{.RequestNumber}}<br>
 envbin {{.Version}}, {{.GoVersion}}<br>
 Started at {{.StartTime}}, up {{.RunTime}}<br>
+</p>
+
+<p>
+Session: {{.SessionName}}<br>
+Request: {{.RequestNumber}}<br>
 </p>
 
 <p>

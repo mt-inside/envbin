@@ -25,6 +25,7 @@ import (
 	units "github.com/docker/go-units"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	cli "github.com/jawher/mow.cli"
 	"github.com/klauspost/cpuid"
 	"github.com/mxk/go-flowrate/flowrate"
 	"github.com/prometheus/procfs"
@@ -247,6 +248,16 @@ func init() {
 }
 
 func main() {
+	app := cli.App("envbin", "Print environment information, sometimes, badly")
+	app.Spec = "[ADDR]"
+	addr := app.StringArg("ADDR", ":8080", "Listen address")
+
+	app.Action = func() { envbin_main(addr) }
+
+	app.Run(os.Args)
+}
+
+func envbin_main(addr *string) {
 	s := NewSettings()
 
 	root_mux := mux.NewRouter()
@@ -451,8 +462,8 @@ func main() {
 
 	})
 
-	log.Print("Listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", root_mux))
+	log.Printf("Listening on %s", *addr)
+	log.Fatal(http.ListenAndServe(*addr, root_mux))
 }
 
 func getDefaultIp() string {

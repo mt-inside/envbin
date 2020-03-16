@@ -8,4 +8,3 @@ COPY *tpl ./
 
 EXPOSE $PORT
 ENTRYPOINT ["/app/envbin"]
-CMD ["--port", "8080"]

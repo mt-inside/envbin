@@ -6,6 +6,7 @@ Request: {{.RequestNumber}}
 
 Host: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
 Virtualisation: {{.Virt}}
+Kubernetes: {{.K8s}} {{.K8sVersion}} in {{.K8sNamespace}} running as {{.K8sServiceAccount}}
 Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
 Procs: {{.ProcCount}} procs
 Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}

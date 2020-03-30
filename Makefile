@@ -1,7 +1,7 @@
 .PHONY: build run
 .DEFAULT_GOAL := run
 
-FLAGS := -ldflags "-X main.version=0.0.1"
+FLAGS := -ldflags "-X data.version=0.0.1"
 
 lint:
 	golangci-lint run
@@ -18,6 +18,6 @@ run:
 image: build-docker
 	docker build -t mtinside/envbin:latest .
 image-run: image
-	docker run -p8080 mtinside/envbin:latest
+	docker run -p8080:8080 mtinside/envbin:latest
 image-push: image
 	docker push mtinside/envbin

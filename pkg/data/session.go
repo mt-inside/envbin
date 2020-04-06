@@ -1,24 +1,27 @@
 package data
 
 import (
-	"github.com/docker/docker/pkg/namesgenerator"
-	"github.com/docker/go-units"
 	"strconv"
 	"time"
+
+	"github.com/docker/docker/pkg/namesgenerator"
+	"github.com/docker/go-units"
 )
 
 var (
-	version string
+	Version   string
+	GitCommit string
+	BuildTime string
 )
 
 var (
-	name string
+	name      string
 	startTime time.Time
 	reqNo     int
 )
 
 func init() {
-name =      namesgenerator.GetRandomName(0)
+	name = namesgenerator.GetRandomName(0)
 	startTime = time.Now()
 	reqNo = 0
 }
@@ -28,8 +31,10 @@ func getSessionData() map[string]string {
 
 	reqNo++ // TODO: not the right place for this. Go MVC
 
-	data["Version"] = version
-	data["StartTime"] = startTime.Format("2006-01-02 15:04:05")
+	data["Version"] = Version
+	data["GitCommit"] = GitCommit
+	data["BuildTime"] = BuildTime
+	data["StartTime"] = startTime.Format("2006-01-02 15:04:05 -0700")
 	data["RunTime"] = units.HumanDuration(time.Now().Sub(startTime))
 	data["SessionName"] = name
 	data["RequestNumber"] = strconv.Itoa(reqNo)

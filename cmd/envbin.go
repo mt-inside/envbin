@@ -4,6 +4,7 @@ package main
 // What does curl, browser, etc send?
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	cli "github.com/jawher/mow.cli"
 	"github.com/mt-inside/envbin/pkg/handlers"
@@ -12,10 +13,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 )
 
+var (
+	Version   string
+	GitCommit string
+	BuildTime string
+)
+
 func main() {
+	fmt.Printf("envbin %s git %s, built at %s with %s\n", Version, GitCommit, BuildTime, runtime.Version())
 	app := cli.App("envbin", "Print environment information, sometimes, badly")
 	app.Spec = "[ADDR]"
 	addr := app.StringArg("ADDR", ":8080", "Listen address")

@@ -1,4 +1,4 @@
-envbin {{.Version}}, {{.GoVersion}}
+envbin {{.Version}} git {{.GitCommit}}, built at {{.BuildTime}} with {{.GoVersion}}
 Started at {{.StartTime}}, up {{.RunTime}}
 
 Session: {{.SessionName}}

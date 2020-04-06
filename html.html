@@ -1,7 +1,19 @@
-<html>
-<head></head>
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+    <meta charset="utf-8">
+    <title>Envbin</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.1/css/bulma.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<meta name="theme-color" content="#fafafa">
+</head>
 <body>
+<section class="section">
 <h1>envbin</h1>
+</section>
 <p>
 envbin {{.Version}}, {{.GoVersion}}<br>
 Started at {{.StartTime}}, up {{.RunTime}}<br>
@@ -30,49 +42,49 @@ CPU: time {{.CpuSelfTime}}<br>
 <table>
 <tr>
 <td>Quit</td>
-<td><form method="get" action="/api/exit">
+<td><form method="get" action="handlers/exit">
 <input type="text" name="code" value="0">
 <button>exit</button>
 </form></td>
 </tr>
 <tr>
 <td>Liveness: {{.SettingLiveness}}</td>
-<td><form method="get" action="/api/liveness">
+<td><form method="get" action="handlers/liveness">
 <button name="value" value="true">true</button>
 <button name="value" value="false">false</button>
 </form></td>
 </tr>
 <tr>
 <td>Readiness: {{.SettingReadiness}}</td>
-<td><form method="get" action="/api/readiness">
+<td><form method="get" action="handlers/readiness">
 <button name="value" value="true">true</button>
 <button name="value" value="false">false</button>
 </form></td>
 </tr>
 <tr>
 <td>Latency: {{.SettingLatency}}</td>
-<td><form method="get" action="/api/delay">
+<td><form method="get" action="handlers/delay">
 <input type="text" name="value" value="{{.SettingLatency}}">
 <button>set</button>
 </form></td>
 </tr>
 <tr>
 <td>Bandwidth: {{.SettingBandwidth}}</td>
-<td><form method="get" action="/api/bandwidth">
+<td><form method="get" action="handlers/bandwidth">
 <input type="text" name="value" value="{{.SettingBandwidth}}">
 <button>set</button>
 </form></td>
 </tr>
 <tr>
 <td>Error Rate: {{.SettingErrorRate}}</td>
-<td><form method="get" action="/api/errorrate">
+<td><form method="get" action="handlers/errorrate">
 <input type="text" name="value" value="{{.SettingErrorRate}}">
 <button>set</button>
 </form></td>
 </tr>
 <tr>
 <td>Allocate:</td>
-<td><form method="get" action="/api/allocate">
+<td><form method="get" action="handlers/allocate">
 <button name="value" value="1024">1kB</button>
 <button name="value" value="1048576">1MB</button>
 <button name="value" value="1073741824">1GB</button>
@@ -80,11 +92,13 @@ CPU: time {{.CpuSelfTime}}<br>
 </tr>
 <tr>
 <td>CPU Use: {{.SettingCpuUse}}</td>
-<td><form method="get" action="/api/cpu">
+<td><form method="get" action="handlers/cpu">
 <input type="text" name="value" value="{{.SettingCpuUse}}">
 <button>set</button>
 </form></td>
 </tr>
 </table>
+
+<script src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </body>
 </html>

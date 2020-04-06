@@ -1,19 +1,23 @@
 .PHONY: build run
 .DEFAULT_GOAL := run
 
-FLAGS := -ldflags "-X data.version=0.0.1"
+Version := $(shell git describe --tags --dirty)
+GitCommit := $(shell git rev-parse HEAD)
+BuildTime := $(shell date +%Y-%m-%d_%H:%M:%S%z)
+LDFLAGS := -X main.Version=$(Version) -X main.GitCommit=$(GitCommit) -X main.BuildTime=$(BuildTime)
+LDFLAGS += -X github.com/mt-inside/envbin/pkg/data.Version=$(Version) -X github.com/mt-inside/envbin/pkg/data.GitCommit=$(GitCommit) -X github.com/mt-inside/envbin/pkg/data.BuildTime=$(BuildTime)
 
 lint:
 	golangci-lint run
 
 build:
-	go build $(FLAGS) cmd/envbin.go
+	go build -ldflags "$(LDFLAGS)" cmd/envbin.go
 
 build-docker:
-	GOOS=linux go build -o envbin-docker $(FLAGS) cmd/envbin.go
+	GOOS=linux go build -o envbin-docker -ldflags "$(LDFLAGS)" cmd/envbin.go
 
 run:
-	go run $(FLAGS) cmd/envbin.go
+	go run -ldflags "$(LDFLAGS)" cmd/envbin.go :8088
 
 image: build-docker
 	docker build -t mtinside/envbin:latest .

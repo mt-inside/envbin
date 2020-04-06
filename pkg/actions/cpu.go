@@ -23,17 +23,19 @@ func useCPU() {
 				// Try to cap the high-time to rought 1s. If it's more than that, then the high duty part lasts longer than the 1s period timer, and that channel starts to fill up with ticks. As soon as there's some breathing room again that'll quickly get drained, but the channel could get full and idk what the Tick producer does then.
 				// Also, if the user requests a crazy duty cycle of say 1M, then it won't respond to requests to lower that rate until after a period of 1M / #cores.
 				dutyCycle := math.Min(data.GetCPUUse(), cpus) / cpus
-				highTimer := time.After(
-					time.Duration(
-						dutyCycle*1000,
-					) * time.Millisecond,
-				)
-			high:
-				for {
-					select {
-					case <-highTimer:
-						break high
-					default:
+				if dutyCycle != 0 { /* Special case 0 CPU usage. Without this, we used about 0.015 cores, presumably because highTimer takes a little while to go off, and the channel a while to signal */
+					highTimer := time.After(
+						time.Duration(
+							dutyCycle*1000,
+						) * time.Millisecond,
+					)
+				high:
+					for {
+						select {
+						case <-highTimer:
+							break high
+						default:
+						}
 					}
 				}
 				<-period // low

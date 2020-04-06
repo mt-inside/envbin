@@ -8,15 +8,13 @@ import (
 )
 
 func init() {
-	go useCPU()
+	useCPU()
 }
 
 // Not the best "algorithm" in the world.
 // * Seems to over/undershoot by about 10%. This could be the sampling rate of top though
 // * You really don't need to do anything "cpu-intensive" here; this happily loads 16 virtual cores.
 func useCPU() {
-	done := make(chan int)
-
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
 			period := time.Tick(1 * time.Second)
@@ -42,7 +40,4 @@ func useCPU() {
 			}
 		}()
 	}
-
-	time.Sleep(time.Second * 10)
-	close(done)
 }

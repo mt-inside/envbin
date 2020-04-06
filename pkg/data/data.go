@@ -13,7 +13,7 @@ func GetData() map[string]string {
 	d = util.AppendMap(d, getMemData())
 	d = util.AppendMap(d, getOsData())
 	d = util.AppendMap(d, getSettingsData())
-	d = util.AppendMap(d, getK8sData())
+	//d = util.AppendMap(d, getK8sData()) TODO: handle no permissions and other errors
 
 	return d
 }

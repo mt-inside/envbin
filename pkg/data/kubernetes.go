@@ -2,14 +2,18 @@ package data
 
 import (
 	"context"
+	"log"
+	"os"
+	"strconv"
 
 	//"crypto/rsa"
 	//"crypto/x509"
 	//"encoding/pem"
 	"fmt"
 	"github.com/ericchiang/k8s"
+	corev1 "github.com/ericchiang/k8s/apis/core/v1"
 	"io/ioutil"
- "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 )
 
 func getK8sData() map[string]string {
@@ -99,6 +103,24 @@ func getK8sData() map[string]string {
 		}
 
 		data["K8sVersion"] = fmt.Sprintf("%s %s",version.GitVersion, version.Platform)
+
+		var nodes corev1.NodeList
+		if err := client.List(context.Background(), "", &nodes); err != nil {
+			log.Fatalf("Can't list Nodes: %v", err)
+		}
+		data["K8sNodeCount"] = strconv.Itoa(len(nodes.Items))
+		var self *corev1.Node
+		hostname, _ := os.Hostname()
+		for _, self = range nodes.Items {
+			if *self.Metadata.Name == hostname { break }
+		}
+		log.Print(*self.Status.NodeInfo.ContainerRuntimeVersion)
+		log.Print(*self.Status.NodeInfo.KubeletVersion)
+		log.Print(*self.Status.NodeInfo.KubeProxyVersion)
+		log.Print(*self.Status.NodeInfo.OsImage)
+		log.Print(self.Metadata.Labels["node.kubernetes.io/instance-type"])
+		log.Print(self.Metadata.Labels["topology.kubernetes.io/region"])
+		log.Print(self.Metadata.Labels["topology.kubernetes.io/zone"])
 
 		// TODO: get own pod container list
 		// TODO: get own namespace pods list

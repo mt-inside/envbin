@@ -44,9 +44,7 @@ func envbinMain(addr *string) {
 
 	rootMux.Path("/").MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool { return strings.Contains(r.Header.Get("Accept"), "text/html") }).Handler(middleware.MiddlewareStack(renderers.RenderHTML, "text/html"))
 	rootMux.Path("/").Headers("Accept", "application/json").Handler(middleware.MiddlewareStack(renderers.RenderJSON, "application/json"))
-	rootMux.Path("/").Headers("Accept", "text/yaml").Handler(middleware.MiddlewareStack(renderers.RenderYAML, "text/yaml"))
-	rootMux.Path("/").Headers("Accept", "text/x-yaml").Handler(middleware.MiddlewareStack(renderers.RenderYAML, "text/x-yaml"))
-	rootMux.Path("/").Headers("Accept", "application/x-yaml").Handler(middleware.MiddlewareStack(renderers.RenderYAML, "application/x-yaml"))
+	rootMux.Path("/").Headers("Accept", "text/yaml", "Accept", "text/x-yaml", "Accept", "application/x-yaml").Handler(middleware.MiddlewareStack(renderers.RenderYAML, "text/yaml"))
 	rootMux.Path("/").Handler(middleware.MiddlewareStack(renderers.RenderText, "text/plain")) // fall through
 
 	log.Printf("Listening on %s", *addr)

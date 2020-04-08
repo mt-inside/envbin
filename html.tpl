@@ -61,6 +61,18 @@
 
     <nav class="panel is-primary">
         <p class="panel-heading">
+            Kubernetes
+        </p>
+        <div class="panel-block">
+            Present: {{.K8s}}<br>
+            Version: {{.K8sVersion}}<br>
+            Running in namespace: {{.K8sNamespace}}<br>
+            As ServiceAccount: {{.K8sServiceAccount}}<br>
+        </div>
+    </nav>
+
+    <nav class="panel is-primary">
+        <p class="panel-heading">
             Resources
         </p>
         <div class="panel-block">

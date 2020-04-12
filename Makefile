@@ -13,15 +13,15 @@ lint:
 build:
 	go build -ldflags "$(LDFLAGS)" cmd/envbin.go
 
-build-docker:
+build-for-docker:
 	GOOS=linux go build -o envbin-docker -ldflags "$(LDFLAGS)" cmd/envbin.go
 
 run:
 	go run -ldflags "$(LDFLAGS)" cmd/envbin.go :8088
 
-image: build-docker
+image: build-for-docker
 	docker build -t mtinside/envbin:latest .
-image-run: image
-	docker run -p8080:8080 mtinside/envbin:latest
 image-push: image
 	docker push mtinside/envbin
+docker-run: image
+	docker run -p8080:8080 mtinside/envbin:latest

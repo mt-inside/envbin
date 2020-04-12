@@ -1,21 +1,37 @@
-envbin {{.Version}} git {{.GitCommit}}, built at {{.BuildTime}} with {{.GoVersion}}
-Started at {{.StartTime}}, up {{.RunTime}}
+                 _     _
+  ___ _ ____   _| |__ (_)_ __
+ / _ \ '_ \ \ / / '_ \| | '_ \
+|  __/ | | \ V /| |_) | | | | |
+ \___|_| |_|\_/ |_.__/|_|_| |_|
 
-Session: {{.SessionName}}
+Version {{.Version}}, git {{.GitCommit}}
+Built at {{.BuildTime}} with {{.GoVersion}}
+Started at {{.StartTime}}; up {{.RunTime}}
+
+SESSION
+Name: {{.SessionName}}
 Request: {{.RequestNumber}}
 
-Host: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
+HOST
+OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
 Virtualisation: {{.Virt}}
-Kubernetes: {{.K8s}} {{.K8sVersion}} in {{.K8sNamespace}} running as {{.K8sServiceAccount}}
 Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
 Procs: {{.ProcCount}} procs
 Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}
-Network: {{.Hostname}}, {{.Ip}}
+Hostname: {{.Hostname}}, primary IP: {{.Ip}}
 
+KUBERNETES
+Present: {{.K8s}}
+Version: {{.K8sVersion}}
+Running in namespace {{.K8sNamespace}}
+As ServiceAccount: {{.K8sServiceAccount}}
+
+RESOURCES
 Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical
 GC Runs: {{.GcRuns}}
-CPU: time {{.CpuSelfTime}}
+CPU Time: {{.CpuSelfTime}}
 
+SETTINGS
 Liveness: {{.SettingLiveness}}
 Readiness: {{.SettingReadiness}}
 Latency: {{.SettingLatency}}

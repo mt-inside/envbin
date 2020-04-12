@@ -30,7 +30,7 @@
         <div class="panel-block">
             Version {{.Version}}, git {{.GitCommit}}<br>
             Built at {{.BuildTime}} with {{.GoVersion}}<br>
-            Started at {{.StartTime}}, up {{.RunTime}}<br>
+            Started at {{.StartTime}}; up {{.RunTime}}<br>
         </div>
     </nav>
 
@@ -54,8 +54,7 @@
             Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM<br>
             Procs: {{.ProcCount}} procs<br>
             Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}<br>
-            Hostname: {{.Hostname}}<br>
-            IP: {{.Ip}}<br>
+            Hostname: {{.Hostname}}, Primary IP: {{.Ip}}<br>
         </div>
     </nav>
 
@@ -78,7 +77,7 @@
         <div class="panel-block">
             Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical<br>
             GC Runs: {{.GcRuns}}<br>
-            CPU: time {{.CpuSelfTime}}<br>
+            CPU Time: {{.CpuSelfTime}}<br>
         </div>
     </nav>
 

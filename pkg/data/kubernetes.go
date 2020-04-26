@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"errors"
 
 	//"crypto/rsa"
 	//"crypto/x509"
@@ -97,30 +98,59 @@ func getK8sData() map[string]string {
 			// log.Fatalf("can't parse and verify token: %v", err) // Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
 		}
 
-		if claims, ok := token.Claims.(*k8sClaims); ok /*&& token.Valid*/ {
-			data["K8sNamespace"] = claims.Namespace
-			data["K8sServiceAccount"] = claims.Name
+		claims, ok := token.Claims.(*k8sClaims)
+		if !ok /*|| !token.Valid*/ {
+			log.Fatal("ServiceAccount token invalid")
 		}
+		data["K8sNamespace"] = claims.Namespace
+		data["K8sServiceAccount"] = claims.Name
 
 		data["K8sVersion"] = fmt.Sprintf("%s %s",version.GitVersion, version.Platform)
 
+		hostname, _ := os.Hostname()
+		var thisPod corev1.Pod
+		if err := client.Get(context.Background(), claims.Namespace, hostname, &thisPod); err != nil {
+			var k8sErr *k8s.APIError
+			if errors.As(err, &k8sErr) {
+				log.Printf("Forbidden to get Pod, check RBAC: %v", k8sErr)
+				data["K8sThisPodContainersCount"] = "forbidden"
+			} else {
+				log.Fatalf("Can't get Pod: %v", err)
+			}
+		} else {
+			data["K8sThisPodContainersCount"] = strconv.Itoa(len(thisPod.Spec.Containers))
+
+			data["K8sThisPodContainersImages"] = ""
+			for _, c := range thisPod.Spec.Containers {
+				data["K8sThisPodContainersImages"] += *c.Image + ", "
+			}
+		}
+
+
 		var nodes corev1.NodeList
 		if err := client.List(context.Background(), "", &nodes); err != nil {
-			log.Fatalf("Can't list Nodes: %v", err)
+			var k8sErr *k8s.APIError
+			if errors.As(err, &k8sErr) {
+				log.Printf("Forbidden to list nodes, check RBAC: %v", k8sErr)
+				data["K8sNodeCount"] = "forbidden"
+			} else {
+				log.Fatalf("Can't list Nodes: %v", err)
+			}
+		} else {
+			data["K8sNodeCount"] = strconv.Itoa(len(nodes.Items))
+			var self *corev1.Node
+			for _, self = range nodes.Items {
+				if *self.Metadata.Name == *thisPod.Spec.NodeName {
+					data["K8sNodeAddress"] = *self.Status.Addresses[0].Address + " / " + *self.Status.Addresses[1].Address // TODO loop
+					data["K8sNodeVersion"] = fmt.Sprintf("%s %s/%s", *self.Status.NodeInfo.KubeletVersion, *self.Status.NodeInfo.OperatingSystem, *self.Status.NodeInfo.Architecture)
+					data["K8sNodeRuntime"] = *self.Status.NodeInfo.ContainerRuntimeVersion
+					data["K8sNodeOS"] = *self.Status.NodeInfo.OsImage
+					data["K8sNodeCloudInstance"] = self.Metadata.Labels["node.kubernetes.io/instance-type"]
+					data["K8sNodeCloudRegion"] = self.Metadata.Labels["topology.kubernetes.io/region"]
+					data["K8sNodeCloudZone"] = self.Metadata.Labels["topology.kubernetes.io/zone"]
+				}
+			}
 		}
-		data["K8sNodeCount"] = strconv.Itoa(len(nodes.Items))
-		var self *corev1.Node
-		hostname, _ := os.Hostname()
-		for _, self = range nodes.Items {
-			if *self.Metadata.Name == hostname { break }
-		}
-		log.Print(*self.Status.NodeInfo.ContainerRuntimeVersion)
-		log.Print(*self.Status.NodeInfo.KubeletVersion)
-		log.Print(*self.Status.NodeInfo.KubeProxyVersion)
-		log.Print(*self.Status.NodeInfo.OsImage)
-		log.Print(self.Metadata.Labels["node.kubernetes.io/instance-type"])
-		log.Print(self.Metadata.Labels["topology.kubernetes.io/region"])
-		log.Print(self.Metadata.Labels["topology.kubernetes.io/zone"])
 
 		// TODO: get own pod container list
 		// TODO: get own namespace pods list

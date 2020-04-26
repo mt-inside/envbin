@@ -67,6 +67,18 @@
             Version: {{.K8sVersion}}<br>
             Running in namespace: {{.K8sNamespace}}<br>
             As ServiceAccount: {{.K8sServiceAccount}}<br>
+            This Pod:<br>
+              Containers: {{.K8sThisPodContainersCount}}<br>
+              Images: {{.K8sThisPodContainersImages}}<br>
+            Nodes: {{.K8sNodeCount}}<br>
+            This Node:<br>
+              Address: {{.K8sNodeAddress}}<br>
+              Version: {{.K8sNodeVersion}}<br>
+              OS: {{.K8sNodeOS}}<br>
+              Container runtime: {{.K8sNodeRuntime}}<br>
+              Cloud Instance: {{.K8sNodeCloudInstance}}<br>
+              Cloud Region: {{.K8sNodeCloudRegion}}<br>
+              Cloud Zone: {{.K8sNodeCloudZone}}<br>
         </div>
     </nav>
 

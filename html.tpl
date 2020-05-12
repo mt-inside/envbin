@@ -17,81 +17,61 @@
 
 <section class="section">
     <div class="container">
-        <h1 class="title">envbin</h1>
-    </div>
-</section>
+        <h1 class="title is-1">envbin</h1>
 
-<section class="section">
-
-    <nav class="panel is-primary">
-        <p class="panel-heading">
-            Version
-        </p>
-        <div class="panel-block">
+        <h3 class="title is-3"> Version </h3>
+        <p>
             Version {{.Version}}, git {{.GitCommit}}<br>
             Built at {{.BuildTime}} with {{.GoVersion}}<br>
             Started at {{.StartTime}}; up {{.RunTime}}<br>
-        </div>
-    </nav>
-
-    <nav class="panel is-primary">
-        <p class="panel-heading">
-            Session
         </p>
-        <div class="panel-block">
+
+        <h3 class="title is-3"> Session </h3>
+        <p>
             Name: {{.SessionName}}<br>
             Request: {{.RequestNumber}}<br>
-        </div>
-    </nav>
-
-    <nav class="panel is-primary">
-        <p class="panel-heading">
-            Host
         </p>
-        <div class="panel-block">
+
+        <h3 class="title is-3"> Host </h3>
+        <p>
             OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}<br>
             Virtualisation: {{.Virt}}<br>
             Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM<br>
             Procs: {{.ProcCount}} procs<br>
             Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}<br>
             Hostname: {{.Hostname}}, Primary IP: {{.Ip}}<br>
-        </div>
-    </nav>
-
-    <nav class="panel is-primary">
-        <p class="panel-heading">
-            Kubernetes
         </p>
-        <div class="panel-block">
+
+        <h3 class="title is-3"> Kubernetes </h3>
+        <p>
             Present: {{.K8s}}<br>
-            Version: {{.K8sVersion}}<br>
+            Control plane version: {{.K8sVersion}}<br>
+            Nodes: {{.K8sNodeCount}}<br>
+        </p>
+            <h5 class="title is-5">This Pod</h5>
+        <p>
             Running in namespace: {{.K8sNamespace}}<br>
             As ServiceAccount: {{.K8sServiceAccount}}<br>
-            This Pod:<br>
-              Containers: {{.K8sThisPodContainersCount}}<br>
-              Images: {{.K8sThisPodContainersImages}}<br>
-            Nodes: {{.K8sNodeCount}}<br>
-            This Node:<br>
-              Address: {{.K8sNodeAddress}}<br>
-              Version: {{.K8sNodeVersion}}<br>
-              OS: {{.K8sNodeOS}}<br>
-              Container runtime: {{.K8sNodeRuntime}}<br>
-              Cloud Instance: {{.K8sNodeCloudInstance}}<br>
-              Cloud Region: {{.K8sNodeCloudRegion}}<br>
-              Cloud Zone: {{.K8sNodeCloudZone}}<br>
-        </div>
-    </nav>
-
-    <nav class="panel is-primary">
-        <p class="panel-heading">
-            Resources
+            Containers: {{.K8sThisPodContainersImages}}<br>
         </p>
-        <div class="panel-block">
+            <h5 class="title is-5">This Node</h5>
+        <p>
+            Address: {{.K8sNodeAddress}}<br>
+            Version: {{.K8sNodeVersion}}<br>
+            OS: {{.K8sNodeOS}}<br>
+            Container runtime: {{.K8sNodeRuntime}}<br>
+            Cloud instance type: {{.K8sNodeCloudInstance}}<br>
+            Cloud zone: {{.K8sNodeCloudZone}}<br>
+        </p>
+
+        <h3 class="title is-3"> Resources </h3>
+        <p>
             Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical<br>
             GC Runs: {{.GcRuns}}<br>
             CPU Time: {{.CpuSelfTime}}<br>
-        </div>
-    </nav>
+        </p>
+
+    </div>
 
 </section>
 

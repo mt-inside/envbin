@@ -6,7 +6,7 @@
     <title>Envbin</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.1/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
     <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-extensions@6.2.7/bulma-switch/dist/css/bulma-switch.min.css" integrity="sha256-hhNzSX9QCUNRpgKiGuOGzPtUdetKhSP4X/jQkkYgBzI=" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bulma-extensions@6.2.7/dist/js/bulma-extensions.min.js" integrity="sha256-q4zsxO0fpPm6VhtL/9QkCFE5ZkNa0yeUxhmt1VO1ev0=" crossorigin="anonymous"></script>-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
@@ -19,20 +19,20 @@
     <div class="container">
         <h1 class="title is-1">envbin</h1>
 
-        <h3 class="title is-3"> Version </h3>
+        <h1 class="title is-3">Version </h1>
         <p>
             Version {{.Version}}, git {{.GitCommit}}<br>
             Built at {{.BuildTime}} with {{.GoVersion}}<br>
             Started at {{.StartTime}}; up {{.RunTime}}<br>
         </p>
 
-        <h3 class="title is-3"> Session </h3>
+        <h1 class="title is-3">Session</h1>
         <p>
             Name: {{.SessionName}}<br>
             Request: {{.RequestNumber}}<br>
         </p>
 
-        <h3 class="title is-3"> Host </h3>
+        <h1 class="title is-3">Host</h1>
         <p>
             OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}<br>
             Virtualisation: {{.Virt}}<br>
@@ -42,19 +42,19 @@
             Hostname: {{.Hostname}}, Primary IP: {{.Ip}}<br>
         </p>
 
-        <h3 class="title is-3"> Kubernetes </h3>
+        <h1 class="title is-3">Kubernetes</h1>
         <p>
             Present: {{.K8s}}<br>
             Control plane version: {{.K8sVersion}}<br>
             Nodes: {{.K8sNodeCount}}<br>
         </p>
-            <h5 class="title is-5">This Pod</h5>
+        <h1 class="title is-5">This Pod</h1>
         <p>
             Running in namespace: {{.K8sNamespace}}<br>
             As ServiceAccount: {{.K8sServiceAccount}}<br>
             Containers: {{.K8sThisPodContainersImages}}<br>
         </p>
-            <h5 class="title is-5">This Node</h5>
+        <h1 class="title is-5">This Node</h1>
         <p>
             Address: {{.K8sNodeAddress}}<br>
             Version: {{.K8sNodeVersion}}<br>
@@ -64,7 +64,7 @@
             Cloud zone: {{.K8sNodeCloudZone}}<br>
         </p>
 
-        <h3 class="title is-3"> Resources </h3>
+        <h1 class="title is-3">Resources</h1>
         <p>
             Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical<br>
             GC Runs: {{.GcRuns}}<br>

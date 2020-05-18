@@ -146,6 +146,7 @@ func getK8sData() map[string]string {
 					data["K8sNodeVersion"] = fmt.Sprintf("%s %s/%s", *self.Status.NodeInfo.KubeletVersion, *self.Status.NodeInfo.OperatingSystem, *self.Status.NodeInfo.Architecture)
 					data["K8sNodeRuntime"] = *self.Status.NodeInfo.ContainerRuntimeVersion
 					data["K8sNodeOS"] = *self.Status.NodeInfo.OsImage
+					data["K8sNodeRole"] = findSuffix(self.Metadata.Labels, "node-role.kubernetes.io/")
 					data["K8sNodeCloudInstance"] = self.Metadata.Labels["node.kubernetes.io/instance-type"]
 					data["K8sNodeCloudRegion"] = self.Metadata.Labels["topology.kubernetes.io/region"]
 					data["K8sNodeCloudZone"] = self.Metadata.Labels["topology.kubernetes.io/zone"]
@@ -159,4 +160,13 @@ func getK8sData() map[string]string {
 	}
 
 	return data
+}
+
+func findSuffix(m map[string]string, pre string) string {
+	for k, _ := range(m) {
+		if strings.HasPrefix(k, pre) {
+			return strings.TrimPrefix(k, pre)
+		}
+	}
+	return ""
 }

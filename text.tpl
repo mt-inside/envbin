@@ -34,6 +34,7 @@ This Node:
   Version: {{.K8sNodeVersion}}
   OS: {{.K8sNodeOS}}
   Container runtime: {{.K8sNodeRuntime}}
+  Node role: {{.K8sNodeRole}}
   Cloud Instance: {{.K8sNodeCloudInstance}}
   Cloud Zone: {{.K8sNodeCloudZone}}
 

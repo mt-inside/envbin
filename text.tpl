@@ -35,7 +35,6 @@ This Node:
   OS: {{.K8sNodeOS}}
   Container runtime: {{.K8sNodeRuntime}}
   Cloud Instance: {{.K8sNodeCloudInstance}}
-  Cloud Region: {{.K8sNodeCloudRegion}}
   Cloud Zone: {{.K8sNodeCloudZone}}
 
 RESOURCES

@@ -60,6 +60,7 @@
             Version: {{.K8sNodeVersion}}<br>
             OS: {{.K8sNodeOS}}<br>
             Container runtime: {{.K8sNodeRuntime}}<br>
+            Node role(s): {{.K8sNodeRole}}<br>
             Cloud instance type: {{.K8sNodeCloudInstance}}<br>
             Cloud zone: {{.K8sNodeCloudZone}}<br>
         </p>

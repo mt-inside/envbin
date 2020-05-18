@@ -2,19 +2,21 @@ package data
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"strconv"
-	"errors"
+	"strings"
 
 	//"crypto/rsa"
 	//"crypto/x509"
 	//"encoding/pem"
 	"fmt"
+	"io/ioutil"
+
+	"github.com/dgrijalva/jwt-go"
 	"github.com/ericchiang/k8s"
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
-	"io/ioutil"
-	"github.com/dgrijalva/jwt-go"
 )
 
 func getK8sData() map[string]string {
@@ -33,15 +35,15 @@ func getK8sData() map[string]string {
 
 		type k8sClaims struct {
 			Namespace string `json:"kubernetes.io/serviceaccount/namespace"`
-			Secret string `json:"kubernetes.io/serviceaccount/secret.name"`
-			Name string `json:"kubernetes.io/serviceaccount/service-account.name"`
-			Uid string `json:"kubernetes.io/serviceaccount/service-account.uid"`
+			Secret    string `json:"kubernetes.io/serviceaccount/secret.name"`
+			Name      string `json:"kubernetes.io/serviceaccount/service-account.name"`
+			Uid       string `json:"kubernetes.io/serviceaccount/service-account.uid"`
 
 			jwt.StandardClaims
 		}
 
 		// TODO: unit test this with a ca.crt and satoek from a pod
-		token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil, /*func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil) /*func(token *jwt.Token) (interface{}, error) {
 		    // This JWT is signed with the Service Account keypair.
 		    // This isn't the same as the apiserver CA keypair, so ca.crt on the disk can't validate it
 		    // As of Mar '20 there's no way to directly get the public part of the SA pair
@@ -93,7 +95,7 @@ func getK8sData() map[string]string {
 			}
 
 			return pub, nil
-		}*/)
+		}*/
 		if err != nil {
 			// log.Fatalf("can't parse and verify token: %v", err) // Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
 		}
@@ -105,7 +107,7 @@ func getK8sData() map[string]string {
 		data["K8sNamespace"] = claims.Namespace
 		data["K8sServiceAccount"] = claims.Name
 
-		data["K8sVersion"] = fmt.Sprintf("%s %s",version.GitVersion, version.Platform)
+		data["K8sVersion"] = fmt.Sprintf("%s %s", version.GitVersion, version.Platform)
 
 		hostname, _ := os.Hostname()
 		var thisPod corev1.Pod
@@ -125,7 +127,6 @@ func getK8sData() map[string]string {
 				data["K8sThisPodContainersImages"] += *c.Image + ", "
 			}
 		}
-
 
 		var nodes corev1.NodeList
 		if err := client.List(context.Background(), "", &nodes); err != nil {

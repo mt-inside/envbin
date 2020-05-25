@@ -4,7 +4,6 @@
 Version := $(shell git describe --tags --dirty)
 GitCommit := $(shell git rev-parse HEAD)
 BuildTime := $(shell date +%Y-%m-%d_%H:%M:%S%z)
-LDFLAGS := -X main.Version=$(Version) -X main.GitCommit=$(GitCommit) -X main.BuildTime=$(BuildTime)
 LDFLAGS += -X github.com/mt-inside/envbin/pkg/data.Version=$(Version) -X github.com/mt-inside/envbin/pkg/data.GitCommit=$(GitCommit) -X github.com/mt-inside/envbin/pkg/data.BuildTime=$(BuildTime)
 
 lint:

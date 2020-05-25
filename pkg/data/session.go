@@ -1,6 +1,8 @@
 package data
 
 import (
+	"fmt"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -40,4 +42,11 @@ func getSessionData() map[string]string {
 	data["RequestNumber"] = strconv.Itoa(reqNo)
 
 	return data
+}
+
+func RenderSessionData() (ret []string) {
+	ret = append(ret, fmt.Sprintf("envbin %s: git %s, built at %s with %s", Version, GitCommit, BuildTime, runtime.Version()))
+	ret = append(ret, fmt.Sprintf("session: %s", name))
+
+	return
 }

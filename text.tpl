@@ -12,6 +12,10 @@ SESSION
 Name: {{.SessionName}}
 Request: {{.RequestNumber}}
 
+YOU
+IP: {{.RequestIP}}
+User Agent: {{.UserAgent}}
+
 HOST
 OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
 Virtualisation: {{.Virt}}

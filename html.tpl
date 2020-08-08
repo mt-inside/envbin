@@ -32,6 +32,12 @@
             Request: {{.RequestNumber}}<br>
         </p>
 
+        <h1 class="title is-3">Request</h1>
+        <p>
+            Source: {{.RequestIP}}<br>
+            User Agent: {{.UserAgent}}<br>
+        </p>
+
         <h1 class="title is-3">Host</h1>
         <p>
             OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}<br>

@@ -1,8 +1,11 @@
 package data
 
-import "github.com/mt-inside/envbin/pkg/util"
+import (
+    "github.com/mt-inside/envbin/pkg/util"
+    "net/http"
+)
 
-func GetData() map[string]string {
+func GetData(r *http.Request) map[string]string {
 	d := make(map[string]string) //TODO: strongly type me with a struct. Esp for (optional) sections
 
 	d = util.AppendMap(d, getSessionData())
@@ -14,6 +17,7 @@ func GetData() map[string]string {
 	d = util.AppendMap(d, getOsData())
 	d = util.AppendMap(d, getSettingsData())
 	d = util.AppendMap(d, getK8sData()) //TODO: handle no permissions and other errors
+	d = util.AppendMap(d, getRequestData(r))
 
 	return d
 }

@@ -23,4 +23,4 @@ image: build-for-docker
 image-push: image
 	docker push mtinside/envbin
 docker-run: image
-	docker run -p8080:8080 mtinside/envbin:latest
+	docker run --rm --name envbin -p8080:8080 mtinside/envbin:latest

@@ -11,7 +11,7 @@ func getProcsData() map[string]string {
 	procs := sigar.ProcList{}
 	procs.Get()
 
-	data["ProcCount"] = strconv.Itoa(len(procs.List))
+	data["OtherProcsCount"] = strconv.Itoa(len(procs.List) - 1)
 
 	return data
 }

@@ -27,8 +27,8 @@
 
         <h1 class="title is-3">Request</h1>
         <p>
-            Source: {{.RequestIP}}<br>
-            User Agent: {{.UserAgent}}<br>
+            Apparent source: {{.RequestIP}}<br>
+            User agent: {{.UserAgent}}<br>
         </p>
 
         <h1 class="title is-3">Hardware</h1>
@@ -40,7 +40,7 @@
         <h1 class="title is-3">Operating Environment</h1>
         <p>
             OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}<br>
-            PID: {{.Pid}}, parent: {{.Ppid}} (#others: {{.ProcCount}})<br>
+            PID: {{.Pid}}, parent: {{.Ppid}} (#others: {{.OtherProcsCount}})<br>
             UID: {{.Uid}} (effective: {{.Euid}})<br>
             Primary GID: {{.Gid}} (effective: {{.Egid}}) (others: {{.Groups}})<br>
         </p>

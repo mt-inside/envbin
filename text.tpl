@@ -15,7 +15,7 @@ HOST
 OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
 Virtualisation: {{.Virt}}
 Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
-Procs: {{.ProcCount}} procs
+Procs: {{.OtherProcsCount}} procs
 Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}
 Hostname: {{.Hostname}}, primary IP: {{.Ip}}
 

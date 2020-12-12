@@ -31,13 +31,22 @@
             User Agent: {{.UserAgent}}<br>
         </p>
 
-        <h1 class="title is-3">Host</h1>
+        <h1 class="title is-3">Hardware</h1>
+        <p>
+            Virtualisation: {{.Virt}}<br>
+            Apparent hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM<br>
+        </p>
+
+        <h1 class="title is-3">Operating Environment</h1>
         <p>
             OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}<br>
-            Virtualisation: {{.Virt}}<br>
-            Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM<br>
-            Procs: {{.ProcCount}} procs<br>
-            Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}<br>
+            PID: {{.Pid}}, parent: {{.Ppid}} (#others: {{.ProcCount}})<br>
+            UID: {{.Uid}} (effective: {{.Euid}})<br>
+            Primary GID: {{.Gid}} (effective: {{.Egid}}) (others: {{.Groups}})<br>
+        </p>
+
+        <h1 class="title is-3">Network</h1>
+        <p>
             Hostname: {{.Hostname}}, Primary IP: {{.Ip}}<br>
         </p>
 

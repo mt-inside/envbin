@@ -7,17 +7,23 @@
 Version {{.Version}}, git {{.GitCommit}}
 Built at {{.BuildTime}} with {{.GoVersion}}
 
-YOU
-IP: {{.RequestIP}}
+REQUEST
+Apparent source: {{.RequestIp}} ({{.RequestIpEnrich}})
 User Agent: {{.UserAgent}}
 
-HOST
-OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
+HARDWARE
 Virtualisation: {{.Virt}}
-Hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
-Procs: {{.OtherProcsCount}} procs
-Evnironment: PID: {{.Pid}}, U/GID: {{.Uid}}/{{.Gid}}
-Hostname: {{.Hostname}}, primary IP: {{.Ip}}
+Apparent hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
+
+OPERATING ENVIRONMENT
+OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
+PID: {{.Pid}}, parent: {{.Ppid}} (#others: {{.OtherProcsCount}})
+UID: {{.Uid}} (effective: {{.Euid}})
+Primary GID: {{.Gid}} (effective: {{.Egid}}) (others: {{.Groups}})
+
+NETWORK
+Hostname: {{.Hostname}}, Primary IP: {{.HostIp}}
+Apparent external IP: {{.ExternalIp}} ({{.ExternalIpEnrich}})
 
 KUBERNETES
 Present: {{.K8s}}

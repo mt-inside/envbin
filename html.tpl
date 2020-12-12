@@ -27,7 +27,7 @@
 
         <h1 class="title is-3">Request</h1>
         <p>
-            Apparent source: {{.RequestIP}}<br>
+            Apparent source: {{.RequestIp}} ({{.RequestIpEnrich}})<br>
             User agent: {{.UserAgent}}<br>
         </p>
 
@@ -47,7 +47,8 @@
 
         <h1 class="title is-3">Network</h1>
         <p>
-            Hostname: {{.Hostname}}, Primary IP: {{.Ip}}<br>
+            Hostname: {{.Hostname}}, Primary IP: {{.HostIp}}<br>
+            Apparent external IP: {{.ExternalIp}} ({{.ExternalIpEnrich}})<br>
         </p>
 
         <h1 class="title is-3">Kubernetes</h1>

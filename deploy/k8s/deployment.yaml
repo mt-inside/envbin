@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envbin
+  labels:
+    app: envbin
+spec:
+  selector:
+    matchLabels:
+      app: envbin
+  template:
+    metadata:
+      labels:
+        app: envbin
+    spec:
+      serviceAccount: envbin
+      containers:
+        - name: envbin
+          image: docker.io/mtinside/envbin:latest
+          ports:
+            - containerPort: 8080

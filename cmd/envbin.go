@@ -4,16 +4,16 @@ package main
 // What does curl, browser, etc send?
 
 import (
-	"github.com/gorilla/mux"
-	cli "github.com/jawher/mow.cli"
-	"github.com/mt-inside/envbin/pkg/data"
-	"github.com/mt-inside/envbin/pkg/handlers"
-	"github.com/mt-inside/envbin/pkg/middleware"
-	"github.com/mt-inside/envbin/pkg/renderers"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gorilla/mux"
+	cli "github.com/jawher/mow.cli"
+	"github.com/mt-inside/envbin/pkg/data"
+	"github.com/mt-inside/envbin/pkg/middleware"
+	"github.com/mt-inside/envbin/pkg/renderers"
 )
 
 func main() {
@@ -33,10 +33,6 @@ func main() {
 func envbinMain(addr *string) {
 	rootMux := mux.NewRouter()
 	rootMux.Use(middleware.LoggingMiddleware)
-
-	handlers.HandleApi(rootMux.PathPrefix("/handlers").Subrouter()) //TODO rename our package away from handlers
-	handlers.HandleMisc(rootMux)
-	handlers.HandleProbes(rootMux)
 
 	rootMux.Path("/").MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 		return strings.Contains(r.Header.Get("Accept"), "text/html")

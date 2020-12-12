@@ -8,10 +8,6 @@ Version {{.Version}}, git {{.GitCommit}}
 Built at {{.BuildTime}} with {{.GoVersion}}
 Started at {{.StartTime}}; up {{.RunTime}}
 
-SESSION
-Name: {{.SessionName}}
-Request: {{.RequestNumber}}
-
 YOU
 IP: {{.RequestIP}}
 User Agent: {{.UserAgent}}
@@ -41,16 +37,3 @@ This Node:
   Node role: {{.K8sNodeRole}}
   Cloud Instance: {{.K8sNodeCloudInstance}}
   Cloud Zone: {{.K8sNodeCloudZone}}
-
-RESOURCES
-Memory: {{.MemUseVirtual}} virtual, {{.MemUsePhysical}} physical
-GC Runs: {{.GcRuns}}
-CPU Time: {{.CpuSelfTime}}
-
-SETTINGS
-Liveness: {{.SettingLiveness}}
-Readiness: {{.SettingReadiness}}
-Latency: {{.SettingLatency}}
-Bandwidth: {{.SettingBandwidth}}
-Error rate: {{.SettingErrorRate}}
-Cpu Use: {{.SettingCpuUse}}

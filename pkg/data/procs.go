@@ -1,8 +1,9 @@
 package data
 
 import (
-	sigar "github.com/cloudfoundry/gosigar"
 	"strconv"
+
+	sigar "github.com/cloudfoundry/gosigar"
 )
 
 func getProcsData() map[string]string {

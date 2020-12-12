@@ -1,8 +1,5 @@
 package main
 
-// mime type switching, if that's a thing?
-// What does curl, browser, etc send?
-
 import (
 	"log"
 	"net/http"

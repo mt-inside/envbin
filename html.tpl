@@ -23,7 +23,6 @@
         <p>
             Version {{.Version}}, git {{.GitCommit}}<br>
             Built at {{.BuildTime}} with {{.GoVersion}}<br>
-            Started at {{.StartTime}}; up {{.RunTime}}<br>
         </p>
 
         <h1 class="title is-3">Request</h1>

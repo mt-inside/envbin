@@ -6,7 +6,6 @@
 
 Version {{.Version}}, git {{.GitCommit}}
 Built at {{.BuildTime}} with {{.GoVersion}}
-Started at {{.StartTime}}; up {{.RunTime}}
 
 YOU
 IP: {{.RequestIP}}

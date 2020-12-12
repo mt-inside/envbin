@@ -27,7 +27,7 @@
 
         <h1 class="title is-3">Request</h1>
         <p>
-            Apparent source: {{.RequestIP}}<br>
+            Apparent source: {{.RequestIp}} ({{.RequestIpEnrich}})<br>
             User agent: {{.UserAgent}}<br>
         </p>
 

@@ -15,6 +15,7 @@ func getRequestData(r *http.Request) map[string]string {
 		data["RequestIpEnrich"] = enrichments.EnrichIpRendered(host)
 	}
 	data["UserAgent"] = r.UserAgent()
+	data["ProxyChain"] = r.Header.Get(http.CanonicalHeaderKey("X-Envbin-Proxy-Chain"))
 
 	return data
 }

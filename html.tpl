@@ -28,6 +28,7 @@
         <h1 class="title is-3">Request</h1>
         <p>
             Apparent source: {{.RequestIp}} ({{.RequestIpEnrich}})<br>
+            Proxies: {{.ProxyChain}}<br>
             User agent: {{.UserAgent}}<br>
         </p>
 

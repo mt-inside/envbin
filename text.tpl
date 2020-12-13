@@ -9,6 +9,7 @@ Built at {{.BuildTime}} with {{.GoVersion}}
 
 REQUEST
 Apparent source: {{.RequestIp}} ({{.RequestIpEnrich}})
+Proxies: {{.ProxyChain}}
 User Agent: {{.UserAgent}}
 
 HARDWARE

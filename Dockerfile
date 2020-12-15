@@ -1,4 +1,5 @@
-FROM golang:1.15 as build
+ARG ARCH=
+FROM ${ARCH}golang:1.15 as build
 
 WORKDIR /app
 
@@ -7,7 +8,9 @@ RUN go mod download
 
 # including the .git dir
 COPY . .
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go install -a -tags netgo -ldflags "-w -extldflags '-static' $(build/ldflags.sh)" cmd/envbin.go
+# Because we're building *in* a container for a container, there's no cross-OS-compilation; no need to specify GOOS
+# Also because we take ARG ARCH and use buildx (invokes qemu), we always use the native compiler for any platform; never any need to specify GOARCH
+RUN CGO_ENABLED=1 go install -a -tags netgo -ldflags "-w -extldflags '-static' $(build/ldflags.sh)" cmd/envbin.go
 
 
 FROM gcr.io/distroless/static-debian10:latest AS run

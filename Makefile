@@ -1,4 +1,4 @@
-.PHONY: build run
+.PHONY: lint run image image-push docker-run
 .DEFAULT_GOAL := run
 
 

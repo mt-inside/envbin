@@ -9,7 +9,7 @@ import (
 func GetData(r *http.Request) map[string]string {
 	d := make(map[string]string) //TODO: strongly type me with a struct. Esp for (optional) sections
 
-	d = util.AppendMap(d, getSessionData())
+	d = util.AppendMap(d, getBuildData())
 	d = util.AppendMap(d, getNetworkData())
 	d = util.AppendMap(d, getHardwareData())
 	d = util.AppendMap(d, getProcData()) //TODO: darwin (or optional)

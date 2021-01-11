@@ -14,9 +14,7 @@ import (
 )
 
 func main() {
-	for _, s := range data.RenderSessionData() {
-		log.Println(s)
-	}
+	log.Println(data.RenderBuildData())
 
 	app := cli.App("envbin", "Print environment information, sometimes, badly")
 	app.Spec = "[ADDR]"

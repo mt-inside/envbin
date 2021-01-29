@@ -12,10 +12,8 @@ func MiddlewareStack(next func(r *http.Request) []byte, mime string) http.Handle
 
 				bs := next(r)
 
-				// Templates can be executed straight into writers, so we could pump the template into the httpResponseWriter. Problem is, it only flushes on the boundaries into and out of {{}} template substitutions, which makes the output sporadic. So we dump into a string and write that one byte at a time.
-				for i := 0; i < len(bs); i++ {
-					w.Write(bs[i : i+1])
-				}
+				// could just execute the template straight into the writer, but we're gonna merge back with badpod soon
+				w.Write(bs)
 			}),
 		),
 	)

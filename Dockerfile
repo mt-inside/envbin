@@ -22,3 +22,4 @@ COPY *tpl /
 
 EXPOSE $PORT
 ENTRYPOINT ["/envbin"]
+CMD ["serve"]

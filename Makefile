@@ -5,8 +5,11 @@
 lint:
 	golangci-lint run
 
-run:
-	go run -ldflags "$(shell build/ldflags.sh)" cmd/envbin.go
+run-server:
+	go run -ldflags "$(shell build/ldflags.sh)" cmd/envbin.go serve
+
+run-oneshot:
+	go run -ldflags "$(shell build/ldflags.sh)" cmd/envbin.go oneshot
 
 image:
 	docker build -t mtinside/envbin:latest .

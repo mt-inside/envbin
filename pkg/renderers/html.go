@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"html/template"
 	"log"
+	"net/http"
+
+	"github.com/mt-inside/envbin/pkg/data"
 )
 
-func RenderHTML(data map[string]string) (bs []byte) {
+func RenderHTML(r *http.Request) (bs []byte) {
+	data := data.GetData(r)
 	var b bytes.Buffer
 	t, err := template.ParseFiles("html.tpl")
 	if err != nil {

@@ -24,5 +24,7 @@ func getProcData() map[string]string {
 		data["Cwd"] = cwd
 	}
 
+	/* TODO: capabilities */
+
 	return data
 }

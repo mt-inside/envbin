@@ -17,6 +17,12 @@ func RenderTTY() {
 	title("Hardware")
 	kv("Apparent hardware", "%s, %s, %s/%s cores, %s RAM", data["Arch"], data["CpuName"], data["PhysCores"], data["VirtCores"], data["MemTotal"])
 
+	title("Operating Environment")
+	kv("OS", "%s %s, up %s", data["OsType"], data["OsVersion"], data["OsUptime"])
+	kv("PID", "%s, parent %s, #others %s", data["Pid"], data["Ppid"], data["OtherProcsCount"])
+	kv("User", "UID %s (effective %s)", data["Uid"], data["Euid"])
+	kv("Groups", "Primary %s (effective %s), others %s", data["Gid"], data["Egid"], data["Groups"])
+
 	title("Network")
 	kv("Hostname", "%s", data["Hostname"])
 	kv("Primary IP", "%s", data["HostIp"])

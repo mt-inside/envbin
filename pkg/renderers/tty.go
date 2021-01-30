@@ -29,12 +29,10 @@ func RenderTTY() {
 	kv("External IP", "%s %s", data["ExternalIp"], data["ExternalIpEnrich"])
 	// TODO: we control both ends of this interface and it's horrid!
 	// FIXME: doesn't even work, cause interface indecies aren't necc sequential
-	i := 0
-	for {
-		i = i + 1
+	for i := 0; i < 128; i++ {
 		v, ok := data[fmt.Sprintf("Interface%d", i)]
 		if !ok {
-			break
+			continue
 		}
 		kv(fmt.Sprintf("Iface[%d]", i), "%s", v)
 	}

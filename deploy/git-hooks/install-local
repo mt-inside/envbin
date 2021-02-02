@@ -1,5 +1,4 @@
 #!/bin/sh
 
-pwd -P
-
+echo Installing new local copy...
 go install cmd/envbin.go

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+pwd -P
+
+go install cmd/envbin.go

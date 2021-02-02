@@ -15,6 +15,7 @@ func RenderTTY() {
 	kv("Session", "%s", data["Session"])
 
 	title("Hardware")
+	kv("Virtualisation", "%s", data["Virt"])
 	kv("Apparent hardware", "%s, %s, %s/%s cores, %s RAM", data["Arch"], data["CpuName"], data["PhysCores"], data["VirtCores"], data["MemTotal"])
 
 	title("Operating Environment")

@@ -14,6 +14,7 @@ User Agent: {{.UserAgent}}
 
 HARDWARE
 Virtualisation: {{.Virt}}
+Firmware: {{.FirmwareType}}
 Apparent hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
 
 OPERATING ENVIRONMENT

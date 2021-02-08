@@ -35,6 +35,7 @@
         <h1 class="title is-3">Hardware</h1>
         <p>
             Virtualisation: {{.Virt}}<br>
+            Firmware: {{.FirmwareType}}<br>
             Apparent hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM<br>
         </p>
 

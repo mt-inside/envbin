@@ -40,7 +40,7 @@ func main() {
 			addr = cmd.StringArg("ADDR", ":8080", "Listen address")
 		)
 		cmd.Spec = "[ADDR]"
-		cmd.Action = func() { serve(addr) }
+		cmd.Action = func() { serve(logr, addr) }
 	})
 
 	app.Command("oneshot", "Print information to stdout and exit", func(cmd *cli.Cmd) {
@@ -91,9 +91,12 @@ func (w ZaprWriter) Write(data []byte) (n int, err error) {
 	return len(data), nil
 }
 
-func serve(addr *string) {
+func serve(log logr.Logger, addr *string) {
 	rootMux := mux.NewRouter()
 	rootMux.Use(middleware.LoggingMiddleware)
+
+	rootMux.Path("/health").HandlerFunc(healthHandler)
+	rootMux.Path("/ready").HandlerFunc(healthHandler)
 
 	rootMux.Path("/").MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 		return strings.Contains(r.Header.Get("Accept"), "text/html")
@@ -102,8 +105,15 @@ func serve(addr *string) {
 	rootMux.Path("/").Headers("Accept", "text/yaml", "Accept", "text/x-yaml", "Accept", "application/x-yaml").Handler(middleware.MiddlewareStack(renderers.RenderYAML, "text/yaml"))
 	rootMux.Path("/").Handler(middleware.MiddlewareStack(renderers.RenderText, "text/plain")) // fall through
 
-	log.Printf("Listening on %s", *addr)
-	log.Fatal(http.ListenAndServe(*addr, rootMux))
+	log.Info("Listening", "addr", *addr)
+	http.ListenAndServe(*addr, rootMux)
 
-	// TODO: graceful shutdown (lower readiness)
+	// TODO: graceful shutdown (lower readiness - combine with badpod first)
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
+
+	log.Printf("Served health ok")
 }

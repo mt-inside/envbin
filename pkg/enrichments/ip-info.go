@@ -28,18 +28,16 @@ func ExternalIp() string {
 	return ipApiFetch("").Ip
 }
 
-func EnrichIp(ip string) IpInfo {
-	if ip == "" {
-		log.Fatalf("IP '%s' is a special parameter to ipapi.co and shouldn't be provided through this path", ip)
-	}
-	return ipApiFetch(ip)
-}
-
 func EnrichIpRendered(ip string) string {
-	e := EnrichIp(ip)
+	if ip == "" {
+		log.Printf("IP '%s' is a special parameter to ipapi.co and shouldn't be provided through this path", ip)
+		return ""
+	}
+	e := ipApiFetch(ip)
 	return fmt.Sprintf("%s, %s, %s, %s (AS: %s, %s)", e.City, e.Region, e.Postal, e.Country, e.Asn, e.As)
 }
 
+// TODO: early return err
 func ipApiFetch(ip string) IpInfo {
 	client := http.Client{
 		Timeout: time.Second * 2,

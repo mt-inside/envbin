@@ -163,7 +163,7 @@ func getK8sData() map[string]string {
 }
 
 func findSuffix(m map[string]string, pre string) string {
-	for k, _ := range(m) {
+	for k, _ := range m {
 		if strings.HasPrefix(k, pre) {
 			return strings.TrimPrefix(k, pre)
 		}

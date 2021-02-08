@@ -9,7 +9,6 @@ import (
 func getOsData() map[string]string {
 	data := map[string]string{}
 
-
 	uptime := sigar.Uptime{}
 	uptime.Get()
 	is, _ := host.Info()

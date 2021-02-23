@@ -1,14 +1,19 @@
 .PHONY: lint run image image-push docker-run
-.DEFAULT_GOAL := run
+.DEFAULT_GOAL := run-oneshot
 
 
 lint:
-	golangci-lint run
+	#go fmt ./...
+	#go vet ./...
+	#golangci-lint run ./...
 
-run-server:
+build: lint
+	go build -o envbin ./cmd/envbin.go
+
+run-server: lint
 	go run -ldflags "$(shell build/ldflags.sh)" cmd/envbin.go serve
 
-run-oneshot:
+run-oneshot: lint
 	go run -ldflags "$(shell build/ldflags.sh)" cmd/envbin.go oneshot
 
 image:

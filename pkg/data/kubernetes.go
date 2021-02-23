@@ -1,3 +1,6 @@
+// +build ignore
+// FIXME: wewrite against pure client-go
+
 package data
 
 import (

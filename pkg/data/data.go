@@ -17,7 +17,7 @@ func GetData(r *http.Request) map[string]string {
 	d = util.AppendMap(d, getProcsData())
 	d = util.AppendMap(d, getMemData())
 	d = util.AppendMap(d, getOsData())
-	d = util.AppendMap(d, getK8sData()) //TODO: handle no permissions and other errors
+	//d = util.AppendMap(d, getK8sData()) //TODO: handle no permissions and other errors
 	d = util.AppendMap(d, getRequestData(r))
 	d = util.AppendMap(d, getTerminalData())
 	d = util.AppendMap(d, getFirmwareData())

@@ -1,9 +1,10 @@
 package data
 
 import (
-	sigar "github.com/cloudfoundry/gosigar"
-	"github.com/shirou/gopsutil/host"
 	"runtime"
+
+	sigar "github.com/cloudfoundry/gosigar"
+	"github.com/shirou/gopsutil/v3/host"
 )
 
 func getOsData() map[string]string {

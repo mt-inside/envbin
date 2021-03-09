@@ -1,10 +1,11 @@
 package data
 
 import (
-	"github.com/klauspost/cpuid"
-	"github.com/shirou/gopsutil/host"
 	"runtime"
 	"strconv"
+
+	"github.com/klauspost/cpuid"
+	"github.com/shirou/gopsutil/v3/host"
 )
 
 func getHardwareData() map[string]string {

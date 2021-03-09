@@ -17,7 +17,7 @@ func getHardwareData() map[string]string {
 	data["CpuName"] = cpuid.CPU.BrandName
 	data["PhysCores"] = strconv.Itoa(cpuid.CPU.PhysicalCores)
 	data["VirtCores"] = strconv.Itoa(cpuid.CPU.LogicalCores)
-	data["Virt"] = is.VirtualizationSystem
+	data["Virt"] = is.VirtualizationSystem + " " + is.VirtualizationRole
 
 	return data
 }

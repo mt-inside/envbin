@@ -21,6 +21,7 @@ func RenderTTY() {
 
 	title("Operating Environment")
 	kv("OS", "%s %s, up %s", data["OsType"], data["OsVersion"], data["OsUptime"])
+	kv("Distro", "%s (%s) %s", data["OsDistro"], data["OsFamily"], data["OsVersion"])
 	kv("PID", "%s, parent %s, #others %s", data["Pid"], data["Ppid"], data["OtherProcsCount"])
 	kv("User", "UID %s (effective %s)", data["Uid"], data["Euid"])
 	kv("Groups", "Primary %s (effective %s), others %s", data["Gid"], data["Egid"], data["Groups"])

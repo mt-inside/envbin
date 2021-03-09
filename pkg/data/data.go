@@ -21,6 +21,7 @@ func GetData(r *http.Request) map[string]string {
 	d = util.AppendMap(d, getRequestData(r))
 	d = util.AppendMap(d, getTerminalData())
 	d = util.AppendMap(d, getFirmwareData())
+	d = util.AppendMap(d, getOsDistributionData())
 
 	return d
 }

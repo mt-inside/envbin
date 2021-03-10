@@ -18,7 +18,9 @@ Firmware: {{.FirmwareType}}
 Apparent hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores, {{.MemTotal}} RAM
 
 OPERATING ENVIRONMENT
-OS: {{.OsType}} {{.OsVersion}}, uptime {{.OsUptime}}
+OS: {{.OsType}} {{.KernelVersion}}, uptime {{.OsUptime}}
+Distro: {{.OsDistro}} ({{.OsFamily}}) {{.OsVersion}}
+REAL: {{.OsReal}}
 PID: {{.Pid}}, parent: {{.Ppid}} (#others: {{.OtherProcsCount}})
 UID: {{.Uid}} (effective: {{.Euid}})
 Primary GID: {{.Gid}} (effective: {{.Egid}}) (others: {{.Groups}})

@@ -11,7 +11,6 @@ func RenderTTY() {
 	data := data.GetData(nil)
 
 	title("Request")
-	kv("TTY", "%s", data["Tty"])
 	kv("Session", "%s", data["Session"])
 
 	title("Hardware")
@@ -20,8 +19,9 @@ func RenderTTY() {
 	kv("Apparent hardware", "%s, %s, %s/%s cores, %s RAM", data["Arch"], data["CpuName"], data["PhysCores"], data["VirtCores"], data["MemTotal"])
 
 	title("Operating Environment")
-	kv("OS", "%s %s, up %s", data["OsType"], data["OsVersion"], data["OsUptime"])
+	kv("OS", "%s %s, up %s", data["OsType"], data["KernelVersion"], data["OsUptime"])
 	kv("Distro", "%s (%s) %s", data["OsDistro"], data["OsFamily"], data["OsVersion"])
+	kv("REAL", "%s", data["OsReal"])
 	kv("PID", "%s, parent %s, #others %s", data["Pid"], data["Ppid"], data["OtherProcsCount"])
 	kv("User", "UID %s (effective %s)", data["Uid"], data["Euid"])
 	kv("Groups", "Primary %s (effective %s), others %s", data["Gid"], data["Egid"], data["Groups"])

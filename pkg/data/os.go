@@ -20,7 +20,7 @@ func getOsData() map[string]string {
 
 	data["OsUptime"] = uptime.Format()
 	data["OsType"] = runtime.GOOS
-	data["OsVersion"] = is.KernelVersion
+	data["KernelVersion"] = is.KernelVersion
 	data["GoVersion"] = runtime.Version()
 
 	return data

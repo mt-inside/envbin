@@ -2,17 +2,21 @@ package data
 
 import (
 	"github.com/dselans/dmidecode"
-	"github.com/mt-inside/envbin/pkg/util"
+	"github.com/mt-inside/go-usvc"
 )
 
+func init() {
+	plugins = append(plugins, getDmiData)
+}
+
 func getDmiData() map[string]string {
-	log := util.GlobalLog
+	log := usvc.Global
 
 	data := map[string]string{}
 
 	dmi := dmidecode.New()
 	if err := dmi.Run(); err != nil {
-		util.GlobalLog.Error(err, "Can't read DMI")
+		usvc.Global.Error(err, "Can't read DMI")
 		return map[string]string{}
 	}
 

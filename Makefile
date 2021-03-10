@@ -8,13 +8,16 @@ lint:
 	#golangci-lint run ./...
 
 build: lint
-	go build -o envbin ./cmd/envbin.go
+	go build -o envbin ./cmd/envbin/...
+
+install: lint
+	./deploy/git-hooks/install-local
 
 run-server: lint
-	go run -ldflags "$(shell build/ldflags.sh)" cmd/envbin.go serve
+	go run -ldflags "$(shell build/ldflags.sh)" ./cmd/envbin/... serve
 
 run-oneshot: lint
-	go run -ldflags "$(shell build/ldflags.sh)" cmd/envbin.go oneshot
+	go run -ldflags "$(shell build/ldflags.sh)" ./cmd/envbin/... oneshot
 
 image:
 	docker build -t mtinside/envbin:latest .

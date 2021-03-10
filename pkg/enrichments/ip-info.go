@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mt-inside/envbin/pkg/util"
+	"github.com/mt-inside/go-usvc"
 )
 
 const baseUrl = "https://ipapi.co"
@@ -30,7 +30,7 @@ func ExternalIp() string {
 
 	info, err := ipApiFetch("")
 	if err != nil {
-		util.GlobalLog.Error(err, "Can't get info for external IP")
+		usvc.Global.Error(err, "Can't get info for external IP")
 		return "<unknown>"
 	}
 
@@ -52,7 +52,7 @@ func EnrichIpRendered(ip string) string {
 }
 
 func ipApiFetch(ip string) (IpInfo, error) {
-	log := util.GlobalLog // TODO hack
+	log := usvc.Global // TODO hack
 
 	client := http.Client{
 		Timeout: time.Second * 2,

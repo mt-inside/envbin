@@ -29,6 +29,10 @@ NETWORK
 Hostname: {{.Hostname}}, Primary IP: {{.HostIp}}
 Apparent external IP: {{.ExternalIp}} ({{.ExternalIpEnrich}})
 
+AWS
+Location: Account {{.AwsAccountID}} in {{.AwsRegion}} / {{.AwsZone}}
+Instance: {{.AwsInstanceType}} running {{.AwsImageID}}
+
 KUBERNETES
 Present: {{.K8s}}
 Version: {{.K8sVersion}}

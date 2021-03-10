@@ -6,6 +6,10 @@ import (
 	"strconv"
 )
 
+func init() {
+	plugins = append(plugins, getProcData)
+}
+
 func getProcData() map[string]string {
 	data := map[string]string{}
 

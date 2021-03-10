@@ -5,6 +5,10 @@ import (
 	"github.com/docker/go-units"
 )
 
+func init() {
+	plugins = append(plugins, getMemData)
+}
+
 func getMemData() map[string]string {
 	data := map[string]string{}
 

@@ -8,6 +8,10 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 )
 
+func init() {
+	plugins = append(plugins, getHardwareData)
+}
+
 func getHardwareData() map[string]string {
 	data := map[string]string{}
 

@@ -4,6 +4,10 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 )
 
+func init() {
+	plugins = append(plugins, getOsDistributionData)
+}
+
 func getOsDistributionData() map[string]string {
 	data := map[string]string{}
 

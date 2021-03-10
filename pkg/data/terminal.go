@@ -7,6 +7,10 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
+func init() {
+	plugins = append(plugins, getTerminalData)
+}
+
 func getTerminalData() map[string]string {
 	data := map[string]string{}
 

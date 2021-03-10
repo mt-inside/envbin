@@ -12,6 +12,10 @@ var (
 	BuildTime string
 )
 
+func init() {
+	plugins = append(plugins, getBuildData)
+}
+
 func getBuildData() map[string]string {
 	data := map[string]string{}
 

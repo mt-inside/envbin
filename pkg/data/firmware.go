@@ -2,6 +2,10 @@ package data
 
 import "os"
 
+func init() {
+	plugins = append(plugins, getFirmwareData)
+}
+
 func getFirmwareData() map[string]string {
 	data := map[string]string{}
 

@@ -9,6 +9,10 @@ import (
 	"github.com/mt-inside/envbin/pkg/enrichments"
 )
 
+func init() {
+	plugins = append(plugins, getNetworkData)
+}
+
 func getNetworkData() map[string]string {
 	data := map[string]string{}
 

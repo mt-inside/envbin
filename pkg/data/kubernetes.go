@@ -22,6 +22,10 @@ import (
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
 )
 
+func init() {
+	plugins = append(plugins, getK8sData)
+}
+
 func getK8sData() map[string]string {
 	data := map[string]string{}
 

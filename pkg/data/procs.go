@@ -6,6 +6,10 @@ import (
 	sigar "github.com/cloudfoundry/gosigar"
 )
 
+func init() {
+	plugins = append(plugins, getProcsData)
+}
+
 func getProcsData() map[string]string {
 	data := map[string]string{}
 

@@ -1,9 +1,11 @@
 package data
 
 import (
+	"context"
 	"runtime"
 	"strconv"
 
+	"github.com/go-logr/logr"
 	"github.com/klauspost/cpuid"
 	"github.com/shirou/gopsutil/v3/host"
 )
@@ -12,16 +14,12 @@ func init() {
 	plugins = append(plugins, getHardwareData)
 }
 
-func getHardwareData() map[string]string {
-	data := map[string]string{}
-
+func getHardwareData(ctx context.Context, log logr.Logger, t *Trie) {
 	is, _ := host.Info()
 
-	data["Arch"] = runtime.GOARCH
-	data["CpuName"] = cpuid.CPU.BrandName
-	data["PhysCores"] = strconv.Itoa(cpuid.CPU.PhysicalCores)
-	data["VirtCores"] = strconv.Itoa(cpuid.CPU.LogicalCores)
-	data["Virt"] = is.VirtualizationSystem + " " + is.VirtualizationRole
-
-	return data
+	t.Insert(runtime.GOARCH, "Hardware", "CPU", "Arch")
+	t.Insert(cpuid.CPU.BrandName, "Hardware", "CPU", "Model")
+	t.Insert(strconv.Itoa(cpuid.CPU.PhysicalCores), "Hardware", "CPU", "Cores")
+	t.Insert(strconv.Itoa(cpuid.CPU.LogicalCores), "Hardware", "CPU", "Threads")
+	t.Insert(is.VirtualizationSystem+" "+is.VirtualizationRole, "Hardware", "Virtualisation")
 }

@@ -6,22 +6,16 @@ import (
 	"os"
 
 	"github.com/jessevdk/go-flags"
-	"github.com/mt-inside/envbin/pkg/data"
-	"github.com/mt-inside/go-usvc"
 )
 
-var opts struct{}
+var mainOpts struct {
+	DevMode bool `long:"dev-mode"`
+}
 var (
-	flagParser = flags.NewParser(&opts, flags.Default)
+	flagParser = flags.NewParser(&mainOpts, flags.Default)
 )
 
 func main() {
-	log := usvc.GetLogger(false)
-	log.Info(data.RenderBuildData())
-
-	serveOpts.log = log
-
-	//.oneshotOpts.log = log
 	_, err := flagParser.Parse()
 	if err != nil {
 		fmt.Println("err")

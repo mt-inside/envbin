@@ -1,9 +1,10 @@
 package data
 
 import (
-	"fmt"
+	"context"
 	"os"
 
+	"github.com/go-logr/logr"
 	"github.com/mattn/go-isatty"
 )
 
@@ -11,9 +12,7 @@ func init() {
 	plugins = append(plugins, getTerminalData)
 }
 
-func getTerminalData() map[string]string {
-	data := map[string]string{}
-
+func getTerminalData(ctx context.Context, log logr.Logger, t *Trie) {
 	var tty string
 	if isatty.IsTerminal(os.Stdout.Fd()) {
 		if ttyDev, err := os.Readlink("/proc/self/fd/1"); err == nil {
@@ -22,18 +21,13 @@ func getTerminalData() map[string]string {
 			tty = err.Error()
 		}
 	} else {
-		tty = "no"
+		tty = "n/a"
 	}
 
-	data["Session"] = fmt.Sprintf(
-		"id %s, class %s, type %s, seat %s, vt %s, tty %s",
-		os.Getenv("XDG_SESSION_ID"),
-		os.Getenv("XDG_SESSION_CLASS"),
-		os.Getenv("XDG_SESSION_TYPE"),
-		os.Getenv("XDG_SEAT"),
-		os.Getenv("XDG_VTNR"),
-		tty,
-	)
-
-	return data
+	t.Insert(os.Getenv("XDG_SESSION_ID"), "Process", "Session", "ID")
+	t.Insert(os.Getenv("XDG_SESSION_CLASS"), "Process", "Session", "Class")
+	t.Insert(os.Getenv("XDG_SESSION_TYPE"), "Process", "Session", "Type")
+	t.Insert(os.Getenv("XDG_SEAT"), "Process", "Session", "Seat")
+	t.Insert(os.Getenv("XDG_VTNR"), "Process", "Session", "VT")
+	t.Insert(tty, "Process", "Session", "TTY")
 }

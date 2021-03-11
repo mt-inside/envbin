@@ -1,34 +1,34 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/go-logr/logr"
 )
 
 func init() {
 	plugins = append(plugins, getProcData)
 }
 
-func getProcData() map[string]string {
-	data := map[string]string{}
+func getProcData(ctx context.Context, log logr.Logger, t *Trie) {
+	t.Insert(strconv.Itoa(os.Getpid()), "Process", "ID")
+	t.Insert(strconv.Itoa(os.Getppid()), "Process", "ParentID")
 
-	data["Pid"] = strconv.Itoa(os.Getpid())
-	data["Ppid"] = strconv.Itoa(os.Getppid())
-
-	data["Uid"] = strconv.Itoa(os.Getuid())
-	data["Euid"] = strconv.Itoa(os.Geteuid())
-	data["Gid"] = strconv.Itoa(os.Getgid())
-	data["Egid"] = strconv.Itoa(os.Getegid())
+	t.Insert(strconv.Itoa(os.Getuid()), "Process", "UID")
+	t.Insert(strconv.Itoa(os.Getgid()), "Process", "GID")
 	if groups, err := os.Getgroups(); err == nil {
-		data["Groups"] = fmt.Sprint(groups)
+		t.Insert(fmt.Sprint(groups), "Process", "Groups")
 	}
 
+	if exe, err := os.Executable(); err == nil {
+		t.Insert(exe, "Process", "Path")
+	}
 	if cwd, err := os.Getwd(); err == nil {
-		data["Cwd"] = cwd
+		t.Insert(cwd, "Process", "CWD")
 	}
 
 	/* TODO: capabilities */
-
-	return data
 }

@@ -1,22 +1,30 @@
 package data
 
 import (
+	"context"
 	"net/http"
+	"time"
 
-	"github.com/mt-inside/envbin/pkg/util"
+	"github.com/go-logr/logr"
 )
 
 var (
-	plugins []func() map[string]string
+	plugins []func(ctx context.Context, log logr.Logger, t *Trie)
 )
 
-func GetData(r *http.Request) map[string]string {
-	d := make(map[string]string) //TODO: strongly type me with a struct. Esp for (optional) sections
+func GetData(ctx context.Context, log logr.Logger) *Trie {
+	t := NewTrie()
 
 	for _, p := range plugins {
-		d = util.AppendMap(d, p())
+		go p(ctx, log, t)
 	}
-	d = util.AppendMap(d, getRequestData(r))
+	time.Sleep(6 * time.Second) // FIXME: HACK!!! The datas should punt arrays of Element over a channel, and this func loops over the channel and inserts them
 
-	return d
+	return t
+}
+func GetDataWithRequest(ctx context.Context, log logr.Logger, r *http.Request) *Trie {
+	t := GetData(ctx, log)
+	getRequestData(ctx, log, t, r)
+
+	return t
 }

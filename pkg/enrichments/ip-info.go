@@ -1,14 +1,14 @@
 package enrichments
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
-	"github.com/mt-inside/go-usvc"
+	"github.com/go-logr/logr"
 )
 
 const baseUrl = "https://ipapi.co"
@@ -25,42 +25,37 @@ type IpInfo struct {
 	Reason  string `json:"reason"`
 }
 
-func ExternalIp() string {
+func ExternalIp(ctx context.Context, log logr.Logger) (string, error) {
 	// TODO Can force to v4?
 
-	info, err := ipApiFetch("")
+	info, err := ipApiFetch(ctx, log, "")
 	if err != nil {
-		usvc.Global.Error(err, "Can't get info for external IP")
-		return "<unknown>"
+		return "", err
 	}
 
-	return info.Ip
+	return info.Ip, nil
 }
 
-func EnrichIpRendered(ip string) string {
+func EnrichIpRendered(ctx context.Context, log logr.Logger, ip string) (string, error) {
 	if ip == "" {
-		log.Printf("IP '%s' is a special parameter to ipapi.co (gets apparent external IP) and shouldn't be provided through this path", ip)
-		return ""
+		panic("Empty IP is a special parameter to ipapi.co (gets apparent external IP) and shouldn't be provided through this path")
 	}
 
-	info, err := ipApiFetch(ip)
+	info, err := ipApiFetch(ctx, log, ip)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return fmt.Sprintf("%s, %s, %s, %s (AS: %s, %s)", info.City, info.Region, info.Postal, info.Country, info.Asn, info.As)
+	return fmt.Sprintf("%s, %s, %s, %s (AS: %s, %s)", info.City, info.Region, info.Postal, info.Country, info.Asn, info.As), nil
 }
 
-func ipApiFetch(ip string) (IpInfo, error) {
-	log := usvc.Global // TODO hack
-
+func ipApiFetch(ctx context.Context, log logr.Logger, ip string) (IpInfo, error) {
 	client := http.Client{
 		Timeout: time.Second * 2,
 	}
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/%s/json", baseUrl, ip), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/%s/json", baseUrl, ip), nil)
 	if err != nil {
-		log.Error(err, "Can't make http request?")
 		return IpInfo{}, err
 	}
 
@@ -68,7 +63,6 @@ func ipApiFetch(ip string) (IpInfo, error) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Error(err, "Can't get IP info", "ip", ip)
 		return IpInfo{}, err
 	}
 
@@ -78,21 +72,18 @@ func ipApiFetch(ip string) (IpInfo, error) {
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Error(err, "Can't get IP info", "ip", ip)
 		return IpInfo{}, err
 	}
 
 	ipInfo := IpInfo{}
 	err = json.Unmarshal(body, &ipInfo)
 	if err != nil {
-		log.Error(err, "Can't get IP info", "ip", ip)
 		return IpInfo{}, err
 	}
 
 	// TODO ipapi.co returns valid JSON for a lot of error cases, just with "error" and "reason" set
 	if ipInfo.Error {
-		log.Error(err, "Can't get IP info", "ip", ip, "message", ipInfo.Reason)
-		return IpInfo{}, err
+		return IpInfo{}, fmt.Errorf("IpInfo error: %s", ipInfo.Reason)
 	}
 
 	return ipInfo, nil

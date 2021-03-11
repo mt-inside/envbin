@@ -1,20 +1,21 @@
 package data
 
-import "os"
+import (
+	"context"
+	"os"
+
+	"github.com/go-logr/logr"
+)
 
 func init() {
 	plugins = append(plugins, getFirmwareData)
 }
 
-func getFirmwareData() map[string]string {
-	data := map[string]string{}
-
+func getFirmwareData(ctx context.Context, log logr.Logger, t *Trie) {
 	_, err := os.Stat("/sys/firmware/efi")
 	if os.IsNotExist(err) {
-		data["FirmwareType"] = "BIOS"
+		t.Insert("BIOS", "Hardware", "Firmware", "BootType")
 	} else {
-		data["FirmwareType"] = "EFI"
+		t.Insert("EFI", "Hardware", "Firmware", "BootType")
 	}
-
-	return data
 }

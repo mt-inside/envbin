@@ -4,15 +4,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-logr/logr"
 	"github.com/gorilla/mux"
+	"github.com/mt-inside/envbin/pkg/data"
 	"github.com/mt-inside/envbin/pkg/middleware"
 	"github.com/mt-inside/envbin/pkg/renderers"
 	"github.com/mt-inside/go-usvc"
 )
 
 type serveCmd struct {
-	log  logr.Logger
 	Addr string `short:"a" long:"addr" description:"listen address" default:":8080"`
 }
 
@@ -30,6 +29,9 @@ func init() {
 }
 
 func (cmd *serveCmd) Execute(args []string) error {
+	log := usvc.GetLogger(mainOpts.DevMode)
+	log.Info(data.RenderBuildData())
+
 	rootMux := mux.NewRouter()
 	rootMux.Use(middleware.LoggingMiddleware)
 
@@ -38,12 +40,12 @@ func (cmd *serveCmd) Execute(args []string) error {
 
 	rootMux.Path("/").MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 		return strings.Contains(r.Header.Get("Accept"), "text/html")
-	}).Handler(middleware.MiddlewareStack(renderers.RenderHTML, "text/html"))
-	rootMux.Path("/").Headers("Accept", "application/json").Handler(middleware.MiddlewareStack(renderers.RenderJSON, "application/json"))
-	rootMux.Path("/").Headers("Accept", "text/yaml", "Accept", "text/x-yaml", "Accept", "application/x-yaml").Handler(middleware.MiddlewareStack(renderers.RenderYAML, "text/yaml"))
-	rootMux.Path("/").Handler(middleware.MiddlewareStack(renderers.RenderText, "text/plain")) // fall through
+	}).Handler(middleware.MiddlewareStack(log, renderers.RenderHTML))
+	rootMux.Path("/").Headers("Accept", "application/json").Handler(middleware.MiddlewareStack(log, renderers.RenderJSON))
+	rootMux.Path("/").Headers("Accept", "text/yaml", "Accept", "text/x-yaml", "Accept", "application/x-yaml").Handler(middleware.MiddlewareStack(log, renderers.RenderYAML))
+	rootMux.Path("/").Handler(middleware.MiddlewareStack(log, renderers.RenderText)) // fall through
 
-	cmd.log.Info("Listening", "addr", cmd.Addr)
+	log.Info("Listening", "addr", cmd.Addr)
 	http.ListenAndServe(cmd.Addr, rootMux)
 
 	// TODO: graceful shutdown (lower readiness - combine with badpod first)

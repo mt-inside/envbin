@@ -1,11 +1,14 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
+	"net/url"
 	"os"
 
+	"github.com/go-logr/logr"
 	"github.com/mt-inside/envbin/pkg/enrichments"
 )
 
@@ -13,22 +16,41 @@ func init() {
 	plugins = append(plugins, getNetworkData)
 }
 
-func getNetworkData() map[string]string {
-	data := map[string]string{}
-
+func getNetworkData(ctx context.Context, log logr.Logger, t *Trie) {
 	hostname, _ := os.Hostname()
 
-	data["Hostname"] = hostname
-	getIfaces(data)
-	data["HostIp"] = getDefaultIP()
-	// basically pointless enriching the Host IP; either it's a container or VM or private network, in which case enrichment is pointless, or the host's interface has the external IP, in which case it'll equal ExternalIp, which is enriched anyway
-	data["ExternalIp"] = getExternalIp()
-	data["ExternalIpEnrich"] = enrichments.EnrichIpRendered(data["ExternalIp"])
+	t.Insert(hostname, "Network", "Hostname")
 
-	return data
+	getIfaces(t)
+
+	t.Insert(getDefaultIP(), "Network", "DefaultIP")
+
+	extIP, err := enrichments.ExternalIp(ctx, log)
+	if err != nil {
+		log.Error(err, "Can't get external IP address")
+		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
+			t.Insert("Timeout", "Network", "ExternalIP")
+		} else {
+			t.Insert("Error", "Network", "ExternalIP")
+		}
+	} else {
+		t.Insert(extIP, "Network", "ExternalIP", "Address")
+
+		extIpInfo, err := enrichments.EnrichIpRendered(ctx, log, extIP)
+		if err != nil {
+			log.Error(err, "Can't get IP info", "ip", extIP)
+			if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
+				t.Insert("Timeout", "Network", "ExternalIP", "Info")
+			} else {
+				t.Insert("Error", "Network", "ExternalIP", "Info")
+			}
+		} else {
+			t.Insert(extIpInfo, "Network", "ExternalIP", "Info")
+		}
+	}
 }
 
-func getIfaces(data map[string]string) {
+func getIfaces(t *Trie) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		log.Fatal("Can't show system network interfaces")
@@ -41,9 +63,9 @@ func getIfaces(data map[string]string) {
 			if addr.(*net.IPNet).IP.To4() == nil {
 				continue
 			}
-			k := fmt.Sprintf("Interface%d", iface.Index)
+			k := fmt.Sprint(iface.Index)
 			v := fmt.Sprintf("%s, %s, %s", iface.Name, addr.String(), iface.Flags)
-			data[k] = v
+			t.Insert(v, "Network", "Interfaces", string(k))
 		}
 	}
 }
@@ -59,9 +81,4 @@ func getDefaultIP() string {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
 	return localAddr.IP.String()
-}
-
-func getExternalIp() string {
-	// Using the same service to get this too
-	return enrichments.ExternalIp()
 }

@@ -1,12 +1,10 @@
-// +build ignore
+// +buil ignore
 // FIXME: wewrite against pure client-go
 
 package data
 
 import (
 	"context"
-	"errors"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -18,155 +16,168 @@ import (
 	"io/ioutil"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/ericchiang/k8s"
-	corev1 "github.com/ericchiang/k8s/apis/core/v1"
+	"github.com/go-logr/logr"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 func init() {
 	plugins = append(plugins, getK8sData)
 }
 
-func getK8sData() map[string]string {
-	data := map[string]string{}
+func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		t.Insert("None", "Cloud", "Kubernetes")
+		return
+	}
+	t.Insert("Present", "Cloud", "Kubernetes")
 
-	client, err := k8s.NewInClusterClient()
-
-	data["K8s"] = "no"
-	if err == nil {
-		data["K8s"] = "yes"
-
-		disco := k8s.NewDiscoveryClient(client)
-		version, _ := disco.Version(context.Background()) // TODO: better context (timeout of 1s propagated from the root
-		saBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
-		saToken := string(saBytes)
-
-		type k8sClaims struct {
-			Namespace string `json:"kubernetes.io/serviceaccount/namespace"`
-			Secret    string `json:"kubernetes.io/serviceaccount/secret.name"`
-			Name      string `json:"kubernetes.io/serviceaccount/service-account.name"`
-			Uid       string `json:"kubernetes.io/serviceaccount/service-account.uid"`
-
-			jwt.StandardClaims
-		}
-
-		// TODO: unit test this with a ca.crt and satoek from a pod
-		token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil) /*func(token *jwt.Token) (interface{}, error) {
-		    // This JWT is signed with the Service Account keypair.
-		    // This isn't the same as the apiserver CA keypair, so ca.crt on the disk can't validate it
-		    // As of Mar '20 there's no way to directly get the public part of the SA pair
-		    // Options are:
-		    //   * Call the TokenReview API: https://kubernetes.io/docs/reference/access-authn-authz/authentication/
-		    //   * Wait for OICD discovery to be implemented, and use that to get the public key: https://github.com/kubernetes/enhancements/blob/master/keps/sig-auth/20190730-oidc-discovery.md
-		    //     * maybe some of the work is there? https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-
-		can allegedly do this:
-		      containers:
-			        - name: envbin
-			          image: mtinside/envbin:latest
-			          volumeMounts:
-			            - mountPath: /var/run/secrets/tokens
-			              name: vault-token
-			      volumes:
-			        - name: vault-token
-			          projected:
-			            sources:
-			            - serviceAccountToken:
-			                path: vault-token
-			                expirationSeconds: 7200
-			                audience: vault
-
-		but even with `minikube start --feature-gates='TokenRequest=true,TokenRequestProjection=true'`, Pods don't start
-
-
-		    // verify rs256 alg
-
-			asn1, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt") - no!
-			if err != nil {
-				log.Fatalf("Can't read ca cert: %v", err)
-			}
-
-			block, _ := pem.Decode(asn1)
-			if block == nil || block.Type != "CERTIFICATE" {
-				log.Fatalf("Can't decode PEM: %v", err)
-			}
-
-			cert, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				log.Fatalf("Can't parse ca cert: %v", err)
-			}
-
-			var pub *rsa.PublicKey
-			var ok bool
-			if pub, ok = cert.PublicKey.(*rsa.PublicKey); !ok {
-				log.Fatalf("can't get public key from cert; %v", err)
-			}
-
-			return pub, nil
-		}*/
-		if err != nil {
-			// log.Fatalf("can't parse and verify token: %v", err) // Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
-		}
-
-		claims, ok := token.Claims.(*k8sClaims)
-		if !ok /*|| !token.Valid*/ {
-			log.Fatal("ServiceAccount token invalid")
-		}
-		data["K8sNamespace"] = claims.Namespace
-		data["K8sServiceAccount"] = claims.Name
-
-		data["K8sVersion"] = fmt.Sprintf("%s %s", version.GitVersion, version.Platform)
-
-		hostname, _ := os.Hostname()
-		var thisPod corev1.Pod
-		if err := client.Get(context.Background(), claims.Namespace, hostname, &thisPod); err != nil {
-			var k8sErr *k8s.APIError
-			if errors.As(err, &k8sErr) {
-				log.Printf("Forbidden to get Pod, check RBAC: %v", k8sErr)
-				data["K8sThisPodContainersCount"] = "forbidden"
-			} else {
-				log.Fatalf("Can't get Pod: %v", err)
-			}
-		} else {
-			data["K8sThisPodContainersCount"] = strconv.Itoa(len(thisPod.Spec.Containers))
-
-			data["K8sThisPodContainersImages"] = ""
-			for _, c := range thisPod.Spec.Containers {
-				data["K8sThisPodContainersImages"] += *c.Image + ", "
-			}
-		}
-
-		var nodes corev1.NodeList
-		if err := client.List(context.Background(), "", &nodes); err != nil {
-			var k8sErr *k8s.APIError
-			if errors.As(err, &k8sErr) {
-				log.Printf("Forbidden to list nodes, check RBAC: %v", k8sErr)
-				data["K8sNodeCount"] = "forbidden"
-			} else {
-				log.Fatalf("Can't list Nodes: %v", err)
-			}
-		} else {
-			data["K8sNodeCount"] = strconv.Itoa(len(nodes.Items))
-			var self *corev1.Node
-			for _, self = range nodes.Items {
-				if *self.Metadata.Name == *thisPod.Spec.NodeName {
-					data["K8sNodeAddress"] = *self.Status.Addresses[0].Address + " / " + *self.Status.Addresses[1].Address // TODO loop
-					data["K8sNodeVersion"] = fmt.Sprintf("%s %s/%s", *self.Status.NodeInfo.KubeletVersion, *self.Status.NodeInfo.OperatingSystem, *self.Status.NodeInfo.Architecture)
-					data["K8sNodeRuntime"] = *self.Status.NodeInfo.ContainerRuntimeVersion
-					data["K8sNodeOS"] = *self.Status.NodeInfo.OsImage
-					data["K8sNodeRole"] = findSuffix(self.Metadata.Labels, "node-role.kubernetes.io/")
-					data["K8sNodeCloudInstance"] = self.Metadata.Labels["node.kubernetes.io/instance-type"]
-					data["K8sNodeCloudRegion"] = self.Metadata.Labels["topology.kubernetes.io/region"]
-					data["K8sNodeCloudZone"] = self.Metadata.Labels["topology.kubernetes.io/zone"]
-				}
-			}
-		}
-
-		// TODO: get own pod container list
-		// TODO: get own namespace pods list
-		// TODO: search for parent ownerrefs, and build kubectl tree style location
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Error(err, "Can't connect to k8s apiserver")
+		return
 	}
 
-	return data
+	version, err := clientSet.Discovery().ServerVersion()
+	if err != nil {
+		log.Error(err, "Can't get cluster version")
+	} else {
+		t.Insert(fmt.Sprintf("%s %s", version.GitVersion, version.Platform), "Cloud", "Kubernetes", "Cluster", "Version")
+	}
+
+	saBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	saToken := string(saBytes)
+
+	type k8sClaims struct {
+		Namespace string `json:"kubernetes.io/serviceaccount/namespace"`
+		Secret    string `json:"kubernetes.io/serviceaccount/secret.name"`
+		Name      string `json:"kubernetes.io/serviceaccount/service-account.name"`
+		Uid       string `json:"kubernetes.io/serviceaccount/service-account.uid"`
+
+		jwt.StandardClaims
+	}
+
+	// TODO: unit test this with a ca.crt and satoek from a pod
+	token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil)
+	if err != nil {
+		// log.Fatalf("can't parse and verify token: %v", err) // Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
+	}
+	// This JWT is signed with the Service Account keypair.
+	// This isn't the same as the apiserver CA keypair, so ca.crt on the disk can't validate it
+	// As of Mar '20 there's no way to directly get the public part of the SA pair
+	// Options are:
+	//   * Call the TokenReview API: https://kubernetes.io/docs/reference/access-authn-authz/authentication/
+	//   * Wait for OICD discovery to be implemented, and use that to get the public key: https://github.com/kubernetes/enhancements/blob/master/keps/sig-auth/20190730-oidc-discovery.md
+	//     * maybe some of the work is there? https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+
+	/*func(token *jwt.Token) (interface{}, error) {
+	can allegedly do this:
+	      containers:
+		        - name: envbin
+		          image: mtinside/envbin:latest
+		          volumeMounts:
+		            - mountPath: /var/run/secrets/tokens
+		              name: vault-token
+		      volumes:
+		        - name: vault-token
+		          projected:
+		            sources:
+		            - serviceAccountToken:
+		                path: vault-token
+		                expirationSeconds: 7200
+		                audience: vault
+
+	but even with `minikube start --feature-gates='TokenRequest=true,TokenRequestProjection=true'`, Pods don't start
+
+
+	    // verify rs256 alg
+
+		asn1, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt") - no!
+		if err != nil {
+			log.Fatalf("Can't read ca cert: %v", err)
+		}
+
+		block, _ := pem.Decode(asn1)
+		if block == nil || block.Type != "CERTIFICATE" {
+			log.Fatalf("Can't decode PEM: %v", err)
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			log.Fatalf("Can't parse ca cert: %v", err)
+		}
+
+		var pub *rsa.PublicKey
+		var ok bool
+		if pub, ok = cert.PublicKey.(*rsa.PublicKey); !ok {
+			log.Fatalf("can't get public key from cert; %v", err)
+		}
+
+		return pub, nil
+	}*/
+
+	claims, ok := token.Claims.(*k8sClaims)
+	if !ok /*|| !token.Valid*/ {
+		log.Error(fmt.Errorf("ServiceAccount token invalid"), "Can't read k8s info")
+	}
+	t.Insert(claims.Namespace, "Cloud", "Kubernetes", "Pod", "Namespace")
+	t.Insert(claims.Name, "Cloud", "Kubernetes", "Pod", "ServiceAccount")
+
+	hostname, _ := os.Hostname()
+	pod, err := clientSet.CoreV1().Pods(claims.Namespace).Get(ctx, hostname, metav1.GetOptions{})
+	if err != nil {
+		if k8sErrors.IsForbidden(err) {
+			log.Error(err, "Forbidden getting own Pod info; check RBAC")
+			t.Insert("Forbidden", "Cloud", "Kubernetes", "Pod")
+		} else if err == context.DeadlineExceeded {
+			log.Error(err, "Timed out getting own Pod info")
+			t.Insert("Timeout", "Cloud", "Kubernetes", "Pod")
+		} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
+			log.Error(err, "Timed out getting own Pod info")
+			t.Insert("Timeout", "Cloud", "Kubernetes", "Pod")
+		} else {
+			log.Error(err, "Error getting own Pod info")
+		}
+	} else {
+		t.Insert(strconv.Itoa(len(pod.Spec.Containers)), "Cloud", "Kubernetes", "Pod", "ContainersCount")
+
+		images := []string{}
+		for _, c := range pod.Spec.Containers {
+			images = append(images, c.Image)
+		}
+		t.Insert(strings.Join(images, ","), "Cloud", "Kubernetes", "Pod", "ContainersImages")
+
+		if node, err := clientSet.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{}); err != nil {
+			if k8sErrors.IsForbidden(err) {
+				log.Error(err, "Forbidden getting own Node info; check RBAC")
+				t.Insert("Forbidden", "Cloud", "Kubernetes", "Node")
+			} else if err == context.DeadlineExceeded {
+				log.Error(err, "Timed out getting own Node info")
+				t.Insert("Timeout", "Cloud", "Kubernetes", "Node")
+			} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
+				log.Error(err, "Timed out getting own Node info")
+				t.Insert("Timeout", "Cloud", "Kubernetes", "Node")
+			} else {
+				log.Error(err, "Error getting own Node info")
+			}
+		} else {
+			t.Insert(node.Status.Addresses[0].Address+" / "+node.Status.Addresses[1].Address, "Cloud", "Kubernetes", "Node", "Address") // TODO loop
+			t.Insert(fmt.Sprintf("%s %s/%s", node.Status.NodeInfo.KubeletVersion, node.Status.NodeInfo.OperatingSystem, node.Status.NodeInfo.Architecture), "Cloud", "Kubernetes", "Node", "Version")
+			t.Insert(node.Status.NodeInfo.ContainerRuntimeVersion, "Cloud", "Kubernetes", "Node", "ContainerRuntime")
+			t.Insert(node.Status.NodeInfo.OSImage, "Cloud", "Kubernetes", "Node", "OS")
+			t.Insert(findSuffix(node.Labels, "node-role.kubernetes.io/"), "Cloud", "Kubernetes", "Node", "Role")
+			t.Insert(node.Labels["node.kubernetes.io/instance-type"], "Cloud", "Kubernetes", "Node", "InstanceType")
+			t.Insert(node.Labels["topology.kubernetes.io/region"], "Cloud", "Kubernetes", "Node", "Region")
+			t.Insert(node.Labels["topology.kubernetes.io/zone"], "Cloud", "Kubernetes", "Node", "Zone")
+		}
+	}
+
+	// TODO: get own namespace pods list
+	// TODO: get nodes list: t.Insert(strconv.Itoa(len(nodes.Items)), "Cloud", "Kubernetes", "Cluster", "NodesCount")
+	// TODO: search for parent ownerrefs, and build kubectl tree style location
 }
 
 func findSuffix(m map[string]string, pre string) string {

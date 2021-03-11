@@ -5,37 +5,28 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/go-logr/logr"
 )
 
 func init() {
 	plugins = append(plugins, getAwsData)
 }
 
-func getAwsData() map[string]string {
-	data := map[string]string{}
-
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+func getAwsData(ctx context.Context, log logr.Logger, t *Trie) {
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	aws := imds.NewFromConfig(cfg)
 
-	region, err := aws.GetRegion(context.TODO(), nil)
+	iid, err := aws.GetInstanceIdentityDocument(ctx, nil)
 	if err != nil {
-		return nil // TODO proper errors
+		return
 	}
-	data["AwsRegion"] = region.Region
-
-	iid, err := aws.GetInstanceIdentityDocument(context.TODO(), nil)
-	if err != nil {
-		return nil // TODO proper errors
-	}
-	data["AwsAccountID"] = iid.AccountID
-	data["AwsRegion"] = iid.Region
-	data["AwsZone"] = iid.AvailabilityZone
-	data["AwsInstanceType"] = iid.InstanceType
-	data["AwsImageID"] = iid.ImageID
-
-	return data
+	t.Insert(iid.AccountID, "Cloud", "AccountID")
+	t.Insert(iid.Region, "Cloud", "Region")
+	t.Insert(iid.AvailabilityZone, "Cloud", "Zone")
+	t.Insert(iid.InstanceType, "Cloud", "Instance", "Type")
+	t.Insert(iid.ImageID, "Cloud", "Instance", "ImageID")
 }

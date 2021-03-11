@@ -1,8 +1,11 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"runtime"
+
+	"github.com/go-logr/logr"
 )
 
 const Binary = "envbin"
@@ -16,13 +19,10 @@ func init() {
 	plugins = append(plugins, getBuildData)
 }
 
-func getBuildData() map[string]string {
-	data := map[string]string{}
-
-	data["Version"] = Version
-	data["BuildTime"] = BuildTime
-
-	return data
+func getBuildData(ctx context.Context, log logr.Logger, t *Trie) {
+	t.Insert(Version, "Build", "Version")
+	t.Insert(BuildTime, "Build", "Time")
+	t.Insert(runtime.Version(), "Build", "Runtime")
 }
 
 func RenderBuildData() string {

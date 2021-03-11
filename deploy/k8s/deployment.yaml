@@ -17,5 +17,6 @@ spec:
       containers:
         - name: envbin
           image: docker.io/mtinside/envbin:latest
+          args: ["serve", "--dev-mode"]
           ports:
             - containerPort: 8080

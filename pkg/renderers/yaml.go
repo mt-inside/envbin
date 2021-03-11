@@ -1,21 +1,20 @@
 package renderers
 
 import (
-	"log"
 	"net/http"
 
-	"gopkg.in/yaml.v2"
-
+	"github.com/go-logr/logr"
 	"github.com/mt-inside/envbin/pkg/data"
+	"gopkg.in/yaml.v2"
 )
 
-func RenderYAML(r *http.Request) (bs []byte) {
-	data := data.GetData(r)
-	var err error
-	bs, err = yaml.Marshal(data)
+func RenderYAML(log logr.Logger, w http.ResponseWriter, r *http.Request, data *data.Trie) []byte {
+	w.Header().Set("Content-Type", "text/yaml")
+
+	bs, err := yaml.Marshal(data)
 	if err != nil {
-		log.Fatalf("Can't encode data to YAML: %v", err)
+		log.Error(err, "Can't encode data to YAML")
 	}
 
-	return
+	return bs
 }

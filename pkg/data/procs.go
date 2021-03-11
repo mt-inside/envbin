@@ -1,22 +1,20 @@
 package data
 
 import (
+	"context"
 	"strconv"
 
 	sigar "github.com/cloudfoundry/gosigar"
+	"github.com/go-logr/logr"
 )
 
 func init() {
 	plugins = append(plugins, getProcsData)
 }
 
-func getProcsData() map[string]string {
-	data := map[string]string{}
-
+func getProcsData(ctx context.Context, log logr.Logger, t *Trie) {
 	procs := sigar.ProcList{}
 	procs.Get()
 
-	data["OtherProcsCount"] = strconv.Itoa(len(procs.List) - 1)
-
-	return data
+	t.Insert(strconv.Itoa(len(procs.List)-1), "OS", "ProcessesCount")
 }

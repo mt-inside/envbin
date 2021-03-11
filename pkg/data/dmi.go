@@ -1,23 +1,22 @@
 package data
 
 import (
+	"context"
+
 	"github.com/dselans/dmidecode"
-	"github.com/mt-inside/go-usvc"
+	"github.com/go-logr/logr"
 )
 
 func init() {
 	plugins = append(plugins, getDmiData)
 }
 
-func getDmiData() map[string]string {
-	log := usvc.Global
-
-	data := map[string]string{}
-
+func getDmiData(ctx context.Context, log logr.Logger, t *Trie) {
 	dmi := dmidecode.New()
+	// TODO: try to detect when it's a permissions error (even if we just check our UID or some /sys file access), and set Forbidden
 	if err := dmi.Run(); err != nil {
-		usvc.Global.Error(err, "Can't read DMI")
-		return map[string]string{}
+		log.Error(err, "Can't read DMI")
+		return
 	}
 
 	syss, _ := dmi.SearchByType(1) // system info
@@ -80,6 +79,4 @@ func getDmiData() map[string]string {
 	// 		spew.Dump(v)
 	// 	}
 	// }
-
-	return data
 }

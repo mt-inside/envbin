@@ -19,8 +19,7 @@ Apparent hardware: {{.Arch}}, {{.CpuName}}, {{.PhysCores}}/{{.VirtCores}} cores,
 
 OPERATING ENVIRONMENT
 OS: {{.OsType}} {{.KernelVersion}}, uptime {{.OsUptime}}
-Distro: {{.OsDistro}} ({{.OsFamily}}) {{.OsVersion}}
-REAL: {{.OsReal}}
+Distro: {{.OsDistro}} ({{.OsFamily}}) {{.OsVersion}} ({{.OsRelease}})
 PID: {{.Pid}}, parent: {{.Ppid}} (#others: {{.OtherProcsCount}})
 UID: {{.Uid}} (effective: {{.Euid}})
 Primary GID: {{.Gid}} (effective: {{.Egid}}) (others: {{.Groups}})

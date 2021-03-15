@@ -2,11 +2,11 @@ package data
 
 import (
 	"context"
-	"runtime"
+	"fmt"
+	"os"
+	"strconv"
 
-	sigar "github.com/cloudfoundry/gosigar"
 	"github.com/go-logr/logr"
-	"github.com/shirou/gopsutil/v3/host"
 )
 
 func init() {
@@ -14,11 +14,21 @@ func init() {
 }
 
 func getOsData(ctx context.Context, log logr.Logger, t *Trie) {
-	uptime := sigar.Uptime{}
-	uptime.Get()
-	is, _ := host.Info()
+	t.Insert(strconv.Itoa(os.Getpid()), "Process", "ID")
+	t.Insert(strconv.Itoa(os.Getppid()), "Process", "ParentID")
 
-	t.Insert(uptime.Format(), "OS", "Uptime")
-	t.Insert(runtime.GOOS, "OS", "Kernel", "Type")
-	t.Insert(is.KernelVersion, "OS", "Kernel", "Version")
+	t.Insert(strconv.Itoa(os.Getuid()), "Process", "UID")
+	t.Insert(strconv.Itoa(os.Getgid()), "Process", "GID")
+	if groups, err := os.Getgroups(); err == nil {
+		t.Insert(fmt.Sprint(groups), "Process", "Groups")
+	}
+
+	if exe, err := os.Executable(); err == nil {
+		t.Insert(exe, "Process", "Path")
+	}
+	if cwd, err := os.Getwd(); err == nil {
+		t.Insert(cwd, "Process", "CWD")
+	}
+
+	/* TODO: capabilities */
 }

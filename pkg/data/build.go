@@ -23,6 +23,8 @@ func getBuildData(ctx context.Context, log logr.Logger, t *Trie) {
 	t.Insert(Version, "Build", "Version")
 	t.Insert(BuildTime, "Build", "Time")
 	t.Insert(runtime.Version(), "Build", "Runtime")
+	t.Insert(runtime.GOARCH, "Hardware", "CPU", "Arch")
+	t.Insert(runtime.GOOS, "OS", "Kernel", "Type")
 }
 
 func RenderBuildData() string {

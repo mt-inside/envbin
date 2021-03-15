@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
-	"github.com/klauspost/cpuid"
+	"github.com/klauspost/cpuid/v2"
 	"github.com/shirou/gopsutil/v3/host"
 )
 

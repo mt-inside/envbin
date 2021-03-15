@@ -16,7 +16,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/joho/godotenv v1.3.0
-	github.com/klauspost/cpuid v1.2.3
+	github.com/klauspost/cpuid/v2 v2.0.4
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mt-inside/go-usvc v0.0.2
 	github.com/onsi/ginkgo v1.12.0 // indirect

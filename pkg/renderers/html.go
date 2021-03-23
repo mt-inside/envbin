@@ -19,7 +19,7 @@ func RenderHTML(log logr.Logger, w http.ResponseWriter, r *http.Request, data *d
 	}
 
 	var b bytes.Buffer
-	t.Execute(&b, data)
+	t.Execute(&b, data.Render())
 
 	return b.Bytes()
 }

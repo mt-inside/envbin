@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -18,7 +17,6 @@ var (
 func main() {
 	_, err := flagParser.Parse()
 	if err != nil {
-		fmt.Println("err")
 		var e *flags.Error
 		if errors.As(err, &e) {
 			if e.Type == flags.ErrHelp {

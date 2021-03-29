@@ -20,7 +20,7 @@ run-oneshot: lint
 	go run -ldflags "$(shell build/ldflags.sh)" ./cmd/envbin/... oneshot
 
 image:
-	docker build -t mtinside/envbin:latest .
+	docker buildx build --load -t mtinside/envbin:latest .
 image-push: image
 	docker push mtinside/envbin
 docker-run: image

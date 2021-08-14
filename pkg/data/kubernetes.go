@@ -30,10 +30,10 @@ func init() {
 func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		t.Insert("None", "Cloud", "Kubernetes")
+		t.Insert(Some{"None"}, "Cloud", "Kubernetes")
 		return
 	}
-	t.Insert("Present", "Cloud", "Kubernetes")
+	t.Insert(Some{"Present"}, "Cloud", "Kubernetes")
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -45,7 +45,7 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	if err != nil {
 		log.Error(err, "Can't get cluster version")
 	} else {
-		t.Insert(fmt.Sprintf("%s %s", version.GitVersion, version.Platform), "Cloud", "Kubernetes", "Cluster", "Version")
+		t.Insert(Some{fmt.Sprintf("%s %s", version.GitVersion, version.Platform)}, "Cloud", "Kubernetes", "Cluster", "Version")
 	}
 
 	saBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
@@ -63,7 +63,8 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	// TODO: unit test this with a ca.crt and satoek from a pod
 	token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil)
 	if err != nil {
-		// log.Fatalf("can't parse and verify token: %v", err) // Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
+		log.Error(err, "can't parse and verify token") // Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
+		return
 	}
 	// This JWT is signed with the Service Account keypair.
 	// This isn't the same as the apiserver CA keypair, so ca.crt on the disk can't validate it
@@ -122,66 +123,67 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	claims, ok := token.Claims.(*k8sClaims)
 	if !ok /*|| !token.Valid*/ {
 		log.Error(fmt.Errorf("ServiceAccount token invalid"), "Can't read k8s info")
+		return
 	}
-	t.Insert(claims.Namespace, "Cloud", "Kubernetes", "Pod", "Namespace")
-	t.Insert(claims.Name, "Cloud", "Kubernetes", "Pod", "ServiceAccount")
+	t.Insert(Some{claims.Namespace}, "Cloud", "Kubernetes", "Pod", "Namespace")
+	t.Insert(Some{claims.Name}, "Cloud", "Kubernetes", "Pod", "ServiceAccount")
 
 	hostname, _ := os.Hostname()
 	pod, err := clientSet.CoreV1().Pods(claims.Namespace).Get(ctx, hostname, metav1.GetOptions{})
 	if err != nil {
 		if k8sErrors.IsForbidden(err) {
 			log.Error(err, "Forbidden getting own Pod info; check RBAC")
-			t.Insert("Forbidden", "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some{"Forbidden"}, "Cloud", "Kubernetes", "Pod")
 		} else if err == context.DeadlineExceeded {
 			log.Error(err, "Timed out getting own Pod info")
-			t.Insert("Timeout", "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Pod")
 		} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
 			log.Error(err, "Timed out getting own Pod info")
-			t.Insert("Timeout", "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Pod")
 		} else {
 			log.Error(err, "Error getting own Pod info")
 		}
 	} else {
-		t.Insert(strconv.Itoa(len(pod.Spec.Containers)), "Cloud", "Kubernetes", "Pod", "ContainersCount")
+		t.Insert(Some{strconv.Itoa(len(pod.Spec.Containers))}, "Cloud", "Kubernetes", "Pod", "ContainersCount")
 
 		images := []string{}
 		for _, c := range pod.Spec.Containers {
 			images = append(images, c.Image)
 		}
-		t.Insert(strings.Join(images, ","), "Cloud", "Kubernetes", "Pod", "ContainersImages")
+		t.Insert(Some{strings.Join(images, ",")}, "Cloud", "Kubernetes", "Pod", "ContainersImages")
 
 		if node, err := clientSet.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{}); err != nil {
 			if k8sErrors.IsForbidden(err) {
 				log.Error(err, "Forbidden getting own Node info; check RBAC")
-				t.Insert("Forbidden", "Cloud", "Kubernetes", "Node")
+				t.Insert(Some{"Forbidden"}, "Cloud", "Kubernetes", "Node")
 			} else if err == context.DeadlineExceeded {
 				log.Error(err, "Timed out getting own Node info")
-				t.Insert("Timeout", "Cloud", "Kubernetes", "Node")
+				t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Node")
 			} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
 				log.Error(err, "Timed out getting own Node info")
-				t.Insert("Timeout", "Cloud", "Kubernetes", "Node")
+				t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Node")
 			} else {
 				log.Error(err, "Error getting own Node info")
 			}
 		} else {
-			t.Insert(node.Status.Addresses[0].Address+" / "+node.Status.Addresses[1].Address, "Cloud", "Kubernetes", "Node", "Address") // TODO loop
-			t.Insert(fmt.Sprintf("%s %s/%s", node.Status.NodeInfo.KubeletVersion, node.Status.NodeInfo.OperatingSystem, node.Status.NodeInfo.Architecture), "Cloud", "Kubernetes", "Node", "Version")
-			t.Insert(node.Status.NodeInfo.ContainerRuntimeVersion, "Cloud", "Kubernetes", "Node", "ContainerRuntime")
-			t.Insert(node.Status.NodeInfo.OSImage, "Cloud", "Kubernetes", "Node", "OS")
-			t.Insert(findSuffix(node.Labels, "node-role.kubernetes.io/"), "Cloud", "Kubernetes", "Node", "Role")
-			t.Insert(node.Labels["node.kubernetes.io/instance-type"], "Cloud", "Kubernetes", "Node", "InstanceType")
-			t.Insert(node.Labels["topology.kubernetes.io/region"], "Cloud", "Kubernetes", "Node", "Region")
-			t.Insert(node.Labels["topology.kubernetes.io/zone"], "Cloud", "Kubernetes", "Node", "Zone")
+			t.Insert(Some{node.Status.Addresses[0].Address + " / " + node.Status.Addresses[1].Address}, "Cloud", "Kubernetes", "Node", "Address") // TODO loop
+			t.Insert(Some{fmt.Sprintf("%s %s/%s", node.Status.NodeInfo.KubeletVersion, node.Status.NodeInfo.OperatingSystem, node.Status.NodeInfo.Architecture)}, "Cloud", "Kubernetes", "Node", "Version")
+			t.Insert(Some{node.Status.NodeInfo.ContainerRuntimeVersion}, "Cloud", "Kubernetes", "Node", "ContainerRuntime")
+			t.Insert(Some{node.Status.NodeInfo.OSImage}, "Cloud", "Kubernetes", "Node", "OS")
+			t.Insert(Some{findSuffix(node.Labels, "node-role.kubernetes.io/")}, "Cloud", "Kubernetes", "Node", "Role")
+			t.Insert(Some{node.Labels["node.kubernetes.io/instance-type"]}, "Cloud", "Kubernetes", "Node", "InstanceType")
+			t.Insert(Some{node.Labels["topology.kubernetes.io/region"]}, "Cloud", "Kubernetes", "Node", "Region")
+			t.Insert(Some{node.Labels["topology.kubernetes.io/zone"]}, "Cloud", "Kubernetes", "Node", "Zone")
 		}
 	}
 
 	// TODO: get own namespace pods list
-	// TODO: get nodes list: t.Insert(strconv.Itoa(len(nodes.Items)), "Cloud", "Kubernetes", "Cluster", "NodesCount")
+	// TODO: get nodes list: t.Insert(Some{strconv.Itoa(len(nodes.Items))}, "Cloud", "Kubernetes", "Cluster", "NodesCount")
 	// TODO: search for parent ownerrefs, and build kubectl tree style location
 }
 
 func findSuffix(m map[string]string, pre string) string {
-	for k, _ := range m {
+	for k := range m {
 		if strings.HasPrefix(k, pre) {
 			return strings.TrimPrefix(k, pre)
 		}

@@ -24,7 +24,10 @@ func MiddlewareStack(
 				bs := next(log, w, r, d)
 
 				// could just execute the template straight into the writer, but we're gonna merge back with badpod soon
-				w.Write(bs)
+				_, err := w.Write(bs)
+				if err != nil {
+					panic(err)
+				}
 			}),
 		),
 	)

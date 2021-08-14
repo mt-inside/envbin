@@ -16,7 +16,11 @@ func init() {
 
 func getSysUnixData(ctx context.Context, log logr.Logger, t *Trie) {
 	var si unix.Sysinfo_t
-	unix.Sysinfo(&si)
+	err := unix.Sysinfo(&si)
+	if err != nil {
+		log.Error(err, "Can't read memory information")
+		return
+	}
 
-	t.Insert(time.Duration(time.Duration(si.Uptime)*time.Second).String(), "OS", "Uptime")
+	t.Insert(Some{time.Duration(time.Duration(si.Uptime) * time.Second).String()}, "OS", "Uptime")
 }

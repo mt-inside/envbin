@@ -1,29 +1,39 @@
 package main
 
 import (
-	"errors"
 	"os"
 
-	"github.com/jessevdk/go-flags"
-)
-
-var mainOpts struct {
-	DevMode bool `long:"dev-mode"`
-}
-var (
-	flagParser = flags.NewParser(&mainOpts, flags.Default)
+	"github.com/mt-inside/envbin/pkg/data"
+	"github.com/mt-inside/go-usvc"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	_, err := flagParser.Parse()
+	log := usvc.GetLogger(true)
+
+	app := &cli.App{
+		Name:     "envbin",
+		Usage:    "Inspects and makes available information about its runtime environment",
+		Version:  data.Version,
+		Compiled: data.BuildTime(),
+
+		UseShortOptionHandling: true,
+		EnableBashCompletion:   true, // TODO not working
+
+		Flags: []cli.Flag{},
+
+		Metadata: map[string]interface{}{
+			"log": log,
+		},
+
+		Commands: []*cli.Command{
+			Oneshot,
+			Serve,
+		},
+	}
+
+	err := app.Run(os.Args)
 	if err != nil {
-		var e *flags.Error
-		if errors.As(err, &e) {
-			if e.Type == flags.ErrHelp {
-				os.Exit(0)
-			}
-			os.Exit(1)
-		}
 		panic(err)
 	}
 }

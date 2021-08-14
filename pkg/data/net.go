@@ -19,33 +19,33 @@ func init() {
 func getNetworkData(ctx context.Context, log logr.Logger, t *Trie) {
 	hostname, _ := os.Hostname()
 
-	t.Insert(hostname, "Network", "Hostname")
+	t.Insert(Some{hostname}, "Network", "Hostname")
 
 	getIfaces(t)
 
-	t.Insert(getDefaultIP(), "Network", "DefaultIP")
+	t.Insert(Some{getDefaultIP()}, "Network", "DefaultIP")
 
 	extIP, err := enrichments.ExternalIp(ctx, log)
 	if err != nil {
 		log.Error(err, "Can't get external IP address")
 		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-			t.Insert("Timeout", "Network", "ExternalIP")
+			t.Insert(Some{"Timeout"}, "Network", "ExternalIP")
 		} else {
-			t.Insert("Error", "Network", "ExternalIP")
+			t.Insert(Some{"Error"}, "Network", "ExternalIP")
 		}
 	} else {
-		t.Insert(extIP, "Network", "ExternalIP", "Address")
+		t.Insert(Some{extIP}, "Network", "ExternalIP", "Address")
 
 		extIpInfo, err := enrichments.EnrichIpRendered(ctx, log, extIP)
 		if err != nil {
 			log.Error(err, "Can't get IP info", "ip", extIP)
 			if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-				t.Insert("Timeout", "Network", "ExternalIP", "Info")
+				t.Insert(Some{"Timeout"}, "Network", "ExternalIP", "Info")
 			} else {
-				t.Insert("Error", "Network", "ExternalIP", "Info")
+				t.Insert(Some{"Error"}, "Network", "ExternalIP", "Info")
 			}
 		} else {
-			t.Insert(extIpInfo, "Network", "ExternalIP", "Info")
+			t.Insert(Some{extIpInfo}, "Network", "ExternalIP", "Info")
 		}
 	}
 }
@@ -65,7 +65,7 @@ func getIfaces(t *Trie) {
 			}
 			k := fmt.Sprint(iface.Index)
 			v := fmt.Sprintf("%s, %s, %s", iface.Name, addr.String(), iface.Flags)
-			t.Insert(v, "Network", "Interfaces", string(k))
+			t.Insert(Some{v}, "Network", "Interfaces", string(k))
 		}
 	}
 }

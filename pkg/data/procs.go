@@ -14,7 +14,11 @@ func init() {
 
 func getProcsData(ctx context.Context, log logr.Logger, t *Trie) {
 	procs := sigar.ProcList{}
-	procs.Get()
+	err := procs.Get()
+	if err != nil {
+		log.Error(err, "Can't read memory information")
+		return
+	}
 
-	t.Insert(strconv.Itoa(len(procs.List)-1), "OS", "ProcessesCount")
+	t.Insert(Some{strconv.Itoa(len(procs.List) - 1)}, "OS", "ProcessesCount")
 }

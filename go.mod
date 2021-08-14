@@ -22,6 +22,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.21.2
+	github.com/urfave/cli/v2 v2.3.0 // indirect
 	golang.org/x/sys v0.0.0-20210315160823-c6e025ad8005 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/apimachinery v0.20.4

@@ -14,12 +14,12 @@ func init() {
 func getPsutilData(ctx context.Context, log logr.Logger, t *Trie) {
 	is, _ := host.Info()
 
-	t.Insert(is.VirtualizationSystem+" "+is.VirtualizationRole, "Hardware", "Virtualisation")
+	t.Insert(Some{is.VirtualizationSystem + " " + is.VirtualizationRole}, "Hardware", "Virtualisation")
 
-	t.Insert(is.KernelVersion, "OS", "Kernel", "Version")
+	t.Insert(Some{is.KernelVersion}, "OS", "Kernel", "Version")
 
 	// NB this is the distro in the CONTAINER. Distroless shows up as debian
-	t.Insert(is.PlatformFamily, "OS", "Distro", "Family")
-	t.Insert(is.Platform, "OS", "Distro", "Name")
-	t.Insert(is.PlatformVersion, "OS", "Distro", "Version")
+	t.Insert(Some{is.PlatformFamily}, "OS", "Distro", "Family")
+	t.Insert(Some{is.Platform}, "OS", "Distro", "Name")
+	t.Insert(Some{is.PlatformVersion}, "OS", "Distro", "Version")
 }

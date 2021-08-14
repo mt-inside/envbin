@@ -14,7 +14,11 @@ func init() {
 
 func getMemData(ctx context.Context, log logr.Logger, t *Trie) {
 	mem := sigar.Mem{}
-	mem.Get()
+	err := mem.Get()
+	if err != nil {
+		log.Error(err, "Can't read memory information")
+		return
+	}
 
-	t.Insert(units.BytesSize(float64(mem.Total)), "Hardware", "Memory", "Total")
+	t.Insert(Some{units.BytesSize(float64(mem.Total))}, "Hardware", "Memory", "Total")
 }

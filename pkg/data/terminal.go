@@ -24,10 +24,10 @@ func getTerminalData(ctx context.Context, log logr.Logger, t *Trie) {
 		tty = "n/a"
 	}
 
-	t.Insert(os.Getenv("XDG_SESSION_ID"), "Process", "Session", "ID")
-	t.Insert(os.Getenv("XDG_SESSION_CLASS"), "Process", "Session", "Class")
-	t.Insert(os.Getenv("XDG_SESSION_TYPE"), "Process", "Session", "Type")
-	t.Insert(os.Getenv("XDG_SEAT"), "Process", "Session", "Seat")
-	t.Insert(os.Getenv("XDG_VTNR"), "Process", "Session", "VT")
-	t.Insert(tty, "Process", "Session", "TTY")
+	t.Insert(Some{os.Getenv("XDG_SESSION_ID")}, "Process", "Session", "ID")
+	t.Insert(Some{os.Getenv("XDG_SESSION_CLASS")}, "Process", "Session", "Class")
+	t.Insert(Some{os.Getenv("XDG_SESSION_TYPE")}, "Process", "Session", "Type")
+	t.Insert(Some{os.Getenv("XDG_SEAT")}, "Process", "Session", "Seat")
+	t.Insert(Some{os.Getenv("XDG_VTNR")}, "Process", "Session", "VT")
+	t.Insert(Some{tty}, "Process", "Session", "TTY")
 }

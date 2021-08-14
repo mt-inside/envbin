@@ -26,8 +26,8 @@ func getDmiData(ctx context.Context, log logr.Logger, t *Trie) {
 		return
 	}
 	sys := syss[0]
-	t.Insert(sys["Manufacturer"], "Hardware", "System", "Manufacturer")
-	t.Insert(sys["Product Name"], "Hardware", "System", "Product")
+	t.Insert(Some{sys["Manufacturer"]}, "Hardware", "System", "Manufacturer")
+	t.Insert(Some{sys["Product Name"]}, "Hardware", "System", "Product")
 
 	mbs, _ := dmi.SearchByType(2) // mobo
 	if len(mbs) != 1 {
@@ -35,8 +35,8 @@ func getDmiData(ctx context.Context, log logr.Logger, t *Trie) {
 		return
 	}
 	mb := mbs[0]
-	t.Insert(mb["Manufacturer"], "Hardware", "Motherboard", "Manufacturer")
-	t.Insert(mb["Product Name"], "Hardware", "Motherboard", "Product")
+	t.Insert(Some{mb["Manufacturer"]}, "Hardware", "Motherboard", "Manufacturer")
+	t.Insert(Some{mb["Product Name"]}, "Hardware", "Motherboard", "Product")
 
 	fws, _ := dmi.SearchByType(0) // firmware
 	if len(fws) != 1 {
@@ -44,27 +44,27 @@ func getDmiData(ctx context.Context, log logr.Logger, t *Trie) {
 		return
 	}
 	fw := fws[0]
-	t.Insert(fw["Manufacturer"], "Hardware", "Firmware", "Manufacturer")
-	t.Insert(fw["Product Name"], "Hardware", "Firmware", "Version")
-	t.Insert(fw["BIOS Revision"], "Hardware", "Firmware", "Revision")
-	t.Insert(fw["Release Date"], "Hardware", "Firmware", "Date")
-	t.Insert(fw["ROM Size"], "Hardware", "Firmware", "ROM Size")
+	t.Insert(Some{fw["Manufacturer"]}, "Hardware", "Firmware", "Manufacturer")
+	t.Insert(Some{fw["Product Name"]}, "Hardware", "Firmware", "Version")
+	t.Insert(Some{fw["BIOS Revision"]}, "Hardware", "Firmware", "Revision")
+	t.Insert(Some{fw["Release Date"]}, "Hardware", "Firmware", "Date")
+	t.Insert(Some{fw["ROM Size"]}, "Hardware", "Firmware", "ROM Size")
 
 	cpus, _ := dmi.SearchByType(4) // CPUs
 	for i, cpu := range cpus {
-		t.Insert(cpu["Socket Designation"], "Hardware", "CPU", strconv.Itoa(i), "Socket")
-		t.Insert(cpu["Max Speed"], "Hardware", "CPU", strconv.Itoa(i), "Max Speed")
+		t.Insert(Some{cpu["Socket Designation"]}, "Hardware", "CPU", strconv.Itoa(i), "Socket")
+		t.Insert(Some{cpu["Max Speed"]}, "Hardware", "CPU", strconv.Itoa(i), "Max Speed")
 	}
 
 	dimms, _ := dmi.SearchByType(17) // DIMMs
 	for i, dimm := range dimms {
-		t.Insert(dimm["Bank Locator"], "Hardware", "Memory", strconv.Itoa(i), "Channel")
-		t.Insert(dimm["Locator"], "Hardware", "Memory", strconv.Itoa(i), "Slot")
-		t.Insert(dimm["Rank"], "Hardware", "Memory", strconv.Itoa(i), "Ranks")
-		t.Insert(dimm["Size"], "Hardware", "Memory", strconv.Itoa(i), "Size")
-		t.Insert(dimm["Speed"], "Hardware", "Memory", strconv.Itoa(i), "Speed")
-		t.Insert(dimm["Type"], "Hardware", "Memory", strconv.Itoa(i), "Type")
-		t.Insert(dimm["Type Detail"], "Hardware", "Memory", strconv.Itoa(i), "Sub Type")
+		t.Insert(Some{dimm["Bank Locator"]}, "Hardware", "Memory", strconv.Itoa(i), "Channel")
+		t.Insert(Some{dimm["Locator"]}, "Hardware", "Memory", strconv.Itoa(i), "Slot")
+		t.Insert(Some{dimm["Rank"]}, "Hardware", "Memory", strconv.Itoa(i), "Ranks")
+		t.Insert(Some{dimm["Size"]}, "Hardware", "Memory", strconv.Itoa(i), "Size")
+		t.Insert(Some{dimm["Speed"]}, "Hardware", "Memory", strconv.Itoa(i), "Speed")
+		t.Insert(Some{dimm["Type"]}, "Hardware", "Memory", strconv.Itoa(i), "Type")
+		t.Insert(Some{dimm["Type Detail"]}, "Hardware", "Memory", strconv.Itoa(i), "Sub Type")
 	}
 
 	// for _, record := range dmi.Data {

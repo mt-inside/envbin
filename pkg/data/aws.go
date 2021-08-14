@@ -24,10 +24,10 @@ func getAwsData(ctx context.Context, log logr.Logger, t *Trie) {
 	if err != nil {
 		return
 	}
-	t.Insert("AWS", "Cloud", "Provider")
-	t.Insert(iid.AccountID, "Cloud", "AccountID")
-	t.Insert(iid.Region, "Cloud", "Region")
-	t.Insert(iid.AvailabilityZone, "Cloud", "Zone")
-	t.Insert(iid.InstanceType, "Cloud", "Instance", "Type")
-	t.Insert(iid.ImageID, "Cloud", "Instance", "ImageID")
+	t.Insert(Some{"AWS"}, "Cloud", "Provider")
+	t.Insert(Some{iid.AccountID}, "Cloud", "AccountID")
+	t.Insert(Some{iid.Region}, "Cloud", "Region")
+	t.Insert(Some{iid.AvailabilityZone}, "Cloud", "Zone")
+	t.Insert(Some{iid.InstanceType}, "Cloud", "Instance", "Type")
+	t.Insert(Some{iid.ImageID}, "Cloud", "Instance", "ImageID")
 }

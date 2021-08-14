@@ -1,90 +1,118 @@
 package data
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+	"time"
+)
+
+type TrieValue interface {
+	Render() string
+}
+
+type Some struct {
+	Value string
+}
+
+func (s Some) Render() string {
+	return s.Value
+}
+
+type None struct{}
+
+func (n None) Render() string {
+	panic("Don't render me")
+}
+
+type NotPresent struct{}
+
+func (np NotPresent) Render() string {
+	return "NotPresent"
+}
+
+type Error struct {
+	err error
+}
+
+func (e Error) Render() string {
+	return fmt.Sprintf("Error: %v", e.err)
+}
+
+type Timeout struct {
+	d time.Duration
+}
+
+func (t Timeout) Render() string {
+	return fmt.Sprintf("Timed Out (waited %v)", t.d)
+}
+
+type Forbidden struct{}
+
+func (f Forbidden) Render() string {
+	return "Forbidden"
+}
 
 type Trie struct {
+	Value    TrieValue
 	children map[string]*Trie
-	Value    *string // TODO should be a type field: Value (implies this field too), None, Timeout, Forbidden, OtherError
 }
 
 func NewTrie() *Trie {
-	return newTrie()
+	return &Trie{Value: None{}, children: make(map[string]*Trie)}
 }
 
-func newTrie() *Trie {
-	return &Trie{children: make(map[string]*Trie)}
-}
-
-func (t *Trie) Insert(value string, path ...string) {
+func (t *Trie) Insert(value TrieValue, path ...string) {
 	n := t
 	for _, name := range path {
 		if child, ok := n.children[name]; ok {
 			n = child
 		} else {
-			n.children[name] = newTrie()
+			n.children[name] = NewTrie()
 			n = n.children[name]
 		}
 	}
-	n.Value = &value
+	n.Value = value
 }
 
-func (t *Trie) Get(path ...string) (string, bool) {
+func (t *Trie) Get(path ...string) (TrieValue, bool) {
 	n := t
 	for _, name := range path {
 		if child, ok := n.children[name]; ok {
 			n = child
 		} else {
-			return "", false
+			return Some{""}, false
 		}
 	}
-	return *n.Value, true
+	return n.Value, true
 }
 
 type Entry struct {
 	Path  []string
-	Value string
+	Value TrieValue
 }
 
 func (e Entry) String() string {
-	return strings.Join(e.Path, "/") + ": " + e.Value
+	return strings.Join(e.Path, "/") + ": " + e.Value.Render()
 }
 
-func (t *Trie) Walk() []Entry {
-	return t.walkInt([]Entry{}, []string{})
+func (t *Trie) Collect() []Entry {
+	return t.collectInt([]Entry{}, []string{})
 }
 
-func (t *Trie) walkInt(entries []Entry, path []string) []Entry {
-	if t.Value != nil {
-		entries = append(entries, Entry{path, *t.Value})
-	}
+func (t *Trie) collectInt(entries []Entry, path []string) []Entry {
+	entries = append(entries, Entry{path, t.Value})
 	for name, c := range t.children {
-		entries = c.walkInt(entries, append(path, name))
+		entries = c.collectInt(entries, append(path, name))
 	}
 	return entries
 }
 
-func (t *Trie) Render() string {
-	return t.renderInt("", 0, "/")
+func (t *Trie) Walk(cb func(entry Entry)) {
+	t.walkInt(cb, []string{})
 }
-
-func (t *Trie) renderInt(s string, depth int, name string) string {
-	s += strings.Repeat("  ", depth) + name
-	if t.Value != nil {
-		s += ": " + *t.Value
+func (t *Trie) walkInt(cb func(entry Entry), path []string) {
+	cb(Entry{path, t.Value})
+	for name, c := range t.children {
+		c.walkInt(cb, append(path, name))
 	}
-	s += "\n"
-
-	for n, c := range t.children {
-		s = c.renderInt(s, depth+1, n)
-	}
-
-	return s
-}
-
-func (t *Trie) Merge(t2 *Trie) (tOut *Trie) {
-	tOut = NewTrie()
-
-	// TODO
-
-	return tOut
 }

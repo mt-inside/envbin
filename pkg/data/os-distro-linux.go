@@ -19,5 +19,5 @@ func getOsDistributionData(ctx context.Context, log logr.Logger, t *Trie) {
 		panic(err)
 	}
 	// /etc/os-release:PRETTY_VERSION seems to be universal
-	t.Insert(osRelease["PRETTY_NAME"], "OS", "Distro", "Release")
+	t.Insert(Some{osRelease["PRETTY_NAME"]}, "OS", "Distro", "Release")
 }

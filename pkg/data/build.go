@@ -2,8 +2,9 @@ package data
 
 import (
 	"context"
-	"fmt"
 	"runtime"
+	"strconv"
+	"time"
 
 	"github.com/go-logr/logr"
 )
@@ -11,22 +12,27 @@ import (
 const Binary = "envbin"
 
 var (
-	Version   string
-	BuildTime string
+	Version  string
+	TimeUnix string
 )
 
 func init() {
 	plugins = append(plugins, getBuildData)
 }
 
-func getBuildData(ctx context.Context, log logr.Logger, t *Trie) {
-	t.Insert(Version, "Build", "Version")
-	t.Insert(BuildTime, "Build", "Time")
-	t.Insert(runtime.Version(), "Build", "Runtime")
-	t.Insert(runtime.GOARCH, "Hardware", "CPU", "Arch")
-	t.Insert(runtime.GOOS, "OS", "Kernel", "Type")
+func BuildTime() time.Time {
+	unix, err := strconv.ParseInt(TimeUnix, 10, 64)
+	if err != nil {
+		unix = 0
+	}
+
+	return time.Unix(unix, 0)
 }
 
-func RenderBuildData() string {
-	return fmt.Sprintf("%s %s, built at %s with %s", Binary, Version, BuildTime, runtime.Version())
+func getBuildData(ctx context.Context, log logr.Logger, t *Trie) {
+	t.Insert(Some{Version}, "Build", "Version")
+	t.Insert(Some{BuildTime().Format(time.Stamp)}, "Build", "Time")
+	t.Insert(Some{runtime.Version()}, "Build", "Runtime")
+	t.Insert(Some{runtime.GOARCH}, "Hardware", "CPU", "Arch")
+	t.Insert(Some{runtime.GOOS}, "OS", "Kernel", "Type")
 }

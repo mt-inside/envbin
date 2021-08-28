@@ -13,6 +13,7 @@ require (
 	github.com/gin-gonic/gin v1.7.3
 	github.com/go-logr/logr v0.4.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/google/gousb v1.1.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/joho/godotenv v1.3.0
 	github.com/klauspost/cpuid/v2 v2.0.4
@@ -21,6 +22,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.21.2
+	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/sys v0.0.0-20210315160823-c6e025ad8005
 	gopkg.in/yaml.v2 v2.3.0 // indirect

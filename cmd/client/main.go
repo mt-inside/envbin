@@ -27,7 +27,7 @@ func main() {
 
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "addr",
+				Name:  "url",
 				Value: "http://localhost:8080",
 				Usage: "URL of the envbin daemon",
 			},

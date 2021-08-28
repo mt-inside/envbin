@@ -156,7 +156,7 @@ func render(c *cli.Context) error {
 		for _, fn := range fns {
 			norm.Print("  ")
 			norm.Printf(" %s", jsonquery.FindOne(fn, "Power").InnerText())
-			norm.Print("[")
+			norm.Print(" [")
 			if jsonquery.FindOne(fn, "Wakeup").InnerText() == "true" {
 				norm.Printf("Wakeup")
 			}

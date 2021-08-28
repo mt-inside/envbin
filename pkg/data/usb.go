@@ -66,9 +66,7 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 		t.Insert(Some{p}, "Hardware", "Bus", "USB", addr, "Product")
 		t.Insert(Some{unwrap(dev.SerialNumber())}, "Hardware", "Bus", "USB", addr, "Serial")
 		t.Insert(Some{d.Spec.String()}, "Hardware", "Bus", "USB", addr, "Spec")
-		if d.Speed.String() != "" {
-			t.Insert(Some{d.Speed.String()}, "Hardware", "Bus", "USB", addr, "Speed")
-		}
+		t.Insert(Some{d.Speed.String()}, "Hardware", "Bus", "USB", addr, "Speed")
 
 		for _, c := range d.Configs {
 			pow := "0mA"
@@ -79,10 +77,8 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 			t.Insert(Some{pow}, "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Power")
 			t.Insert(Some{strconv.FormatBool(c.RemoteWakeup)}, "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Wakeup")
 			for _, i := range c.Interfaces {
-				t.Insert(Some{usbid.Classify(d)}, "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number))
-				// for _, a := range i.AltSettings {
-				// 	lo.Printf("      Alt %d: Class %s, SubClass %s, Protocol %s\n", a.Alternate, a.Class, a.SubClass, a.Protocol)
-				// }
+				// I've never seen a device with differing properties across alts of an interface, so we just read item 0. If you do need to iterate Alts, nb that you want a.Alternate, not a.Number
+				t.Insert(Some{usbid.Classify(i.AltSettings[0])}, "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number))
 			}
 		}
 	}

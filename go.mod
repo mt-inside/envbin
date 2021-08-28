@@ -3,9 +3,11 @@ module github.com/mt-inside/envbin
 go 1.13
 
 require (
+	github.com/antchfx/jsonquery v1.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.1.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.2
 	github.com/cloudfoundry/gosigar v1.1.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/go-units v0.4.0
 	github.com/dselans/dmidecode v0.0.0-20180814053009-65c3f9d81910

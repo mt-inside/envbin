@@ -14,10 +14,13 @@ install: lint
 	./deploy/git-hooks/install-local
 
 run-server: lint
-	go run -ldflags "$(build/ldflags.sh)" ./cmd/envbin/... serve
+	go run -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... serve
 
 run-oneshot: lint
-	go run -ldflags "$(build/ldflags.sh)" ./cmd/envbin/... oneshot
+	go run -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... oneshot
+
+run-client: lint
+	go run -ldflags "$(build/ldflags.sh)" ./cmd/client/...
 
 package:
 	docker buildx build --load -t {{REPO}}:{{TAG}} .

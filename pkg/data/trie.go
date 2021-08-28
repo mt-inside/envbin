@@ -2,7 +2,9 @@ package data
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -85,6 +87,30 @@ func (t *Trie) MarshalJSON() ([]byte, error) {
 	} else {
 		return json.Marshal(t.children)
 	}
+}
+func (t *Trie) UnmarshalJSON(bs []byte) error {
+	if bs[0] == '{' { // lol hack - TODO: unmarshal into an interface{} and type-assert
+		return json.Unmarshal(bs, &t.children)
+	} else {
+		t.leaf = true
+		if strings.HasPrefix(string(bs), "NotPresent") {
+			t.value = NotPresent{}
+		} else if strings.HasPrefix(string(bs), "Forbidden") {
+			t.value = Forbidden{}
+		} else if strings.HasPrefix(string(bs), "Error") {
+			t.value = Error{errors.New("lost - TODO render with structure")}
+		} else if strings.HasPrefix(string(bs), "Timed Out") {
+			t.value = Timeout{time.Second} // TODO fixme also
+		} else {
+			var val string
+			err := json.Unmarshal(bs, &val)
+			if err != nil {
+				return err
+			}
+			t.value = Some{val}
+		}
+	}
+	return nil
 }
 
 type Value interface {

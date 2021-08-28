@@ -15,6 +15,7 @@ require (
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/google/gousb v1.1.1
 	github.com/gorilla/handlers v1.4.2
+	github.com/jaypipes/ghw v0.8.0
 	github.com/joho/godotenv v1.3.0
 	github.com/klauspost/cpuid/v2 v2.0.4
 	github.com/mattn/go-isatty v0.0.12

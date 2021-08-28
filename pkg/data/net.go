@@ -2,11 +2,11 @@ package data
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/go-logr/logr"
 	"github.com/mt-inside/envbin/pkg/enrichments"
@@ -63,9 +63,10 @@ func getIfaces(t *Trie) {
 			if addr.(*net.IPNet).IP.To4() == nil {
 				continue
 			}
-			k := fmt.Sprint(iface.Index)
-			v := fmt.Sprintf("%s, %s, %s", iface.Name, addr.String(), iface.Flags)
-			t.Insert(Some{v}, "Network", "Interfaces", string(k))
+			k := strconv.Itoa(iface.Index)
+			t.Insert(Some{iface.Name}, "Network", "Interfaces", k, "Name")
+			t.Insert(Some{addr.String()}, "Network", "Interfaces", k, "Address")
+			t.Insert(Some{iface.Flags.String()}, "Network", "Interfaces", k, "Flags")
 		}
 	}
 }

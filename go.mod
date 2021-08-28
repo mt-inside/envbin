@@ -10,10 +10,10 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/dselans/dmidecode v0.0.0-20180814053009-65c3f9d81910
 	github.com/fatih/color v1.10.0
+	github.com/gin-gonic/gin v1.7.3
 	github.com/go-logr/logr v0.4.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/gorilla/handlers v1.4.2
-	github.com/gorilla/mux v1.7.4
 	github.com/joho/godotenv v1.3.0
 	github.com/klauspost/cpuid/v2 v2.0.4
 	github.com/mattn/go-isatty v0.0.12

@@ -2,46 +2,45 @@ package data
 
 import (
 	"testing"
+
+	"github.com/mt-inside/go-usvc"
+	"github.com/stretchr/testify/assert"
 )
 
-// func TestInsertSimple(t *testing.T) {
-// 	trie := NewTrie()
-// 	trie.Insert(Some{"one"}, "foo")
+func TestInsertSimple(t *testing.T) {
+	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
+	trie.Insert(Some{"one"}, "foo")
 
-// 	v, ok := trie.Get("foo")
-// 	if ok != true || v != Some{"one"} {
-// 		t.Errorf("Incorrect value")
-// 	}
-// }
+	v, ok := trie.Get("foo")
+	assert.Equal(t, ok, true, "Couldn't find")
+	assert.Equal(t, v, Some{"one"}, "Incorrect value")
+	assert.Equal(t, v.Render(), "one", "Incorrect rendering")
+}
 
 func TestInsertMiss(t *testing.T) {
-	trie := NewTrie()
+	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
 	trie.Insert(Some{"one"}, "foo")
 
 	_, ok := trie.Get("bar")
-	if ok != false {
-		t.Errorf("Incorrect value")
-	}
+	assert.Equal(t, ok, false, "Incorrectly found")
 }
 
-// func TestInsertPath(t *testing.T) {
-// 	trie := NewTrie()
-// 	trie.Insert(Some{"one"}, "foo", "bar", "baz")
+func TestInsertPath(t *testing.T) {
+	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
+	trie.Insert(Some{"one"}, "foo", "bar", "baz")
 
-// 	v, ok := trie.Get("foo", "bar", "baz")
-// 	if ok != true || v != Some{"one"} {
-// 		t.Errorf("Incorrect value")
-// 	}
-// }
+	v, ok := trie.Get("foo", "bar", "baz")
+	assert.Equal(t, ok, true, "Couldn't find")
+	assert.Equal(t, v, Some{"one"}, "Incorrect value")
+	assert.Equal(t, v.Render(), "one", "Incorrect rendering")
+}
 
 func TestInsertPathMiss(t *testing.T) {
-	trie := NewTrie()
+	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
 	trie.Insert(Some{"one"}, "foo", "bar", "baz")
 
 	_, ok := trie.Get("foo", "bar", "barry")
-	if ok != false {
-		t.Errorf("Incorrect value")
-	}
+	assert.Equal(t, ok, false, "Incorrectly found")
 }
 
 // func TestMergeSimple(t *testing.T) {

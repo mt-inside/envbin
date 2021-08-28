@@ -1,27 +1,102 @@
 package data
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
+
+	"github.com/go-logr/logr"
 )
 
-type TrieValue interface {
+type Trie struct {
+	log      logr.Logger
+	leaf     bool // zero-value => non-leaf
+	children map[string]*Trie
+	value    Value
+}
+
+func NewTrie(log logr.Logger) *Trie {
+	return &Trie{
+		log: log,
+	}
+}
+func (t *Trie) Insert(value Value, path ...string) {
+	log := t.log.WithName("Insert")
+	log.V(1).Info("called", "path", path, "value", value)
+
+	if len(path) == 0 {
+		log.V(1).Info("making leaf")
+		t.leaf = true
+		t.value = value
+		return
+	}
+
+	if t.children == nil {
+		t.children = map[string]*Trie{}
+	}
+
+	name := path[0]
+	if _, ok := t.children[name]; !ok {
+		t.children[name] = NewTrie(t.log)
+	}
+	t.children[name].Insert(value, path[1:]...)
+}
+func (t *Trie) Get(path ...string) (Value, bool) {
+	log := t.log.WithName("Get")
+	log.V(1).Info("called", "path", path, "leaf?", t.leaf)
+
+	if len(path) == 0 {
+		if !t.leaf {
+			log.Info("trie fuckup")
+			return nil, false
+		} else {
+			log.V(1).Info("leaf, Some", "value", t.value)
+			return t.value, true
+		}
+	} else {
+		if t.leaf {
+			switch t.value.(type) {
+			case Some:
+				log.Info("trie fuckup")
+				return nil, false
+			default:
+				log.V(1).Info("leaf, !Some", "value", t.value)
+				return t.value, true
+			}
+		} else {
+			if t.children == nil {
+				log.Info("trie fuckup")
+				return nil, false
+			}
+
+			if _, ok := t.children[path[0]]; !ok {
+				log.Info("trie fuckup")
+				return nil, false
+			}
+
+			log.V(1).Info("recursing")
+			return t.children[path[0]].Get(path[1:]...)
+		}
+	}
+}
+func (t *Trie) MarshalJSON() ([]byte, error) {
+	if t.leaf {
+		return json.Marshal(t.value.Render())
+	} else {
+		return json.Marshal(t.children)
+	}
+}
+
+type Value interface {
 	Render() string
 }
 
 type Some struct {
-	Value string
+	Value string `json:"value"`
 }
 
 func (s Some) Render() string {
 	return s.Value
-}
-
-type None struct{}
-
-func (n None) Render() string {
-	panic("Don't render me")
 }
 
 type NotPresent struct{}
@@ -52,67 +127,45 @@ func (f Forbidden) Render() string {
 	return "Forbidden"
 }
 
-type Trie struct {
-	Value    TrieValue
-	children map[string]*Trie
-}
+// TODO
+// whole thing to pkg/trie
+// this to file walk
+// as func () Walk(Trie t) { switch type }
 
-func NewTrie() *Trie {
-	return &Trie{Value: None{}, children: make(map[string]*Trie)}
+func (t *Trie) Walk(cb func(path []string, value Value)) {
+	t.walkInternal(cb, []string{})
 }
-
-func (t *Trie) Insert(value TrieValue, path ...string) {
-	n := t
-	for _, name := range path {
-		if child, ok := n.children[name]; ok {
-			n = child
-		} else {
-			n.children[name] = NewTrie()
-			n = n.children[name]
+func (t *Trie) walkInternal(cb func(path []string, value Value), path []string) {
+	if len(path) == 0 {
+		if !t.leaf {
+			t.log.Info("trie fuckup")
+			return
 		}
+		cb(path, t.value)
 	}
-	n.Value = value
-}
 
-func (t *Trie) Get(path ...string) (TrieValue, bool) {
-	n := t
-	for _, name := range path {
-		if child, ok := n.children[name]; ok {
-			n = child
-		} else {
-			return Some{""}, false
+	if t.leaf {
+		switch t.value.(type) {
+		case Some:
+			t.log.Info("trie fuckup")
+			return
 		}
+		cb(path, t.value)
 	}
-	return n.Value, true
-}
 
-type Entry struct {
-	Path  []string
-	Value TrieValue
-}
-
-func (e Entry) String() string {
-	return strings.Join(e.Path, "/") + ": " + e.Value.Render()
-}
-
-func (t *Trie) Collect() []Entry {
-	return t.collectInt([]Entry{}, []string{})
-}
-
-func (t *Trie) collectInt(entries []Entry, path []string) []Entry {
-	entries = append(entries, Entry{path, t.Value})
 	for name, c := range t.children {
-		entries = c.collectInt(entries, append(path, name))
+		c.walkInternal(cb, append(path, name))
 	}
-	return entries
 }
 
-func (t *Trie) Walk(cb func(entry Entry)) {
-	t.walkInt(cb, []string{})
-}
-func (t *Trie) walkInt(cb func(entry Entry), path []string) {
-	cb(Entry{path, t.Value})
-	for name, c := range t.children {
-		c.walkInt(cb, append(path, name))
-	}
-}
+// func (t Trie) Collect() []Entry {
+// 	return t.collectInt([]Entry{}, []string{})
+// }
+
+// func (t Trie) collectInt(entries []Entry, path []string) []Entry {
+// 	entries = append(entries, Entry{path, t.Value})
+// 	for name, c := range t.Children {
+// 		entries = c.collectInt(entries, append(path, name))
+// 	}
+// 	return entries
+// }

@@ -30,7 +30,7 @@ func init() {
 func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		t.Insert(Some{"None"}, "Cloud", "Kubernetes")
+		t.Insert(NotPresent{}, "Cloud", "Kubernetes")
 		return
 	}
 	t.Insert(Some{"Present"}, "Cloud", "Kubernetes")

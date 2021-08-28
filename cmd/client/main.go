@@ -92,12 +92,13 @@ func render(c *cli.Context) error {
 	}
 
 	whiteBold.Print(jsonquery.FindOne(root, "Network/Hostname").InnerText())
+	norm.Print(" " + jsonquery.FindOne(root, "Network/DefaultIP").InnerText())
+	norm.Print(" / " + jsonquery.FindOne(root, "Network/ExternalIP/Address").InnerText())
+	grey.Printf(" (%s)", jsonquery.FindOne(root, "Network/ExternalIP/Info").InnerText())
 	norm.Println()
 	whiteBold.Print(jsonquery.FindOne(root, "OS/Distro/Release").InnerText())
 	norm.Print(" " + jsonquery.FindOne(root, "OS/Distro/Version").InnerText())
-	norm.Print(" (" + jsonquery.FindOne(root, "OS/Kernel/Type").InnerText())
-	norm.Print(" " + jsonquery.FindOne(root, "OS/Kernel/Version").InnerText())
-	norm.Print(")")
+	grey.Printf(" (%s %s)", jsonquery.FindOne(root, "OS/Kernel/Type").InnerText(), jsonquery.FindOne(root, "OS/Kernel/Version").InnerText())
 	norm.Println()
 
 	norm.Println()

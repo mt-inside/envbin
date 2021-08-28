@@ -136,36 +136,21 @@ func (t *Trie) Walk(cb func(path []string, value Value)) {
 	t.walkInternal(cb, []string{})
 }
 func (t *Trie) walkInternal(cb func(path []string, value Value), path []string) {
-	if len(path) == 0 {
-		if !t.leaf {
-			t.log.Info("trie fuckup")
-			return
-		}
-		cb(path, t.value)
-	}
+	log := t.log.WithName("walkInternal")
+	log.V(1).Info("called", "path", path, "leaf?", t.leaf)
 
 	if t.leaf {
-		switch t.value.(type) {
-		case Some:
-			t.log.Info("trie fuckup")
-			return
-		}
 		cb(path, t.value)
-	}
+	} else {
+		if t.children == nil {
+			panic("Invalid trie")
+		}
 
-	for name, c := range t.children {
-		c.walkInternal(cb, append(path, name))
+		cb(path, Some{""})
+
+		log.V(1).Info("recursing")
+		for name, c := range t.children {
+			c.walkInternal(cb, append(path, name))
+		}
 	}
 }
-
-// func (t Trie) Collect() []Entry {
-// 	return t.collectInt([]Entry{}, []string{})
-// }
-
-// func (t Trie) collectInt(entries []Entry, path []string) []Entry {
-// 	entries = append(entries, Entry{path, t.Value})
-// 	for name, c := range t.Children {
-// 		entries = c.collectInt(entries, append(path, name))
-// 	}
-// 	return entries
-// }

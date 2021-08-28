@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	log := usvc.GetLogger(true)
+	log := usvc.GetLogger(true, 0)
 
 	app := &cli.App{
 		Name:     "envbin",

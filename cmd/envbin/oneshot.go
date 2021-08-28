@@ -32,9 +32,9 @@ func oneshot(c *cli.Context) error {
 }
 
 var (
-	//whiteBold = color.New(color.FgHiWhite).Add(color.Bold)
-	white = color.New(color.FgHiWhite)
-	norm  = color.New(color.FgWhite)
+	whiteBold = color.New(color.FgHiWhite).Add(color.Bold)
+	//white = color.New(color.FgHiWhite)
+	norm = color.New(color.FgWhite)
 	//grey      = color.New(color.FgHiBlack)
 )
 
@@ -44,11 +44,7 @@ func renderCb(path []string, value data.Value) {
 		return
 	}
 	norm.Print(strings.Repeat("  ", depth-1))
-	// TODO: directory printing?
-	// if _, ok := entry.Value.(data.None); ok {
-	// 	white.Printf("%s\n", entry.Path[depth-1])
-	// } else {
-	white.Printf("%s: ", path[depth-1])
+	whiteBold.Printf("%s: ", path[depth-1])
 	norm.Printf("%s\n", value.Render())
 	// }
 }

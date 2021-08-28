@@ -1,9 +1,8 @@
-package data
+package trie
 
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -58,7 +57,7 @@ func (t *Trie) Get(path ...string) (Value, bool) {
 	} else {
 		if t.leaf {
 			switch t.value.(type) {
-			case Some:
+			case some:
 				log.Info("trie fuckup")
 				return nil, false
 			default:
@@ -94,89 +93,21 @@ func (t *Trie) UnmarshalJSON(bs []byte) error {
 	} else {
 		t.leaf = true
 		if strings.HasPrefix(string(bs), "NotPresent") {
-			t.value = NotPresent{}
+			t.value = notPresent{}
 		} else if strings.HasPrefix(string(bs), "Forbidden") {
-			t.value = Forbidden{}
+			t.value = forbidden{}
 		} else if strings.HasPrefix(string(bs), "Error") {
-			t.value = Error{errors.New("lost - TODO render with structure")}
+			t.value = erro{errors.New("lost - TODO render with structure")}
 		} else if strings.HasPrefix(string(bs), "Timed Out") {
-			t.value = Timeout{time.Second} // TODO fixme also
+			t.value = timeout{time.Second} // TODO fixme also
 		} else {
 			var val string
 			err := json.Unmarshal(bs, &val)
 			if err != nil {
 				return err
 			}
-			t.value = Some{val}
+			t.value = Some(val)
 		}
 	}
 	return nil
-}
-
-type Value interface {
-	Render() string
-}
-
-type Some struct {
-	Value string `json:"value"`
-}
-
-func (s Some) Render() string {
-	return s.Value
-}
-
-type NotPresent struct{}
-
-func (np NotPresent) Render() string {
-	return "NotPresent"
-}
-
-type Error struct {
-	err error
-}
-
-func (e Error) Render() string {
-	return fmt.Sprintf("Error: %v", e.err)
-}
-
-type Timeout struct {
-	d time.Duration
-}
-
-func (t Timeout) Render() string {
-	return fmt.Sprintf("Timed Out (waited %v)", t.d)
-}
-
-type Forbidden struct{}
-
-func (f Forbidden) Render() string {
-	return "Forbidden"
-}
-
-// TODO
-// whole thing to pkg/trie
-// this to file walk
-// as func () Walk(Trie t) { switch type }
-
-func (t *Trie) Walk(cb func(path []string, value Value)) {
-	t.walkInternal(cb, []string{})
-}
-func (t *Trie) walkInternal(cb func(path []string, value Value), path []string) {
-	log := t.log.WithName("walkInternal")
-	log.V(1).Info("called", "path", path, "leaf?", t.leaf)
-
-	if t.leaf {
-		cb(path, t.value)
-	} else {
-		if t.children == nil {
-			panic("Invalid trie")
-		}
-
-		cb(path, Some{""})
-
-		log.V(1).Info("recursing")
-		for name, c := range t.children {
-			c.walkInternal(cb, append(path, name))
-		}
-	}
 }

@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/mt-inside/envbin/pkg/data"
+	"github.com/mt-inside/envbin/pkg/data/enrichments"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func MiddlewareStack(
 	log logr.Logger,
-	next func(log logr.Logger, w http.ResponseWriter, r *http.Request, d *data.Trie) []byte,
+	next func(log logr.Logger, w http.ResponseWriter, r *http.Request, d *trie.Trie) []byte,
 ) http.Handler {
 	return recoveryMiddleware( // let it crash
 		proxyHeaders( // Sets header x-envbin-proxy-chain any and all forwarded addresses
@@ -19,7 +20,7 @@ func MiddlewareStack(
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 				defer cancel()
 
-				d := data.GetDataWithRequest(ctx, log, r)
+				d := enrichments.GetDataWithRequest(ctx, log, r)
 
 				bs := next(log, w, r, d)
 

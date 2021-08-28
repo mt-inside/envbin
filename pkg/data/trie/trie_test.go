@@ -1,4 +1,4 @@
-package data
+package trie
 
 import (
 	"testing"
@@ -9,17 +9,17 @@ import (
 
 func TestInsertSimple(t *testing.T) {
 	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
-	trie.Insert(Some{"one"}, "foo")
+	trie.Insert(Some("one"), "foo")
 
 	v, ok := trie.Get("foo")
 	assert.Equal(t, ok, true, "Couldn't find")
-	assert.Equal(t, v, Some{"one"}, "Incorrect value")
+	assert.Equal(t, v, Some("one"), "Incorrect value")
 	assert.Equal(t, v.Render(), "one", "Incorrect rendering")
 }
 
 func TestInsertMiss(t *testing.T) {
 	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
-	trie.Insert(Some{"one"}, "foo")
+	trie.Insert(Some("one"), "foo")
 
 	_, ok := trie.Get("bar")
 	assert.Equal(t, ok, false, "Incorrectly found")
@@ -27,17 +27,17 @@ func TestInsertMiss(t *testing.T) {
 
 func TestInsertPath(t *testing.T) {
 	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
-	trie.Insert(Some{"one"}, "foo", "bar", "baz")
+	trie.Insert(Some("one"), "foo", "bar", "baz")
 
 	v, ok := trie.Get("foo", "bar", "baz")
 	assert.Equal(t, ok, true, "Couldn't find")
-	assert.Equal(t, v, Some{"one"}, "Incorrect value")
+	assert.Equal(t, v, Some("one"), "Incorrect value")
 	assert.Equal(t, v.Render(), "one", "Incorrect rendering")
 }
 
 func TestInsertPathMiss(t *testing.T) {
 	trie := NewTrie(usvc.GetLogger(true).WithName("trie"))
-	trie.Insert(Some{"one"}, "foo", "bar", "baz")
+	trie.Insert(Some("one"), "foo", "bar", "baz")
 
 	_, ok := trie.Get("foo", "bar", "barry")
 	assert.Equal(t, ok, false, "Incorrectly found")
@@ -47,11 +47,11 @@ func TestInsertPathMiss(t *testing.T) {
 // 	t.Skip("Not implemented")
 
 // 	trie := NewTrie()
-// 	trie.Insert(Some{"one"}, "foo")
-// 	trie.Insert(Some{"two"}, "bar")
+// 	trie.Insert(Some("one"), "foo")
+// 	trie.Insert(Some("two"), "bar")
 
 // 	v, ok := trie.Get("foo")
-// 	if ok != true || v != Some{"one"} {
+// 	if ok != true || v != Some("one") {
 // 		t.Errorf("Incorrect value")
 // 	}
 
@@ -65,13 +65,13 @@ func TestInsertPathMiss(t *testing.T) {
 // 	t.Skip("Not implemented")
 
 // 	trie := NewTrie()
-// 	trie.Insert(Some{"one"}, "foo", "bar", "baz")
-// 	trie.Insert(Some{"two"}, "foo", "bar", "barry")
-// 	trie.Insert(Some{"three"}, "foo", "lol", "rofl")
-// 	trie.Insert(Some{"zero"}, "foo")
+// 	trie.Insert(Some("one"), "foo", "bar", "baz")
+// 	trie.Insert(Some("two"), "foo", "bar", "barry")
+// 	trie.Insert(Some("three"), "foo", "lol", "rofl")
+// 	trie.Insert(Some("zero"), "foo")
 
 // 	v, ok := trie.Get("foo")
-// 	if ok != true || v != Some{"zero"} {
+// 	if ok != true || v != Some("zero") {
 // 		t.Errorf("Incorrect value")
 // 	}
 

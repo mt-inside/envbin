@@ -8,6 +8,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/go-logr/logr"
 	"github.com/mt-inside/envbin/pkg/data"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 	"github.com/urfave/cli/v2"
 )
 
@@ -38,7 +39,7 @@ var (
 	//grey      = color.New(color.FgHiBlack)
 )
 
-func renderCb(path []string, value data.Value) {
+func renderCb(path []string, value trie.Value) {
 	depth := len(path)
 	if depth == 0 {
 		return
@@ -48,43 +49,3 @@ func renderCb(path []string, value data.Value) {
 	norm.Printf("%s\n", value.Render())
 	// }
 }
-
-// func title(s string) {
-// 	fmt.Println()
-// 	whiteBold.Printf("== %s ==\n", s)
-// }
-
-// func kv(key string, valFmt string, vals ...interface{}) {
-// 	white.Printf("%s: ", key)
-// 	norm.Printf(valFmt, vals...)
-// 	fmt.Println()
-// }
-
-// title("Request")
-// kv("Session", "%s", data["Session"])
-
-// title("Hardware")
-// kv("Virtualisation", "%s", data["Virt"])
-// kv("Firmware", "%s", data["FirmwareType"])
-// kv("Apparent hardware", "%s, %s, %s/%s cores, %s RAM", data["Arch"], data["CpuName"], data["PhysCores"], data["VirtCores"], data["MemTotal"])
-
-// title("Operating Environment")
-// kv("OS", "%s %s, up %s", data["OsType"], data["KernelVersion"], data["OsUptime"])
-// kv("Distro", "%s (%s) %s (%s)", data["OsDistro"], data["OsFamily"], data["OsVersion"], data["OsRelease"])
-// kv("PID", "%s, parent %s, #others %s", data["Pid"], data["Ppid"], data["OtherProcsCount"])
-// kv("User", "UID %s (effective %s)", data["Uid"], data["Euid"])
-// kv("Groups", "Primary %s (effective %s), others %s", data["Gid"], data["Egid"], data["Groups"])
-
-// title("Network")
-// kv("Hostname", "%s", data["Hostname"])
-// kv("Primary IP", "%s", data["HostIp"])
-// kv("External IP", "%s %s", data["ExternalIp"], data["ExternalIpEnrich"])
-// // TODO: we control both ends of this interface and it's horrid!
-// // FIXME: doesn't even work, cause interface indecies aren't necc sequential
-// for i := 0; i < 128; i++ {
-// 	v, ok := data[fmt.Sprintf("Interface%d", i)]
-// 	if !ok {
-// 		continue
-// 	}
-// 	kv(fmt.Sprintf("Iface[%d]", i), "%s", v)
-// }

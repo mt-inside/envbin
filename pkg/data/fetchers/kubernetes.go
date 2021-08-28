@@ -1,7 +1,7 @@
 // +buil ignore
 // FIXME: wewrite against pure client-go
 
-package data
+package fetchers
 
 import (
 	"context"
@@ -21,19 +21,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/mt-inside/envbin/pkg/data"
+	. "github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
-	plugins = append(plugins, getK8sData)
+	data.RegisterPlugin(getK8sData)
 }
 
 func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		t.Insert(NotPresent{}, "Cloud", "Kubernetes")
+		t.Insert(NotPresent(), "Cloud", "Kubernetes")
 		return
 	}
-	t.Insert(Some{"Present"}, "Cloud", "Kubernetes")
+	t.Insert(Some("Present"), "Cloud", "Kubernetes")
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -45,7 +48,7 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	if err != nil {
 		log.Error(err, "Can't get cluster version")
 	} else {
-		t.Insert(Some{fmt.Sprintf("%s %s", version.GitVersion, version.Platform)}, "Cloud", "Kubernetes", "Cluster", "Version")
+		t.Insert(Some(fmt.Sprintf("%s %s", version.GitVersion, version.Platform)), "Cloud", "Kubernetes", "Cluster", "Version")
 	}
 
 	saBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
@@ -125,60 +128,60 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 		log.Error(fmt.Errorf("ServiceAccount token invalid"), "Can't read k8s info")
 		return
 	}
-	t.Insert(Some{claims.Namespace}, "Cloud", "Kubernetes", "Pod", "Namespace")
-	t.Insert(Some{claims.Name}, "Cloud", "Kubernetes", "Pod", "ServiceAccount")
+	t.Insert(Some(claims.Namespace), "Cloud", "Kubernetes", "Pod", "Namespace")
+	t.Insert(Some(claims.Name), "Cloud", "Kubernetes", "Pod", "ServiceAccount")
 
 	hostname, _ := os.Hostname()
 	pod, err := clientSet.CoreV1().Pods(claims.Namespace).Get(ctx, hostname, metav1.GetOptions{})
 	if err != nil {
 		if k8sErrors.IsForbidden(err) {
 			log.Error(err, "Forbidden getting own Pod info; check RBAC")
-			t.Insert(Some{"Forbidden"}, "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some("Forbidden"), "Cloud", "Kubernetes", "Pod")
 		} else if err == context.DeadlineExceeded {
 			log.Error(err, "Timed out getting own Pod info")
-			t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod")
 		} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
 			log.Error(err, "Timed out getting own Pod info")
-			t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod")
 		} else {
 			log.Error(err, "Error getting own Pod info")
 		}
 	} else {
-		t.Insert(Some{strconv.Itoa(len(pod.Spec.Containers))}, "Cloud", "Kubernetes", "Pod", "ContainersCount")
+		t.Insert(Some(strconv.Itoa(len(pod.Spec.Containers))), "Cloud", "Kubernetes", "Pod", "ContainersCount")
 
 		images := []string{}
 		for _, c := range pod.Spec.Containers {
 			images = append(images, c.Image)
 		}
-		t.Insert(Some{strings.Join(images, ",")}, "Cloud", "Kubernetes", "Pod", "ContainersImages")
+		t.Insert(Some(strings.Join(images, ",")), "Cloud", "Kubernetes", "Pod", "ContainersImages")
 
 		if node, err := clientSet.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{}); err != nil {
 			if k8sErrors.IsForbidden(err) {
 				log.Error(err, "Forbidden getting own Node info; check RBAC")
-				t.Insert(Some{"Forbidden"}, "Cloud", "Kubernetes", "Node")
+				t.Insert(Some("Forbidden"), "Cloud", "Kubernetes", "Node")
 			} else if err == context.DeadlineExceeded {
 				log.Error(err, "Timed out getting own Node info")
-				t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Node")
+				t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Node")
 			} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
 				log.Error(err, "Timed out getting own Node info")
-				t.Insert(Some{"Timeout"}, "Cloud", "Kubernetes", "Node")
+				t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Node")
 			} else {
 				log.Error(err, "Error getting own Node info")
 			}
 		} else {
-			t.Insert(Some{node.Status.Addresses[0].Address + " / " + node.Status.Addresses[1].Address}, "Cloud", "Kubernetes", "Node", "Address") // TODO loop
-			t.Insert(Some{fmt.Sprintf("%s %s/%s", node.Status.NodeInfo.KubeletVersion, node.Status.NodeInfo.OperatingSystem, node.Status.NodeInfo.Architecture)}, "Cloud", "Kubernetes", "Node", "Version")
-			t.Insert(Some{node.Status.NodeInfo.ContainerRuntimeVersion}, "Cloud", "Kubernetes", "Node", "ContainerRuntime")
-			t.Insert(Some{node.Status.NodeInfo.OSImage}, "Cloud", "Kubernetes", "Node", "OS")
-			t.Insert(Some{findSuffix(node.Labels, "node-role.kubernetes.io/")}, "Cloud", "Kubernetes", "Node", "Role")
-			t.Insert(Some{node.Labels["node.kubernetes.io/instance-type"]}, "Cloud", "Kubernetes", "Node", "InstanceType")
-			t.Insert(Some{node.Labels["topology.kubernetes.io/region"]}, "Cloud", "Kubernetes", "Node", "Region")
-			t.Insert(Some{node.Labels["topology.kubernetes.io/zone"]}, "Cloud", "Kubernetes", "Node", "Zone")
+			t.Insert(Some(node.Status.Addresses[0].Address+" / "+node.Status.Addresses[1].Address), "Cloud", "Kubernetes", "Node", "Address") // TODO loop
+			t.Insert(Some(fmt.Sprintf("%s %s/%s", node.Status.NodeInfo.KubeletVersion, node.Status.NodeInfo.OperatingSystem, node.Status.NodeInfo.Architecture)), "Cloud", "Kubernetes", "Node", "Version")
+			t.Insert(Some(node.Status.NodeInfo.ContainerRuntimeVersion), "Cloud", "Kubernetes", "Node", "ContainerRuntime")
+			t.Insert(Some(node.Status.NodeInfo.OSImage), "Cloud", "Kubernetes", "Node", "OS")
+			t.Insert(Some(findSuffix(node.Labels, "node-role.kubernetes.io/")), "Cloud", "Kubernetes", "Node", "Role")
+			t.Insert(Some(node.Labels["node.kubernetes.io/instance-type"]), "Cloud", "Kubernetes", "Node", "InstanceType")
+			t.Insert(Some(node.Labels["topology.kubernetes.io/region"]), "Cloud", "Kubernetes", "Node", "Region")
+			t.Insert(Some(node.Labels["topology.kubernetes.io/zone"]), "Cloud", "Kubernetes", "Node", "Zone")
 		}
 	}
 
 	// TODO: get own namespace pods list
-	// TODO: get nodes list: t.Insert(Some{strconv.Itoa(len(nodes.Items))}, "Cloud", "Kubernetes", "Cluster", "NodesCount")
+	// TODO: get nodes list: t.Insert(Some(strconv.Itoa(len(nodes.Items))), "Cloud", "Kubernetes", "Cluster", "NodesCount")
 	// TODO: search for parent ownerrefs, and build kubectl tree style location
 }
 

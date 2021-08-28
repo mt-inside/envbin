@@ -1,4 +1,4 @@
-package data
+package fetchers
 
 import (
 	"context"
@@ -6,10 +6,13 @@ import (
 
 	sigar "github.com/cloudfoundry/gosigar"
 	"github.com/go-logr/logr"
+
+	"github.com/mt-inside/envbin/pkg/data"
+	. "github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
-	plugins = append(plugins, getProcsData)
+	data.RegisterPlugin(getProcsData)
 }
 
 func getProcsData(ctx context.Context, log logr.Logger, t *Trie) {
@@ -20,5 +23,5 @@ func getProcsData(ctx context.Context, log logr.Logger, t *Trie) {
 		return
 	}
 
-	t.Insert(Some{strconv.Itoa(len(procs.List) - 1)}, "OS", "ProcessesCount")
+	t.Insert(Some(strconv.Itoa(len(procs.List)-1)), "OS", "ProcessesCount")
 }

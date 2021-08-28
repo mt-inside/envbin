@@ -1,17 +1,20 @@
 //go:build linux
 // +build linux
 
-package data
+package fetchers
 
 import (
 	"context"
 
 	"github.com/go-logr/logr"
 	"github.com/joho/godotenv"
+
+	"github.com/mt-inside/envbin/pkg/data"
+	. "github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
-	plugins = append(plugins, getOsDistributionData)
+	data.RegisterPlugin(getOsDistributionData)
 }
 
 func getOsDistributionData(ctx context.Context, log logr.Logger, t *Trie) {
@@ -20,5 +23,5 @@ func getOsDistributionData(ctx context.Context, log logr.Logger, t *Trie) {
 		panic(err)
 	}
 	// /etc/os-release:PRETTY_VERSION seems to be universal
-	t.Insert(Some{osRelease["PRETTY_NAME"]}, "OS", "Distro", "Release")
+	t.Insert(Some(osRelease["PRETTY_NAME"]), "OS", "Distro", "Release")
 }

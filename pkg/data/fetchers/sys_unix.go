@@ -1,7 +1,7 @@
 //go:build linux
 // +build linux
 
-package data
+package fetchers
 
 import (
 	"context"
@@ -9,10 +9,13 @@ import (
 
 	"github.com/go-logr/logr"
 	"golang.org/x/sys/unix"
+
+	"github.com/mt-inside/envbin/pkg/data"
+	. "github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
-	plugins = append(plugins, getSysUnixData)
+	data.RegisterPlugin(getSysUnixData)
 }
 
 func getSysUnixData(ctx context.Context, log logr.Logger, t *Trie) {
@@ -23,5 +26,5 @@ func getSysUnixData(ctx context.Context, log logr.Logger, t *Trie) {
 		return
 	}
 
-	t.Insert(Some{time.Duration(time.Duration(si.Uptime) * time.Second).String()}, "OS", "Uptime")
+	t.Insert(Some(time.Duration(time.Duration(si.Uptime)*time.Second).String()), "OS", "Uptime")
 }

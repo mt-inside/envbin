@@ -27,7 +27,7 @@ func main() {
 		},
 
 		Commands: []*cli.Command{
-			Oneshot,
+			Dump,
 			Serve,
 		},
 	}

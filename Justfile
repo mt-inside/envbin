@@ -16,8 +16,8 @@ install: lint
 run-server: lint
 	go run -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... serve
 
-run-oneshot: lint
-	go run -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... oneshot
+run-dump: lint
+	go run -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... dump
 
 run-client: lint
 	go run -ldflags "$(build/ldflags.sh)" ./cmd/client/...

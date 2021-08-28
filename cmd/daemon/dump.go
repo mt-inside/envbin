@@ -11,14 +11,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var Oneshot = &cli.Command{
-	Name:  "oneshot",
+var Dump = &cli.Command{
+	Name:  "dump",
 	Usage: "Write data to terminal",
 
-	Action: oneshot,
+	Action: dump,
 }
 
-func oneshot(c *cli.Context) error {
+func dump(c *cli.Context) error {
 	log := c.App.Metadata["log"].(logr.Logger)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)

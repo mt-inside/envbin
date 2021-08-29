@@ -10,6 +10,16 @@ import (
 	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
+// TODO not the idea place for this, but easy to hit import loops otherwise
+type ctxKey struct {
+	key string
+}
+
+var (
+	CtxKeyLog  = &ctxKey{"log"}
+	CtxKeyConn = &ctxKey{"conn"}
+)
+
 func MiddlewareStack(
 	log logr.Logger,
 	next func(log logr.Logger, w http.ResponseWriter, r *http.Request, d *trie.Trie) []byte,

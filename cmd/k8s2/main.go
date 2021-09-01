@@ -110,18 +110,18 @@ func appMain(c *cli.Context) error {
 
 	cores := &resource.Quantity{}
 	ram := &resource.Quantity{}
-	disk := &resource.Quantity{}
-	scratch := &resource.Quantity{}
+	storage := &resource.Quantity{}
+	ephemeral := &resource.Quantity{}
 	for _, n := range nodes.Items {
 		cores.Add(*n.Status.Capacity.Cpu())
 		ram.Add(*n.Status.Capacity.Memory())
-		disk.Add(*n.Status.Capacity.Storage())
-		scratch.Add(*n.Status.Capacity.StorageEphemeral())
+		storage.Add(*n.Status.Capacity.Storage())
+		ephemeral.Add(*n.Status.Capacity.StorageEphemeral())
 	}
 	pow2Truncate(ram, Gibi)
-	pow2Truncate(disk, Gibi)
-	pow2Truncate(scratch, Gibi)
-	fmt.Printf("%d Nodes (%v cores, %v ram, %v disk, %v scratch)", len(nodes.Items), cores, ram, disk, scratch)
+	pow2Truncate(storage, Gibi)
+	pow2Truncate(ephemeral, Gibi)
+	fmt.Printf("%d Nodes (%v cores, %v ram, %v storage, %v ephemeral)", len(nodes.Items), cores, ram, storage, ephemeral)
 	fmt.Println()
 
 	// node-role.kubernetes.io/control-plane":""

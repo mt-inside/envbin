@@ -21,6 +21,15 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+type Scale2 int32
+
+const (
+	Kibi Scale2 = 10
+	Mebi Scale2 = 20
+	Gibi Scale2 = 30
+	Tebi Scale2 = 40
+)
+
 func init() {
 	spew.Config.DisableMethods = true
 	spew.Config.DisablePointerMethods = true
@@ -109,7 +118,9 @@ func appMain(c *cli.Context) error {
 		disk.Add(*n.Status.Capacity.Storage())
 		scratch.Add(*n.Status.Capacity.StorageEphemeral())
 	}
-	ram.RoundUp(resource.Giga)
+	pow2Truncate(ram, Gibi)
+	pow2Truncate(disk, Gibi)
+	pow2Truncate(scratch, Gibi)
 	fmt.Printf("%d Nodes (%v cores, %v ram, %v disk, %v scratch)", len(nodes.Items), cores, ram, disk, scratch)
 	fmt.Println()
 
@@ -143,6 +154,13 @@ func appMain(c *cli.Context) error {
 	render(nodes, "Zones", "topology.kubernetes.io/zone")
 
 	return nil
+}
+
+// k8s.io/apimachinery/pkg/api/resource.Quantity only knows how to round to decimal powers (despite nicely printing round numbers of binary powers)
+func pow2Truncate(q *resource.Quantity, s Scale2) {
+	val := q.Value()
+	val = val &^ ((1 << s) - 1)
+	q.Set(val)
 }
 
 func render(nodes *corev1.NodeList, title string, label string) {

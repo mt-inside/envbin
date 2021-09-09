@@ -101,17 +101,17 @@ func render(c *cli.Context) error {
 	renderSummary(root)
 	norm.Println()
 
-	if false {
+	if true {
 		renderNetIfaces(root)
 		norm.Println()
 	}
 
-	if false {
+	if true {
 		renderPCI(root)
 		norm.Println()
 	}
 
-	if false {
+	if true {
 		renderUSB(root)
 		norm.Println()
 	}

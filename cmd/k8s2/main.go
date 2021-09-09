@@ -24,10 +24,10 @@ import (
 type Scale2 int32
 
 const (
-	Kibi Scale2 = 10
-	Mebi Scale2 = 20
+	//Kibi Scale2 = 10
+	//Mebi Scale2 = 20
 	Gibi Scale2 = 30
-	Tebi Scale2 = 40
+	//Tebi Scale2 = 40
 )
 
 func init() {

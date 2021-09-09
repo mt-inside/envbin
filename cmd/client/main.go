@@ -165,7 +165,7 @@ func renderPCI(root *jsonquery.Node) {
 			whiteBold.Print(jsonquery.FindOne(fn, "Vendor").InnerText())
 			whiteBold.Print(" " + jsonquery.FindOne(fn, "Product").InnerText())
 			grey.Print(" rev " + jsonquery.FindOne(fn, "Revision").InnerText())
-			grey.Printf(" (%s / %s)", jsonquery.FindOne(fn, "Class").InnerText(), jsonquery.FindOne(fn, "Subclass").InnerText())
+			grey.Printf(" (%s / %s, driver %s)", jsonquery.FindOne(fn, "Class").InnerText(), jsonquery.FindOne(fn, "Subclass").InnerText(), jsonquery.FindOne(fn, "Driver").InnerText())
 			norm.Println()
 		}
 	}

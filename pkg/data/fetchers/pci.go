@@ -42,6 +42,7 @@ func getPciData(ctx context.Context, log logr.Logger, t *Trie) {
 		t.Insert(Some(d.Revision), "Hardware", "Bus", "PCI", addr, "Functions", function, "Revision")
 		t.Insert(Some(d.Class.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Class")
 		t.Insert(Some(d.Subclass.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Subclass")
+		t.Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
 		for _, iface := range d.Subclass.ProgrammingInterfaces {
 			t.Insert(Some(iface.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Interfaces", iface.ID)
 		}

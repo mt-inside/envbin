@@ -40,6 +40,7 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
+		t.Insert(Error(err), "Cloud", "Kubernetes")
 		log.Error(err, "Can't connect to k8s apiserver")
 		return
 	}
@@ -136,13 +137,13 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 	if err != nil {
 		if k8sErrors.IsForbidden(err) {
 			log.Error(err, "Forbidden getting own Pod info; check RBAC")
-			t.Insert(Some("Forbidden"), "Cloud", "Kubernetes", "Pod")
+			t.Insert(Forbidden(), "Cloud", "Kubernetes", "Pod")
 		} else if err == context.DeadlineExceeded {
 			log.Error(err, "Timed out getting own Pod info")
-			t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod") // TODO Timeout(but need to find the time)
 		} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
 			log.Error(err, "Timed out getting own Pod info")
-			t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod")
+			t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod") // TODO Timeout(but need to find the time)
 		} else {
 			log.Error(err, "Error getting own Pod info")
 		}
@@ -158,7 +159,7 @@ func getK8sData(ctx context.Context, log logr.Logger, t *Trie) {
 		if node, err := clientSet.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{}); err != nil {
 			if k8sErrors.IsForbidden(err) {
 				log.Error(err, "Forbidden getting own Node info; check RBAC")
-				t.Insert(Some("Forbidden"), "Cloud", "Kubernetes", "Node")
+				t.Insert(Forbidden(), "Cloud", "Kubernetes", "Node")
 			} else if err == context.DeadlineExceeded {
 				log.Error(err, "Timed out getting own Node info")
 				t.Insert(Some("Timeout"), "Cloud", "Kubernetes", "Node")

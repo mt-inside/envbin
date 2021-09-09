@@ -15,7 +15,11 @@ func init() {
 }
 
 func getPsutilData(ctx context.Context, log logr.Logger, t *Trie) {
-	is, _ := host.Info()
+	is, err := host.Info()
+	if err != nil {
+		log.Error(err, "Can't read PsUtil data")
+		return
+	}
 
 	t.Insert(Some(is.VirtualizationSystem+" "+is.VirtualizationRole), "Hardware", "Virtualisation")
 

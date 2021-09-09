@@ -21,6 +21,8 @@ func getBlockData(ctx context.Context, log logr.Logger, t *Trie) {
 	blk, err := ghw.Block()
 	if err != nil {
 		t.Insert(Error(err), prefix...)
+		log.Error(err, "Can't get block device info")
+		return
 	}
 
 	for _, d := range blk.Disks {

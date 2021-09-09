@@ -22,7 +22,7 @@ func getSysUnixData(ctx context.Context, log logr.Logger, t *Trie) {
 	var si unix.Sysinfo_t
 	err := unix.Sysinfo(&si)
 	if err != nil {
-		log.Error(err, "Can't read memory information")
+		log.Error(err, "Can't read sysinfo information")
 		return
 	}
 

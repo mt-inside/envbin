@@ -28,13 +28,13 @@ func getFirmwareData(ctx context.Context, log logr.Logger, t *Trie) {
 
 		files, err := filepath.Glob("/sys/firmware/efi/efivars/SecureBoot-*")
 		if err != nil || len(files) != 1 {
-			t.Insert(Some("Error"), "Hardware", "Firmware", "SecureBoot")
+			t.Insert(Error(err), "Hardware", "Firmware", "SecureBoot")
 			return
 		}
 
 		bytes, err := os.ReadFile(files[0])
 		if err != nil {
-			t.Insert(Some("Error"), "Hardware", "Firmware", "SecureBoot")
+			t.Insert(Error(err), "Hardware", "Firmware", "SecureBoot")
 			return
 		}
 

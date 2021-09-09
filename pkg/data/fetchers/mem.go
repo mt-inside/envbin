@@ -20,6 +20,7 @@ func getMemData(ctx context.Context, log logr.Logger, t *Trie) {
 	err := mem.Get()
 	if err != nil {
 		log.Error(err, "Can't read memory information")
+		t.Insert(Error(err), "Hardware", "Memory")
 		return
 	}
 

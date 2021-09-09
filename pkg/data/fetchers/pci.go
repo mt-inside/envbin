@@ -20,7 +20,9 @@ func getPciData(ctx context.Context, log logr.Logger, t *Trie) {
 
 	pci, err := ghw.PCI()
 	if err != nil {
+		log.Error(err, "Can't read PCI data")
 		t.Insert(Error(err), prefix...)
+		return
 	}
 
 	for _, d := range pci.Devices {

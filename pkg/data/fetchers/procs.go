@@ -19,9 +19,10 @@ func getProcsData(ctx context.Context, log logr.Logger, t *Trie) {
 	procs := sigar.ProcList{}
 	err := procs.Get()
 	if err != nil {
-		log.Error(err, "Can't read memory information")
+		log.Error(err, "Can't read process information")
+		t.Insert(Error(err), "OS", "Processes")
 		return
 	}
 
-	t.Insert(Some(strconv.Itoa(len(procs.List)-1)), "OS", "ProcessesCount")
+	t.Insert(Some(strconv.Itoa(len(procs.List)-1)), "OS", "Processes", "Count")
 }

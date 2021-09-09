@@ -29,7 +29,8 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 
 	err := usbid.LoadFromURL(usbid.LinuxUsbDotOrg)
 	if err != nil {
-		t.Insert(Error(err), prefix...)
+		log.Error(err, "Can't load USB IDs")
+		// Don't return, will just have worse device naming
 	}
 
 	usb := gousb.NewContext()
@@ -40,6 +41,8 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 	})
 	if err != nil {
 		t.Insert(Error(err), prefix...)
+		log.Error(err, "Can't read USB data")
+		return
 	}
 
 	for _, dev := range devs {

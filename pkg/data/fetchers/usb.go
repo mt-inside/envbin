@@ -24,6 +24,13 @@ func unwrap(s string, err error) string {
 	return s
 }
 
+func orElse(s string, err error) string {
+	if err != nil {
+		return err.Error()
+	}
+	return s
+}
+
 func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 	prefix := []string{"Hardware", "Bus", "USB"}
 
@@ -59,7 +66,7 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 			if ok {
 				p = px.Name
 			} else {
-				p = unwrap(dev.Product())
+				p = orElse(dev.Product())
 			}
 		} else {
 			m = unwrap(dev.Manufacturer())
@@ -70,7 +77,7 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 		t.Insert(Some(d.Product.String()), "Hardware", "Bus", "USB", addr, "ProductID")
 		t.Insert(Some(m), "Hardware", "Bus", "USB", addr, "Manufacturer")
 		t.Insert(Some(p), "Hardware", "Bus", "USB", addr, "Product")
-		t.Insert(Some(unwrap(dev.SerialNumber())), "Hardware", "Bus", "USB", addr, "Serial")
+		t.Insert(Some(orElse(dev.SerialNumber())), "Hardware", "Bus", "USB", addr, "Serial")
 		t.Insert(Some(d.Spec.String()), "Hardware", "Bus", "USB", addr, "Spec")
 		t.Insert(Some(d.Speed.String()), "Hardware", "Bus", "USB", addr, "Speed")
 

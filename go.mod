@@ -31,6 +31,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
+	github.com/yobert/alsa v0.0.0-20200618200352-d079056f5370
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22
 	k8s.io/api v0.22.1
 	k8s.io/apimachinery v0.22.1

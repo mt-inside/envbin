@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/antchfx/jsonquery"
@@ -113,6 +114,11 @@ func render(c *cli.Context) error {
 
 	if true {
 		renderUSB(root)
+		norm.Println()
+	}
+
+	if true {
+		renderAlsa(root)
 		norm.Println()
 	}
 
@@ -237,6 +243,38 @@ func renderV4l2(root *jsonquery.Node) {
 			norm.Print("  ")
 			norm.Print(jsonquery.FindOne(fmt, "Name").InnerText())
 			grey.Printf(" compressed %s, emulated %s", jsonquery.FindOne(fmt, "Compressed").InnerText(), jsonquery.FindOne(fmt, "Emulated").InnerText())
+			norm.Println()
+		}
+	}
+}
+
+func renderAlsa(root *jsonquery.Node) {
+	for _, dev := range jsonquery.Find(root, "Hardware/Sound/Alsa/Cards/*") {
+		white.Print(jsonquery.FindOne(dev, "Path").InnerText())
+		whiteBold.Printf(" %s", jsonquery.FindOne(dev, "Name").InnerText())
+
+		fmts := jsonquery.Find(dev, "Devices/*")
+		if len(fmts) != 1 {
+			norm.Println()
+		} else {
+			norm.Print(" | ")
+		}
+
+		for _, fmt := range fmts {
+			norm.Print("  ")
+
+			white.Print(jsonquery.FindOne(fmt, "Name").InnerText())
+			norm.Printf(" %s", jsonquery.FindOne(fmt, "Type").InnerText())
+
+			flags := []string{}
+			if jsonquery.FindOne(fmt, "Play").InnerText() == "true" {
+				flags = append(flags, "play")
+			}
+			if jsonquery.FindOne(fmt, "Record").InnerText() == "true" {
+				flags = append(flags, "record")
+			}
+			grey.Printf(" [%s]", strings.Join(flags, ", "))
+
 			norm.Println()
 		}
 	}

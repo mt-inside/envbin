@@ -18,7 +18,7 @@ require (
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/google/gousb v1.1.1
 	github.com/gorilla/handlers v1.4.2
-	github.com/jaypipes/ghw v0.8.1-0.20210829175411-d9a3e5acb866 // indirect
+	github.com/jaypipes/ghw v0.8.1-0.20210829175411-d9a3e5acb866
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/joho/godotenv v1.3.0
 	github.com/klauspost/cpuid/v2 v2.0.4

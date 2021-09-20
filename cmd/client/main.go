@@ -117,6 +117,11 @@ func render(c *cli.Context) error {
 	}
 
 	if true {
+		renderV4l2(root)
+		norm.Println()
+	}
+
+	if true {
 		renderBlock(root)
 		norm.Println()
 	}
@@ -212,6 +217,27 @@ func renderUSB(root *jsonquery.Node) {
 				norm.Print(iface.InnerText())
 				norm.Println()
 			}
+		}
+	}
+}
+
+func renderV4l2(root *jsonquery.Node) {
+	for _, dev := range jsonquery.Find(root, "Hardware/V4l2/*") {
+		white.Print(dev.Data)
+		whiteBold.Printf(" %s", jsonquery.FindOne(dev, "Name").InnerText())
+		white.Printf(" driver %s", jsonquery.FindOne(dev, "Driver").InnerText())
+		grey.Printf(" video out %s, capture %s, streaming %s", jsonquery.FindOne(dev, "Capabilities/VideoOutput").InnerText(), jsonquery.FindOne(dev, "Capabilities/VideoCapture").InnerText(), jsonquery.FindOne(dev, "Capabilities/StreamingIO").InnerText())
+
+		fmts := jsonquery.Find(dev, "Formats/*")
+		if len(fmts) != 1 {
+			norm.Println()
+		}
+
+		for _, fmt := range fmts {
+			norm.Print("  ")
+			norm.Print(jsonquery.FindOne(fmt, "Name").InnerText())
+			grey.Printf(" compressed %s, emulated %s", jsonquery.FindOne(fmt, "Compressed").InnerText(), jsonquery.FindOne(fmt, "Emulated").InnerText())
+			norm.Println()
 		}
 	}
 }

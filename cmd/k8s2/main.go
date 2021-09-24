@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"github.com/mt-inside/go-usvc"
 	"github.com/urfave/cli/v2"
 	corev1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -86,6 +88,8 @@ func appMain(c *cli.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	svcRange(ctx, k8s)
+
 	nodes, err := k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -154,6 +158,36 @@ func appMain(c *cli.Context) error {
 	render(nodes, "Zones", "topology.kubernetes.io/zone")
 
 	return nil
+}
+
+func svcRange(ctx context.Context, k8s kubernetes.Interface) {
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "fake",
+			Namespace: "kube-system",
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				corev1.ServicePort{
+					Port: 443,
+				},
+			},
+			ClusterIP: "1.1.1.1",
+		},
+	}
+
+	_, err := k8s.CoreV1().Services("kube-system").Create(ctx, svc, metav1.CreateOptions{})
+	var se *kerrors.StatusError
+	if err != nil {
+		if errors.As(err, &se) {
+			cause := se.ErrStatus.Details.Causes[0]
+			if cause.Type == metav1.CauseTypeFieldValueInvalid && cause.Field == "spec.clusterIPs" {
+				fmt.Println(cause.Message[strings.LastIndex(cause.Message, " ")+1:])
+				return
+			}
+		}
+	}
+	panic("Unexpectedly no error, wrong error, etc. Some error with the error.")
 }
 
 // k8s.io/apimachinery/pkg/api/resource.Quantity only knows how to round to decimal powers (despite nicely printing round numbers of binary powers)

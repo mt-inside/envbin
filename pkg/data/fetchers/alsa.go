@@ -38,6 +38,18 @@ func getAlsaData(ctx context.Context, log logr.Logger, t *Trie) {
 			t.Insert(Some(device.Type.String()), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Type")
 			t.Insert(Some(strconv.FormatBool(device.Play)), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Play")
 			t.Insert(Some(strconv.FormatBool(device.Record)), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Record")
+
+			if err := device.Open(); err != nil {
+				t.Insert(Error(err), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Sample")
+				continue
+			}
+			if err := device.Prepare(); err != nil {
+				t.Insert(Error(err), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Sample")
+				continue
+			}
+			t.Insert(Some(strconv.Itoa(device.BufferFormat().Channels)), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Channels")
+			t.Insert(Some(device.BufferFormat().SampleFormat.String()), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Sample", "Format")
+			t.Insert(Some(strconv.Itoa(device.BufferFormat().Rate)), "Hardware", "Sound", "Alsa", "Cards", strconv.Itoa(card.Number), "Devices", strconv.Itoa(device.Number), "Sample", "Rate")
 		}
 	}
 }

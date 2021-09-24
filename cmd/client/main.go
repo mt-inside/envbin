@@ -55,6 +55,16 @@ var (
 	grey      = color.New(color.FgHiBlack)
 )
 
+// TODO: really want own printf formatter, where if any of the interpolations error, return "" for the whole thing. Possible?
+func g(node *jsonquery.Node, path string) string {
+	item := jsonquery.FindOne(node, path)
+	if item == nil {
+		return "<null>"
+	}
+
+	return item.InnerText()
+}
+
 func render(c *cli.Context) error {
 	//log := c.App.Metadata["log"].(logr.Logger)
 
@@ -270,24 +280,26 @@ func renderAlsa(root *jsonquery.Node) {
 		white.Print(jsonquery.FindOne(dev, "Path").InnerText())
 		whiteBold.Printf(" %s", jsonquery.FindOne(dev, "Name").InnerText())
 
-		fmts := jsonquery.Find(dev, "Devices/*")
-		if len(fmts) != 1 {
+		devs := jsonquery.Find(dev, "Devices/*")
+		if len(devs) != 1 {
 			norm.Println()
 		} else {
 			norm.Print(" | ")
 		}
 
-		for _, fmt := range fmts {
+		for _, dev := range devs {
 			norm.Print("  ")
 
-			white.Print(jsonquery.FindOne(fmt, "Name").InnerText())
-			norm.Printf(" %s", jsonquery.FindOne(fmt, "Type").InnerText())
+			white.Print(jsonquery.FindOne(dev, "Name").InnerText())
+			norm.Printf(" %s", jsonquery.FindOne(dev, "Type").InnerText())
+
+			norm.Printf(" %sch %s/s x %s", g(dev, "Channels"), g(dev, "Sample/Rate"), g(dev, "Sample/Format"))
 
 			flags := []string{}
-			if jsonquery.FindOne(fmt, "Play").InnerText() == "true" {
+			if jsonquery.FindOne(dev, "Play").InnerText() == "true" {
 				flags = append(flags, "play")
 			}
-			if jsonquery.FindOne(fmt, "Record").InnerText() == "true" {
+			if jsonquery.FindOne(dev, "Record").InnerText() == "true" {
 				flags = append(flags, "record")
 			}
 			grey.Printf(" [%s]", strings.Join(flags, ", "))

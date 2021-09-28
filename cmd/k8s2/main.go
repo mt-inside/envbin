@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,14 +24,11 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-type Scale2 int32
-
-const (
-	//Kibi Scale2 = 10
-	//Mebi Scale2 = 20
-	Gibi Scale2 = 30
-	//Tebi Scale2 = 40
-)
+type NodeBom struct {
+	arch  string
+	cores int64
+	ram   int64
+}
 
 func init() {
 	spew.Config.DisableMethods = true
@@ -77,6 +75,40 @@ func main() {
 	}
 }
 
+func unwrapQuantity(q *resource.Quantity) int64 {
+	x, ok := q.AsInt64()
+	if !ok {
+		panic("Failed to unwrap k8s resource.Quantity - overflows int64")
+	}
+	return x
+}
+
+func formatIEC(x int64) string {
+	if x == 0 {
+		return "0"
+	}
+
+	const precision = 2 // TODO: use in fmt string and derive 100 from it
+
+	base := math.Log(float64(x)) / math.Log(1024)
+	suffixes := []string{"", "ki", "Mi", "Gi", "Ti"}
+
+	return fmt.Sprintf("%.2f%s", math.Round(math.Pow(1024, base-math.Floor(base))*100)/100, suffixes[int(math.Floor(base))])
+}
+
+func formatSI(x int64) string {
+	if x == 0 {
+		return "0"
+	}
+
+	const precision = 2 // TODO: use in fmt string and derive 100 from it
+
+	base := math.Log(float64(x)) / math.Log(1000)
+	suffixes := []string{"", "k", "M", "G", "T"}
+
+	return fmt.Sprintf("%.2f%s", math.Round(math.Pow(1000, base-math.Floor(base))*100)/100, suffixes[int(math.Floor(base))])
+}
+
 func appMain(c *cli.Context) error {
 	log := c.App.Metadata["log"].(logr.Logger)
 
@@ -116,17 +148,28 @@ func appMain(c *cli.Context) error {
 	ram := &resource.Quantity{}
 	storage := &resource.Quantity{}
 	ephemeral := &resource.Quantity{}
+	groups := map[NodeBom]int{}
 	for _, n := range nodes.Items {
+		groups[NodeBom{n.Status.NodeInfo.Architecture, unwrapQuantity(n.Status.Capacity.Cpu()), unwrapQuantity(n.Status.Capacity.Memory())}]++
+
 		cores.Add(*n.Status.Capacity.Cpu())
 		ram.Add(*n.Status.Capacity.Memory())
 		storage.Add(*n.Status.Capacity.Storage())
 		ephemeral.Add(*n.Status.Capacity.StorageEphemeral())
 	}
-	pow2Truncate(ram, Gibi)
-	pow2Truncate(storage, Gibi)
-	pow2Truncate(ephemeral, Gibi)
-	fmt.Printf("%d Nodes (%v cores, %v ram, %v storage, %v ephemeral)", len(nodes.Items), cores, ram, storage, ephemeral)
+	fmt.Printf("%d Nodes (%v cores, %v ram, %v storage, %v ephemeral)",
+		len(nodes.Items),
+		cores,
+		formatIEC(unwrapQuantity(ram)),
+		formatIEC(unwrapQuantity(storage)),
+		formatIEC(unwrapQuantity(ephemeral)),
+	)
 	fmt.Println()
+
+	fmt.Println("Hardware: ")
+	for g, n := range groups {
+		fmt.Printf("  %4d  %s %3d cores %s ram\n", n, g.arch, g.cores, formatIEC(g.ram))
+	}
 
 	// node-role.kubernetes.io/control-plane":""
 	// "kubernetes.io/os":"linux"
@@ -188,13 +231,6 @@ func svcRange(ctx context.Context, k8s kubernetes.Interface) {
 		}
 	}
 	panic("Unexpectedly no error, wrong error, etc. Some error with the error.")
-}
-
-// k8s.io/apimachinery/pkg/api/resource.Quantity only knows how to round to decimal powers (despite nicely printing round numbers of binary powers)
-func pow2Truncate(q *resource.Quantity, s Scale2) {
-	val := q.Value()
-	val = val &^ ((1 << s) - 1)
-	q.Set(val)
 }
 
 func render(nodes *corev1.NodeList, title string, label string) {

@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -28,6 +29,10 @@ type NodeBom struct {
 	arch  string
 	cores int64
 	ram   int64
+}
+type CountedNodeBom struct {
+	node  NodeBom
+	count int
 }
 
 func init() {
@@ -157,7 +162,7 @@ func appMain(c *cli.Context) error {
 		storage.Add(*n.Status.Capacity.Storage())
 		ephemeral.Add(*n.Status.Capacity.StorageEphemeral())
 	}
-	fmt.Printf("%d Nodes (%v cores, %v ram, %v storage, %v ephemeral)",
+	fmt.Printf("%d Nodes: %v cores, %v ram, %v storage, %v ephemeral",
 		len(nodes.Items),
 		cores,
 		formatIEC(unwrapQuantity(ram)),
@@ -167,8 +172,15 @@ func appMain(c *cli.Context) error {
 	fmt.Println()
 
 	fmt.Println("Hardware: ")
-	for g, n := range groups {
-		fmt.Printf("  %4d  %s %3d cores %s ram\n", n, g.arch, g.cores, formatIEC(g.ram))
+	groups_sorted := []CountedNodeBom{}
+	for node, count := range groups {
+		groups_sorted = append(groups_sorted, CountedNodeBom{node, count})
+	}
+	sort.Slice(groups_sorted, func(i, j int) bool {
+		return groups_sorted[i].node.cores > groups_sorted[j].node.cores
+	})
+	for _, cn := range groups_sorted {
+		fmt.Printf("  %4d  %s %3d cores %s ram\n", cn.count, cn.node.arch, cn.node.cores, formatIEC(cn.node.ram))
 	}
 
 	// node-role.kubernetes.io/control-plane":""

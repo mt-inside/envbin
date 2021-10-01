@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,6 +13,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-logr/logr"
 	"github.com/kr/pretty"
+	"github.com/mt-inside/envbin/pkg/utils"
 	"github.com/mt-inside/go-usvc"
 	"github.com/urfave/cli/v2"
 	corev1 "k8s.io/api/core/v1"
@@ -31,8 +31,12 @@ type NodeBom struct {
 	ram   int64
 }
 type CountedNodeBom struct {
-	node  NodeBom
+	bom   NodeBom
 	count int
+}
+type NodeDetails struct {
+	name string
+	bom  NodeBom
 }
 
 func init() {
@@ -88,32 +92,6 @@ func unwrapQuantity(q *resource.Quantity) int64 {
 	return x
 }
 
-func formatIEC(x int64) string {
-	if x == 0 {
-		return "0"
-	}
-
-	const precision = 2 // TODO: use in fmt string and derive 100 from it
-
-	base := math.Log(float64(x)) / math.Log(1024)
-	suffixes := []string{"", "ki", "Mi", "Gi", "Ti"}
-
-	return fmt.Sprintf("%.2f%s", math.Round(math.Pow(1024, base-math.Floor(base))*100)/100, suffixes[int(math.Floor(base))])
-}
-
-func formatSI(x int64) string {
-	if x == 0 {
-		return "0"
-	}
-
-	const precision = 2 // TODO: use in fmt string and derive 100 from it
-
-	base := math.Log(float64(x)) / math.Log(1000)
-	suffixes := []string{"", "k", "M", "G", "T"}
-
-	return fmt.Sprintf("%.2f%s", math.Round(math.Pow(1000, base-math.Floor(base))*100)/100, suffixes[int(math.Floor(base))])
-}
-
 func appMain(c *cli.Context) error {
 	log := c.App.Metadata["log"].(logr.Logger)
 
@@ -127,7 +105,7 @@ func appMain(c *cli.Context) error {
 
 	svcRange(ctx, k8s)
 
-	nodes, err := k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	k8sNodes, err := k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -149,68 +127,86 @@ func appMain(c *cli.Context) error {
 	fmt.Printf("Kubernetes %s %s", version.GitVersion, version.Platform)
 	fmt.Println()
 
-	cores := &resource.Quantity{}
-	ram := &resource.Quantity{}
-	storage := &resource.Quantity{}
-	ephemeral := &resource.Quantity{}
-	groups := map[NodeBom]int{}
-	for _, n := range nodes.Items {
-		groups[NodeBom{n.Status.NodeInfo.Architecture, unwrapQuantity(n.Status.Capacity.Cpu()), unwrapQuantity(n.Status.Capacity.Memory())}]++
+	nodes := []NodeDetails{}
+	boms := map[NodeBom]int{}
 
-		cores.Add(*n.Status.Capacity.Cpu())
-		ram.Add(*n.Status.Capacity.Memory())
-		storage.Add(*n.Status.Capacity.Storage())
-		ephemeral.Add(*n.Status.Capacity.StorageEphemeral())
+	totalCores := &resource.Quantity{}
+	totalRam := &resource.Quantity{}
+	totalStorage := &resource.Quantity{}
+	totalEphemeral := &resource.Quantity{}
+	for _, n := range k8sNodes.Items {
+		// TODO: groupByRole & groupByLabel upfront here (array of labels to pre-calc)
+		// Rounded becuase nodes often report very similar, but not idential, amounts of RAM. 10 binary places seems about right from some finger-in-the-air
+		bom := NodeBom{n.Status.NodeInfo.Architecture, unwrapQuantity(n.Status.Capacity.Cpu()), utils.Round(unwrapQuantity(n.Status.Capacity.Memory()), 2, 10)}
+		boms[bom]++
+
+		node := NodeDetails{n.ObjectMeta.Name, bom}
+		nodes = append(nodes, node)
+
+		totalCores.Add(*n.Status.Capacity.Cpu())
+		totalRam.Add(*n.Status.Capacity.Memory())
+		totalStorage.Add(*n.Status.Capacity.Storage())
+		totalEphemeral.Add(*n.Status.Capacity.StorageEphemeral())
 	}
-	fmt.Printf("%d Nodes: %v cores, %v ram, %v storage, %v ephemeral",
-		len(nodes.Items),
-		cores,
-		formatIEC(unwrapQuantity(ram)),
-		formatIEC(unwrapQuantity(storage)),
-		formatIEC(unwrapQuantity(ephemeral)),
+
+	fmt.Println("Hardware: ")
+	fmt.Printf("  Total %d nodes; %v cores, %v ram, %v storage, %v ephemeral",
+		len(nodes),
+		totalCores,
+		utils.FormatIEC(unwrapQuantity(totalRam), 2),
+		utils.FormatIEC(unwrapQuantity(totalStorage), 2),
+		utils.FormatIEC(unwrapQuantity(totalEphemeral), 2),
 	)
 	fmt.Println()
 
-	fmt.Println("Hardware: ")
-	groups_sorted := []CountedNodeBom{}
-	for node, count := range groups {
-		groups_sorted = append(groups_sorted, CountedNodeBom{node, count})
+	if false { // all
+		for _, node := range nodes {
+			fmt.Printf("  %s  %s %3d cores %s ram\n",
+				node.name,
+				node.bom.arch,
+				node.bom.cores,
+				utils.FormatIEC(node.bom.ram, 2),
+			)
+			// TODO show role, any taints/auto-taints, instance/zone/region
+		}
+	} else {
+		boms_sorted := []CountedNodeBom{}
+		for node, count := range boms {
+			boms_sorted = append(boms_sorted, CountedNodeBom{node, count})
+		}
+		sort.Slice(boms_sorted, func(i, j int) bool {
+			if boms_sorted[i].bom.cores == boms_sorted[j].bom.cores {
+				return boms_sorted[i].bom.ram > boms_sorted[j].bom.ram
+			}
+			return boms_sorted[i].bom.cores > boms_sorted[j].bom.cores
+		})
+		for _, cn := range boms_sorted {
+			fmt.Printf("  %4d  %s %3d cores %s ram\n", cn.count, cn.bom.arch, cn.bom.cores, utils.FormatIEC(cn.bom.ram, 2))
+		}
+
+		fmt.Print("Roles: ")
+		pretty.Print(groupByRole(k8sNodes))
+		fmt.Println()
+
+		// https://kubernetes.io/docs/reference/labels-annotations-taints/
+		// All nodes
+		render(k8sNodes, "OSen", "kubernetes.io/os")
+		render(k8sNodes, "Arches", "kubernetes.io/arch")
+
+		// Auto-taints
+		render(k8sNodes, "Not Ready", "node.kubernetes.io/not-ready")
+		render(k8sNodes, "Unreachable", "node.kubernetes.io/unreachable")
+		render(k8sNodes, "Unschedulable", "node.kubernetes.io/unschedulable")
+		render(k8sNodes, "Memory Pressure", "node.kubernetes.io/memory-pressure")
+		render(k8sNodes, "Disk Pressure", "node.kubernetes.io/disk-pressure")
+		render(k8sNodes, "Network Unavailable", "node.kubernetes.io/network-unavailable")
+		render(k8sNodes, "PID Pressure", "node.kubernetes.io/pid-pressure")
+
+		// Cloud instances
+		render(k8sNodes, "Instance Types", "node.kubernetes.io/instance-type")
+		render(k8sNodes, "Regions", "topology.kubernetes.io/region")
+		render(k8sNodes, "Zones", "topology.kubernetes.io/zone")
 	}
-	sort.Slice(groups_sorted, func(i, j int) bool {
-		return groups_sorted[i].node.cores > groups_sorted[j].node.cores
-	})
-	for _, cn := range groups_sorted {
-		fmt.Printf("  %4d  %s %3d cores %s ram\n", cn.count, cn.node.arch, cn.node.cores, formatIEC(cn.node.ram))
-	}
-
-	// node-role.kubernetes.io/control-plane":""
-	// "kubernetes.io/os":"linux"
-	// "node.kubernetes.io/exclude-from-external-load-balancers":""
-	// "kubernetes.io/arch":"amd64"
-	// "node-role.kubernetes.io/master":""
-
-	fmt.Print("Roles: ")
-	pretty.Print(groupByRole(nodes))
-	fmt.Println()
-
-	// https://kubernetes.io/docs/reference/labels-annotations-taints/
-	// All nodes
-	render(nodes, "OSen", "kubernetes.io/os")
-	render(nodes, "Arches", "kubernetes.io/arch")
-
-	// Auto-taints
-	render(nodes, "Not Ready", "node.kubernetes.io/not-ready")
-	render(nodes, "Unreachable", "node.kubernetes.io/unreachable")
-	render(nodes, "Unschedulable", "node.kubernetes.io/unschedulable")
-	render(nodes, "Memory Pressure", "node.kubernetes.io/memory-pressure")
-	render(nodes, "Disk Pressure", "node.kubernetes.io/disk-pressure")
-	render(nodes, "Network Unavailable", "node.kubernetes.io/network-unavailable")
-	render(nodes, "PID Pressure", "node.kubernetes.io/pid-pressure")
-
-	// Cloud instances
-	render(nodes, "Instance Types", "node.kubernetes.io/instance-type")
-	render(nodes, "Regions", "topology.kubernetes.io/region")
-	render(nodes, "Zones", "topology.kubernetes.io/zone")
 
 	return nil
 }

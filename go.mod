@@ -29,6 +29,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.21.8
 	github.com/spf13/viper v1.9.0
 	github.com/stretchr/testify v1.7.0
+	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/yobert/alsa v0.0.0-20200618200352-d079056f5370
 	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678

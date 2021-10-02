@@ -80,7 +80,7 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 			if err != nil {
 				t.Insert(Error(err), "Mircoarchitecture")
 			} else {
-				t.Insert(Some(intelScalableXeonGens[nGen+1]), "Mircoarchitecture")
+				t.Insert(Some(intelScalableXeonGens[nGen]), "Mircoarchitecture")
 			}
 			return t
 		} else {

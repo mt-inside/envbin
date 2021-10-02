@@ -243,7 +243,8 @@ func renderUSB(root *jsonquery.Node) {
 			}
 			for _, iface := range ifaces {
 				norm.Print("    ")
-				norm.Print(iface.InnerText())
+				norm.Print(g(iface, "Description"))
+				grey.Printf(" driver %s", g(iface, "Driver"))
 				norm.Println()
 			}
 		}

@@ -1,9 +1,14 @@
+// +build linux
+
 package fetchers
 
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/google/gousb"
@@ -56,7 +61,17 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 		defer dev.Close()
 		d := dev.Desc
 
-		addr := fmt.Sprintf("%03d:%03d:%d", d.Bus, d.Address, d.Port)
+		phyAddr, err := findPhysicalAddr(d.Bus, d.Address)
+		if err != nil {
+			log.Error(err, "Can't find usb device")
+			continue // The virtual Root Hub devices, which are annoying
+		}
+
+		addr := fmt.Sprintf("%d-%s", d.Bus, phyAddr)
+
+		t.Insert(Some(strconv.Itoa(d.Bus)), "Hardware", "Bus", "USB", addr, "Bus")
+		t.Insert(Some(phyAddr), "Hardware", "Bus", "USB", addr, "Physical Address")
+		t.Insert(Some(strconv.Itoa(d.Address)), "Hardware", "Bus", "USB", addr, "Logical Device")
 
 		var m, p string
 		mx, ok := usbid.Vendors[d.Vendor]
@@ -91,8 +106,63 @@ func getUsbData(ctx context.Context, log logr.Logger, t *Trie) {
 			t.Insert(Some(strconv.FormatBool(c.RemoteWakeup)), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Wakeup")
 			for _, i := range c.Interfaces {
 				// I've never seen a device with differing properties across alts of an interface, so we just read item 0. If you do need to iterate Alts, nb that you want a.Alternate, not a.Number
-				t.Insert(Some(usbid.Classify(i.AltSettings[0])), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number))
+				t.Insert(Some(usbid.Classify(i.AltSettings[0])), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Description")
+				driver, err := findDriver(d.Bus, phyAddr, c.Number, i.Number)
+				if err == nil {
+					t.Insert(Some(driver), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
+				} else {
+					t.Insert(Error(err), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
+				}
 			}
 		}
 	}
+}
+
+func findPhysicalAddr(bus int, dev int) (string, error) {
+	// filename format: .../devices/<bus>-<address>[.<port>[.<port>...]]:<configuration>.<interface>
+	glob := fmt.Sprintf("/sys/bus/usb/devices/%d-*", bus)
+	devPaths, err := filepath.Glob(glob)
+	if err != nil {
+		return "", err
+	}
+
+	for _, devPath := range devPaths {
+		if strings.Contains(devPath, ":") {
+			continue
+		}
+
+		devnumRaw, err := os.ReadFile(filepath.Join(devPath, "devnum"))
+		if err != nil {
+			return "", err
+		}
+		devnum, err := strconv.Atoi(strings.TrimSpace(string(devnumRaw)))
+		if err != nil {
+			return "", err
+		}
+
+		if devnum != dev {
+			continue
+		}
+
+		devpathRaw, err := os.ReadFile(filepath.Join(devPath, "devpath"))
+		if err != nil {
+			return "", err
+		}
+
+		return strings.TrimSpace(string(devpathRaw)), nil
+	}
+
+	return "", fmt.Errorf("Can't find USB device at bus %d addr %d", bus, dev)
+}
+
+func findDriver(bus int, phyAddr string, config int, iface int) (string, error) {
+	ifacePath := fmt.Sprintf("/sys/bus/usb/devices/%d-%s:%d.%d", bus, phyAddr, config, iface)
+	driverPath := filepath.Join(ifacePath, "driver")
+	targetPath, err := os.Readlink(driverPath)
+	if err != nil {
+		return "", err
+	}
+	driverName := filepath.Base(targetPath)
+
+	return driverName, nil
 }

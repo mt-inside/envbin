@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/docker/go-units"
 	"github.com/go-logr/logr"
 	"github.com/kr/pretty"
 	"github.com/mt-inside/envbin/pkg/utils"
@@ -153,9 +154,9 @@ func appMain(c *cli.Context) error {
 	fmt.Printf("  Total %d nodes; %v cores, %v ram, %v storage, %v ephemeral",
 		len(nodes),
 		totalCores,
-		utils.FormatIEC(unwrapQuantity(totalRam), 2),
-		utils.FormatIEC(unwrapQuantity(totalStorage), 2),
-		utils.FormatIEC(unwrapQuantity(totalEphemeral), 2),
+		units.BytesSize(float64(unwrapQuantity(totalRam))),
+		units.HumanSize(float64(unwrapQuantity(totalStorage))),
+		units.HumanSize(float64(unwrapQuantity(totalEphemeral))),
 	)
 	fmt.Println()
 
@@ -165,7 +166,7 @@ func appMain(c *cli.Context) error {
 				node.name,
 				node.bom.arch,
 				node.bom.cores,
-				utils.FormatIEC(node.bom.ram, 2),
+				units.BytesSize(float64(node.bom.ram)),
 			)
 			// TODO show role, any taints/auto-taints, instance/zone/region
 		}
@@ -181,7 +182,7 @@ func appMain(c *cli.Context) error {
 			return boms_sorted[i].bom.cores > boms_sorted[j].bom.cores
 		})
 		for _, cn := range boms_sorted {
-			fmt.Printf("  %4d  %s %3d cores %s ram\n", cn.count, cn.bom.arch, cn.bom.cores, utils.FormatIEC(cn.bom.ram, 2))
+			fmt.Printf("  %4d  %s %3d cores %s ram\n", cn.count, cn.bom.arch, cn.bom.cores, units.BytesSize(float64(cn.bom.ram)))
 		}
 
 		fmt.Print("Roles: ")

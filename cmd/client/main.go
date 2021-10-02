@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/antchfx/jsonquery"
+	"github.com/docker/go-units"
 	"github.com/fatih/color"
 	"github.com/mt-inside/envbin/pkg/data/fetchers"
 	"github.com/mt-inside/go-usvc"
@@ -56,13 +58,40 @@ var (
 )
 
 // TODO: really want own printf formatter, where if any of the interpolations error, return "" for the whole thing. Possible?
-func g(node *jsonquery.Node, path string) string {
+func s(node *jsonquery.Node, path string) string {
 	item := jsonquery.FindOne(node, path)
 	if item == nil {
 		return "<null>"
 	}
 
 	return item.InnerText()
+}
+
+// func i(node *jsonquery.Node, path string) int64 {
+// 	item := jsonquery.FindOne(node, path)
+// 	if item == nil {
+// 		return -1
+// 	}
+
+// 	n, err := strconv.ParseInt(item.InnerText(), 10, 64)
+// 	if err != nil {
+// 		return -1
+// 	}
+
+// 	return n
+// }
+func f(node *jsonquery.Node, path string) float64 {
+	item := jsonquery.FindOne(node, path)
+	if item == nil {
+		return -1
+	}
+
+	n, err := strconv.ParseFloat(item.InnerText(), 64)
+	if err != nil {
+		return -1
+	}
+
+	return n
 }
 
 func render(c *cli.Context) error {
@@ -156,11 +185,12 @@ func renderSummary(root *jsonquery.Node) {
 	grey.Printf(" (%s %s)", jsonquery.FindOne(root, "OS/Kernel/Type").InnerText(), jsonquery.FindOne(root, "OS/Kernel/Version").InnerText())
 	norm.Print(" up " + jsonquery.FindOne(root, "OS/Uptime").InnerText())
 	norm.Println()
-	whiteBold.Print(jsonquery.FindOne(root, "Hardware/CPU/Model").InnerText())
+	whiteBold.Print(s(root, "Hardware/CPU/Model/Name"))
 	white.Printf(" %s/%s", jsonquery.FindOne(root, "Hardware/CPU/Cores").InnerText(), jsonquery.FindOne(root, "Hardware/CPU/Threads").InnerText())
 	white.Printf(" %s", jsonquery.FindOne(root, "Hardware/CPU/Arch").InnerText())
+	grey.Printf(" (%s)", s(root, "Hardware/CPU/Model/Mircoarchitecture"))
 	norm.Println()
-	whiteBold.Print(jsonquery.FindOne(root, "Hardware/Memory/Total").InnerText())
+	whiteBold.Print(units.BytesSize(f(root, "Hardware/Memory/Total")))
 	norm.Print(" RAM")
 	norm.Println()
 	whiteBold.Print(jsonquery.FindOne(root, "Hardware/Firmware/BootType").InnerText())
@@ -170,7 +200,7 @@ func renderSummary(root *jsonquery.Node) {
 	norm.Println()
 	norm.Print("Process ")
 	whiteBold.Print(jsonquery.FindOne(root, "Process/ID").InnerText())
-	norm.Print("Running as user ")
+	norm.Print(" user ")
 	whiteBold.Print(jsonquery.FindOne(root, "Process/User/Name").InnerText())
 	norm.Print(" group ")
 	whiteBold.Print(jsonquery.FindOne(root, "Process/Group/Name").InnerText())
@@ -243,8 +273,8 @@ func renderUSB(root *jsonquery.Node) {
 			}
 			for _, iface := range ifaces {
 				norm.Print("    ")
-				norm.Print(g(iface, "Description"))
-				grey.Printf(" driver %s", g(iface, "Driver"))
+				norm.Print(s(iface, "Description"))
+				grey.Printf(" driver %s", s(iface, "Driver"))
 				norm.Println()
 			}
 		}
@@ -290,7 +320,7 @@ func renderAlsa(root *jsonquery.Node) {
 			white.Print(jsonquery.FindOne(dev, "Name").InnerText())
 			norm.Printf(" %s", jsonquery.FindOne(dev, "Type").InnerText())
 
-			norm.Printf(" %sch %s/s x %s", g(dev, "Channels"), g(dev, "Sample/Rate"), g(dev, "Sample/Format"))
+			norm.Printf(" %sch %s/s x %s", s(dev, "Channels"), s(dev, "Sample/Rate"), s(dev, "Sample/Format"))
 
 			flags := []string{}
 			if jsonquery.FindOne(dev, "Play").InnerText() == "true" {
@@ -316,7 +346,7 @@ func renderBlock(root *jsonquery.Node) {
 			grey.Printf(" serial %s", serial)
 		}
 
-		norm.Printf(" [%s, %s bytes", jsonquery.FindOne(blk, "ControllerType").InnerText(), jsonquery.FindOne(blk, "SizeBytes").InnerText())
+		norm.Printf(" [%s, %s bytes", s(blk, "ControllerType"), units.HumanSize(f(blk, "SizeBytes")))
 		if jsonquery.FindOne(blk, "Removable").InnerText() == "true" {
 			norm.Printf("Removable")
 		}

@@ -2,9 +2,9 @@ package fetchers
 
 import (
 	"context"
+	"strconv"
 
 	sigar "github.com/cloudfoundry/gosigar"
-	"github.com/docker/go-units"
 	"github.com/go-logr/logr"
 
 	"github.com/mt-inside/envbin/pkg/data"
@@ -24,5 +24,5 @@ func getMemData(ctx context.Context, log logr.Logger, t *Trie) {
 		return
 	}
 
-	t.Insert(Some(units.BytesSize(float64(mem.Total))), "Hardware", "Memory", "Total")
+	t.Insert(Some(strconv.FormatUint(mem.Total, 10)), "Hardware", "Memory", "Total")
 }

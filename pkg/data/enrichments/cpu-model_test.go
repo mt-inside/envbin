@@ -35,6 +35,10 @@ func TestFormatBase10(t *testing.T) {
 			"AMD EPYC 7713 64-Core Processor",
 			map[string]string{"Series": "7", "SKU": "71", "Generation": "3"},
 		},
+		{
+			"Random string",
+			map[string]string{"Details": "Unknown"},
+		},
 	}
 
 	for _, cse := range cases {

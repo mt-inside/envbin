@@ -142,5 +142,7 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 		return t
 	}
 
-	return nil
+	t := NewTrie(log)
+	t.Insert(Some("Unknown"), "Details")
+	return t
 }

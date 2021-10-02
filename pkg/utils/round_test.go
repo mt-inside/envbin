@@ -14,7 +14,7 @@ func TestRoundBase10(t *testing.T) {
 	}
 
 	for _, cse := range cases {
-		rounded := round(cse.x, 10, cse.p)
+		rounded := Round(cse.x, 10, cse.p)
 		if cse.target != rounded {
 			t.Errorf("Answer was wrong; expected: %d, got: %d.", cse.target, rounded)
 		}
@@ -45,7 +45,7 @@ func TestFormatBase10(t *testing.T) {
 	}
 
 	for _, cse := range cases {
-		formatted := formatSI(cse.x, cse.p)
+		formatted := FormatSI(cse.x, cse.p)
 		if cse.target != formatted {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}
@@ -67,8 +67,8 @@ func TestRoundFormatBase10(t *testing.T) {
 	}
 
 	for _, cse := range cases {
-		rounded := round(cse.x, 10, cse.p)
-		formatted := formatSI(rounded, 10)
+		rounded := Round(cse.x, 10, cse.p)
+		formatted := FormatSI(rounded, 10)
 		if cse.target != formatted {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}
@@ -91,7 +91,7 @@ func TestRoundBase2(t *testing.T) {
 	}
 
 	for _, cse := range cases {
-		rounded := round(cse.x, 2, cse.p)
+		rounded := Round(cse.x, 2, cse.p)
 		if cse.target != rounded {
 			t.Errorf("Answer was wrong; expected: %d, got: %d.", cse.target, rounded)
 		}
@@ -122,7 +122,7 @@ func TestFormatBase2(t *testing.T) {
 	}
 
 	for _, cse := range cases {
-		formatted := formatIEC(cse.x, cse.p)
+		formatted := FormatIEC(cse.x, cse.p)
 		if cse.target != formatted {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}
@@ -135,26 +135,26 @@ func TestRoundFormatBase2(t *testing.T) {
 		p      int64
 		target string
 	}{
-		{2_423_462_141_358, 1, "2T"},
-		{2_423_462_141_358, 2, "2.4T"},
-		{2_423_462_141_358, 3, "2.42T"},
-		{2_423_462_141_358, 4, "2.423T"},
-		{2_423_462_141_358, 5, "2.4235T"}, // rounds
-		{2_423_462_141_358, 6, "2.42346T"},
-		{2_423_462_141_358, 7, "2.42346T"},
-		{2_423_462_141_358, 8, "2.42346T"},
-		{2_423_462_141_358, 9, "2.42346T"},
-		{2_423_462_141_358, 10, "2.42346T"},
-		{2_423_462_141_358, 11, "2.42346T"},
-		{2_423_462_141_358, 12, "2.42346T"},
-		{2_423_462_141_358, 13, "2.42346T"},
-		{2_423_462_141_358, 14, "2.42346T"},
-		{2_423_462_141_358, 15, "2.42346T"},
+		{2_423_462_141_358, 1, "2.0000000000Ti"},
+		{2_423_462_141_358, 2, "2.0000000000Ti"},
+		{2_423_462_141_358, 3, "2.0000000000Ti"},
+		{2_423_462_141_358, 4, "2.2500000000Ti"},
+		{2_423_462_141_358, 5, "2.2500000000Ti"},
+		{2_423_462_141_358, 6, "2.1875000000Ti"},
+		{2_423_462_141_358, 7, "2.2187500000Ti"},
+		{2_423_462_141_358, 8, "2.2031250000Ti"},
+		{2_423_462_141_358, 9, "2.2031250000Ti"},
+		{2_423_462_141_358, 10, "2.2031250000Ti"},
+		{2_423_462_141_358, 11, "2.2050781250Ti"},
+		{2_423_462_141_358, 12, "2.2041015625Ti"},
+		{2_423_462_141_358, 13, "2.2041015625Ti"},
+		{2_423_462_141_358, 14, "2.2041015625Ti"},
+		{2_423_462_141_358, 15, "2.2041015625Ti"},
 	}
 
 	for _, cse := range cases {
-		rounded := round(cse.x, 2, cse.p)
-		formatted := formatIEC(rounded, 10)
+		rounded := Round(cse.x, 2, cse.p)
+		formatted := FormatIEC(rounded, 10)
 		if cse.target != formatted {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}

@@ -170,14 +170,10 @@ func renderSummary(root *jsonquery.Node) {
 	norm.Println()
 	norm.Print("Process ")
 	whiteBold.Print(jsonquery.FindOne(root, "Process/ID").InnerText())
-	norm.Print(" (parents ")
-	white.Print(jsonquery.FindOne(root, "Process/ParentID").InnerText())
-	norm.Print(")")
-	norm.Println()
-	norm.Print("Running as UID ")
-	whiteBold.Print(jsonquery.FindOne(root, "Process/UID").InnerText())
-	norm.Print(" GID ")
-	whiteBold.Print(jsonquery.FindOne(root, "Process/GID").InnerText())
+	norm.Print("Running as user ")
+	whiteBold.Print(jsonquery.FindOne(root, "Process/User/Name").InnerText())
+	norm.Print(" group ")
+	whiteBold.Print(jsonquery.FindOne(root, "Process/Group/Name").InnerText())
 	norm.Println()
 }
 

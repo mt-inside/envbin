@@ -19,8 +19,8 @@ func TestRoundBase10(t *testing.T) {
 			t.Errorf("Answer was wrong; expected: %d, got: %d.", cse.target, rounded)
 		}
 	}
-
 }
+
 func TestFormatBase10(t *testing.T) {
 	cases := []struct {
 		x      int64
@@ -50,8 +50,8 @@ func TestFormatBase10(t *testing.T) {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}
 	}
-
 }
+
 func TestRoundFormatBase10(t *testing.T) {
 	cases := []struct {
 		x      int64
@@ -73,8 +73,8 @@ func TestRoundFormatBase10(t *testing.T) {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}
 	}
-
 }
+
 func TestRoundBase2(t *testing.T) {
 	cases := []struct {
 		x      int64
@@ -96,8 +96,8 @@ func TestRoundBase2(t *testing.T) {
 			t.Errorf("Answer was wrong; expected: %d, got: %d.", cse.target, rounded)
 		}
 	}
-
 }
+
 func TestFormatBase2(t *testing.T) {
 	cases := []struct {
 		x      int64
@@ -127,8 +127,8 @@ func TestFormatBase2(t *testing.T) {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}
 	}
-
 }
+
 func TestRoundFormatBase2(t *testing.T) {
 	cases := []struct {
 		x      int64
@@ -159,5 +159,4 @@ func TestRoundFormatBase2(t *testing.T) {
 			t.Errorf("Answer was wrong; expected: %s, got: %s.", cse.target, formatted)
 		}
 	}
-
 }

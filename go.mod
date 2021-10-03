@@ -39,6 +39,13 @@ require (
 )
 
 require (
+	cloud.google.com/go v0.93.3 // indirect
+	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
+	github.com/Azure/go-autorest/autorest v0.11.18 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.9.13 // indirect
+	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
+	github.com/Azure/go-autorest/logger v0.2.1 // indirect
+	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/antchfx/xpath v1.1.7 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.9.1 // indirect
@@ -50,6 +57,7 @@ require (
 	github.com/aws/smithy-go v1.8.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
+	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-logr/zapr v0.4.0 // indirect

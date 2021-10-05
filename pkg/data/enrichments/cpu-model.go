@@ -105,7 +105,7 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 		}
 	} else if strings.Contains(name, "Core(TM)") {
 		var series, sku, generation, flags string
-		fmt.Sscanf(name, "Intel(R) Core(TM) CPU %2s-%1s%3s%1s", &series, &generation, &sku, &flags)
+		fmt.Sscanf(name, "Intel(R) Core(TM) %2s-%1s%3s%1s", &series, &generation, &sku, &flags)
 
 		t := NewTrie(log)
 		t.Insert(Some(series), "Series")

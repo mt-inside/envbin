@@ -16,8 +16,12 @@ func TestFormatBase10(t *testing.T) {
 		results map[string]string
 	}{
 		{
-			"Intel(R) Core(TM) CPU i5-4690K @ 3.50GHz",
+			"Intel(R) Core(TM) i5-4690K CPU @ 3.50GHz",
 			map[string]string{"Series": "i5", "SKU": "690", "Generation": "4", "Flags": "K"},
+		},
+		{
+			"Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+			map[string]string{"Series": "i9", "SKU": "880", "Generation": "9", "Flags": "H"},
 		},
 		{
 			"Intel(R) Xeon(R) CPU E5-2630 v3 @ 2.40GHz",

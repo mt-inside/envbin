@@ -18,6 +18,7 @@ func init() {
 func getAwsData(ctx context.Context, log logr.Logger, t *Trie) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
+		// Technically, no client configured (this will pass on a workstation that interracts with AWS)
 		t.Insert(NotPresent(), "Cloud", "AWS")
 		return
 	}
@@ -26,6 +27,7 @@ func getAwsData(ctx context.Context, log logr.Logger, t *Trie) {
 
 	iid, err := aws.GetInstanceIdentityDocument(ctx, nil)
 	if err != nil {
+		t.Insert(NotPresent(), "Cloud", "AWS")
 		return
 	}
 	t.Insert(Some("AWS"), "Cloud", "Provider")

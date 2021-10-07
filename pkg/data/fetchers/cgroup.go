@@ -41,10 +41,10 @@ func getCgroupData(ctx context.Context, log logr.Logger, t *Trie) {
 
 	mounts_scanner := bufio.NewScanner(mounts)
 	for mounts_scanner.Scan() {
-		if strings.HasPrefix(mounts_scanner.Text(), "cgroup") {
-			t.Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v1", "Enabled")
-		} else if strings.HasPrefix(mounts_scanner.Text(), "cgroup2") {
+		if strings.HasPrefix(mounts_scanner.Text(), "cgroup2") {
 			t.Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v2", "Enabled")
+		} else if strings.HasPrefix(mounts_scanner.Text(), "cgroup") {
+			t.Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v1", "Enabled")
 		}
 	}
 }

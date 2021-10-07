@@ -18,7 +18,7 @@ func init() {
 func getAwsData(ctx context.Context, log logr.Logger, t *Trie) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		// Don't insert errors in this fetcher because it's not an error, nor exceptional, to not be on AWS
+		t.Insert(NotPresent(), "Cloud", "AWS")
 		return
 	}
 

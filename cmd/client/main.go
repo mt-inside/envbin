@@ -188,7 +188,7 @@ func renderSummary(root *jsonquery.Node) {
 	whiteBold.Print(s(root, "Hardware/CPU/Model/Name"))
 	white.Printf(" %s/%s", jsonquery.FindOne(root, "Hardware/CPU/Cores").InnerText(), jsonquery.FindOne(root, "Hardware/CPU/Threads").InnerText())
 	white.Printf(" %s", jsonquery.FindOne(root, "Hardware/CPU/Arch").InnerText())
-	grey.Printf(" (%s)", s(root, "Hardware/CPU/Model/Mircoarchitecture"))
+	grey.Printf(" (%s)", s(root, "Hardware/CPU/Model/Microarchitecture"))
 	norm.Println()
 	whiteBold.Print(units.BytesSize(f(root, "Hardware/Memory/Total")))
 	norm.Print(" RAM")

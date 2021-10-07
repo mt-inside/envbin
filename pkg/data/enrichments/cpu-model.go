@@ -78,9 +78,9 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 
 			nGen, err := strconv.Atoi(generation)
 			if err != nil {
-				t.Insert(Error(err), "Mircoarchitecture")
+				t.Insert(Error(err), "Microarchitecture")
 			} else {
-				t.Insert(Some(intelScalableXeonGens[nGen]), "Mircoarchitecture")
+				t.Insert(Some(intelScalableXeonGens[nGen]), "Microarchitecture")
 			}
 			return t
 		} else {
@@ -97,9 +97,9 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 
 			nGen, err := strconv.Atoi(generation)
 			if err != nil {
-				t.Insert(Error(err), "Mircoarchitecture")
+				t.Insert(Error(err), "Microarchitecture")
 			} else {
-				t.Insert(Some(intelXeonGens[nGen+1]), "Mircoarchitecture")
+				t.Insert(Some(intelXeonGens[nGen+1]), "Microarchitecture")
 			}
 			return t
 		}
@@ -115,9 +115,9 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 
 		nGen, err := strconv.Atoi(generation)
 		if err != nil {
-			t.Insert(Error(err), "Mircoarchitecture")
+			t.Insert(Error(err), "Microarchitecture")
 		} else {
-			t.Insert(Some(intelCoreGens[nGen]), "Mircoarchitecture")
+			t.Insert(Some(intelCoreGens[nGen]), "Microarchitecture")
 		}
 		return t
 	} else if strings.Contains(name, "EPYC") {
@@ -128,7 +128,7 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 		t.Insert(Some(series), "Series")
 		t.Insert(Some(sku), "SKU")
 		t.Insert(Some(generation), "Generation")
-		t.Insert(Some(amdEpycGens[generation]), "Mircoarchitecture")
+		t.Insert(Some(amdEpycGens[generation]), "Microarchitecture")
 		return t
 	} else if strings.Contains(name, "Ryzen") {
 		var series, sku, generation string
@@ -138,7 +138,7 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 		t.Insert(Some(series), "Series")
 		t.Insert(Some(sku), "SKU")
 		t.Insert(Some(generation), "Generation")
-		t.Insert(Some(amdRyzenGens[generation]), "Mircoarchitecture")
+		t.Insert(Some(amdRyzenGens[generation]), "Microarchitecture")
 		return t
 	}
 

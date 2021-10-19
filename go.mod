@@ -6,7 +6,6 @@ require (
 	github.com/antchfx/jsonquery v1.1.4
 	github.com/aws/aws-sdk-go-v2/config v1.8.2
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.5.1
-	github.com/cloudfoundry/gosigar v1.3.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/go-units v0.4.0
@@ -56,6 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.7.1 // indirect
 	github.com/aws/smithy-go v1.8.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
+	github.com/elastic/gosigar v0.14.1 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect

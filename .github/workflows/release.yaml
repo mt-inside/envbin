@@ -21,6 +21,7 @@ jobs:
         run: |
           git --version
           git status
+          git tag
           git describe
 
       - name: Get current tag

@@ -17,14 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
-
-      - name: git dbg
-        run: |
-          git --version
-          git status
-          git tag
-          git describe
+          fetch-depth: 0 # gets all history, needed to see tags
 
       - name: Get current tag
         id: get_current_tag

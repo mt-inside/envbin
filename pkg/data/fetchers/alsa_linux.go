@@ -1,3 +1,5 @@
+// +build native
+
 package fetchers
 
 import (

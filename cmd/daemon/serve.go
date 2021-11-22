@@ -22,19 +22,6 @@ var Serve = &cli.Command{
 	Name:  "serve",
 	Usage: "Serve data over the network",
 
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:  "output-addr",
-			Value: ":8080",
-			Usage: "Listen address for Lorem Ipsum output",
-		},
-		&cli.StringFlag{
-			Name:  "api-addr",
-			Value: ":8081",
-			Usage: "Listen address for API",
-		},
-	},
-
 	Action: serve,
 }
 
@@ -64,7 +51,7 @@ func serve(c *cli.Context) error {
 	servers.GetEnv(log, muxApi.Group("/api/v1/env"))
 	servers.GetConfig(log, muxApi.Group("/api/v1/config"))
 
-	listenAddrApi := c.String("api-addr")
+	listenAddrApi := viper.GetString("ApiListenAddr")
 	chApi := serveHttpSimple(log, listenAddrApi, muxApi, stopCh)
 
 	// TODO: kick off ReadyTimer (as per -> ). 100% shouldn't be in config/
@@ -72,7 +59,7 @@ func serve(c *cli.Context) error {
 	muxOutput := gin.Default()
 	servers.GetOutput(log, muxOutput.Group("/"))
 
-	listenAddrOutput := c.String("output-addr")
+	listenAddrOutput := viper.GetString("OutputListenAddr")
 	chOutput := serveHttpChaos(log, listenAddrOutput, muxOutput, stopCh)
 
 	select {

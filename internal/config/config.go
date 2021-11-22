@@ -13,10 +13,11 @@ import (
 
 func LoadConfig(log logr.Logger) error {
 	var opts struct {
-		Verbose       []bool `short:"v" long:"verbose"`
-		ListenAddr    string `short:"a" long:"addr"`
-		ConfigFileDir string `short:"c" long:"config" description:"Path to the config file's directory. File must be called badpod.yaml"`
-		FEDir         string `short:"w" long:"web" description:"Path to the root directory for the web interface"`
+		Verbose          []bool `short:"v" long:"verbose"`
+		OutputListenAddr string `long:"output-addr"`
+		ApiListenAddr    string `long:"api-addr"`
+		ConfigFileDir    string `short:"c" long:"config" description:"Path to the config file's directory. File must be called badpod.yaml"`
+		FEDir            string `short:"w" long:"web" description:"Path to the root directory for the web interface"`
 
 		BodyLen         int `short:"l" long:"body-lenght"` // TODO go-flags aNNOTATIONs
 		Rate            int64
@@ -40,7 +41,6 @@ func LoadConfig(log logr.Logger) error {
 	viper.SetDefault("Verbosity", 0)
 	viper.SetDefault("OutputListenAddr", ":8080")
 	viper.SetDefault("ApiListenAddr", ":8081")
-	viper.SetDefault("ProbesListenAddr", ":8082")
 
 	viper.SetDefault("Rate", 1000)
 	viper.SetDefault("DelayMS", 2000)
@@ -87,8 +87,11 @@ func LoadConfig(log logr.Logger) error {
 	if len(opts.Verbose) != 0 {
 		viper.Set("Verbosity", len(opts.Verbose))
 	}
-	if opts.ListenAddr != "" {
-		viper.Set("ListenAddr", opts.ListenAddr)
+	if opts.ApiListenAddr != "" {
+		viper.Set("ApiListenAddr", opts.ApiListenAddr)
+	}
+	if opts.OutputListenAddr != "" {
+		viper.Set("OutputListenAddr", opts.OutputListenAddr)
 	}
 	if opts.ErrorRate != 0.0 {
 		viper.Set("ErrorRate", opts.ErrorRate)

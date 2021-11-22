@@ -1,19 +1,12 @@
-// +buil ignore
-// FIXME: wewrite against pure client-go
-
 package fetchers
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
-
-	//"crypto/rsa"
-	//"crypto/x509"
-	//"encoding/pem"
-	"fmt"
-	"io/ioutil"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-logr/logr"

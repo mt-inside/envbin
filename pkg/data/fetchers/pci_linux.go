@@ -37,6 +37,7 @@ func getPciData(ctx context.Context, log logr.Logger, t *Trie) {
 		t.Insert(Some(domain), "Hardware", "Bus", "PCI", addr, "Domain")
 		t.Insert(Some(bus), "Hardware", "Bus", "PCI", addr, "Bus")
 		t.Insert(Some(device), "Hardware", "Bus", "PCI", addr, "Device")
+		t.Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
 		t.Insert(Some(d.Vendor.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Vendor")
 		t.Insert(Some(d.Product.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Product")
 		t.Insert(Some(d.Revision), "Hardware", "Bus", "PCI", addr, "Functions", function, "Revision")

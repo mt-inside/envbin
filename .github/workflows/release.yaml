@@ -19,7 +19,7 @@ jobs:
 
       - name: Get current tag
         id: get_current_tag
-        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+        run: echo "::set-output name=tag::$(git describe --tags)"
 
       - name: Make GH release
         id: make_release
@@ -52,5 +52,4 @@ jobs:
           push: true
           # docker/setup-qemu-action doesn't seem to be needed for this to work
           platforms: linux/arm64/v8,linux/amd64 # distroless doesn't have linux/arm/v6,linux/arm/v7
-          #tags: mtinside/envbin:${{ steps.get_current_tag.outputs.tag }} TODO doesn't work with branch ref
-          tags: mtinside/envbin:latest
+          tags: mtinside/envbin:${{ steps.get_current_tag.outputs.tag }}

@@ -1,5 +1,5 @@
 ARG ARCH=
-FROM ${ARCH}golang:1.16 as build
+FROM ${ARCH}golang:1.17 as build
 
 ARG VERSION=unknown
 

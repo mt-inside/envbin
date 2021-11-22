@@ -17,6 +17,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: git dbg
+        run: |
+          git --version
+          git status
+          git describe
+
       - name: Get current tag
         id: get_current_tag
         run: echo "::set-output name=tag::$(git describe --tags)"

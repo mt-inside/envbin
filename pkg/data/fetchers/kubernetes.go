@@ -137,8 +137,8 @@ func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clie
 		return
 	}
 	for i, c := range pod.Spec.Containers {
-		vals <- Insert(Some(c.Name), "Cloud", "Kubernetes", "Pod", "Container", strconv.Itoa(i), "Name")
-		vals <- Insert(Some(c.Image), "Cloud", "Kubernetes", "Pod", "Container", strconv.Itoa(i), "Image")
+		vals <- Insert(Some(c.Name), "Cloud", "Kubernetes", "Pod", "Containers", strconv.Itoa(i), "Name")
+		vals <- Insert(Some(c.Image), "Cloud", "Kubernetes", "Pod", "Containers", strconv.Itoa(i), "Image")
 	}
 
 	vals <- Insert(Some(pod.Spec.NodeName), "Cloud", "Kubernetes", "Pod", "NodeName")

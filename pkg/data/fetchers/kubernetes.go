@@ -2,15 +2,16 @@ package fetchers
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
+	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-logr/logr"
+	"github.com/golang-jwt/jwt/v4"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -20,7 +21,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getK8sData)
+	data.RegisterPlugin(getK8sDataInCluster)
 }
 
 // inCluster wraps generic getter
@@ -28,13 +29,12 @@ func init() {
 // both to return a trie
 // * cmdline thing to share a renderer with "dump"
 
-func getK8sData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getK8sDataInCluster(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		vals <- Insert(NotPresent(), "Cloud", "Kubernetes")
 		return
 	}
-	vals <- Insert(Some("Present"), "Cloud", "Kubernetes")
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -43,152 +43,165 @@ func getK8sData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 		return
 	}
 
+	getK8sData(ctx, log, clientSet, vals)
+}
+
+type k8sClaims struct {
+	jwt.RegisteredClaims
+
+	Kubernetes struct {
+		Namespace string `json:"namespace"`
+		Pod       struct {
+			Name string `json:"name"`
+			Uid  string `json:"uid"`
+		} `json:"pod"`
+		ServiceAccount struct {
+			Name string `json:"name"`
+			Uid  string `json:"uid"`
+		} `json:"serviceaccount"`
+	} `json:"kubernetes.io"`
+}
+
+func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clientset, vals chan<- InsertMsg) {
+	// Control Plane
 	version, err := clientSet.Discovery().ServerVersion()
 	if err != nil {
+		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Masters")
 		log.Error(err, "Can't get cluster version")
 	} else {
-		vals <- Insert(Some(fmt.Sprintf("%s %s", version.GitVersion, version.Platform)), "Cloud", "Kubernetes", "Cluster", "Version")
+		vals <- Insert(Some(version.GitVersion), "Cloud", "Kubernetes", "Masters", "Version")
+		vals <- Insert(Some(version.Platform), "Cloud", "Kubernetes", "Masters", "Platform")
 	}
+
+	// IP Ranges
+
+	//svcRange(ctx, clientSet) // TODO
+
+	// Namespace & Identity
 
 	saBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 	saToken := string(saBytes)
-
-	type k8sClaims struct {
-		Namespace string `json:"kubernetes.io/serviceaccount/namespace"`
-		Secret    string `json:"kubernetes.io/serviceaccount/secret.name"`
-		Name      string `json:"kubernetes.io/serviceaccount/service-account.name"`
-		Uid       string `json:"kubernetes.io/serviceaccount/service-account.uid"`
-
-		jwt.StandardClaims
-	}
-
 	// TODO: unit test this with a ca.crt and satoek from a pod
 	token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil)
-	if err != nil {
-		log.Error(err, "can't parse and verify token") // Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
-		return
-	}
-	// This JWT is signed with the Service Account keypair.
-	// This isn't the same as the apiserver CA keypair, so ca.crt on the disk can't validate it
-	// As of Mar '20 there's no way to directly get the public part of the SA pair
-	// Options are:
-	//   * Call the TokenReview API: https://kubernetes.io/docs/reference/access-authn-authz/authentication/
-	//   * Wait for OICD discovery to be implemented, and use that to get the public key: https://github.com/kubernetes/enhancements/blob/master/keps/sig-auth/20190730-oidc-discovery.md
-	//     * maybe some of the work is there? https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-
-	/*func(token *jwt.Token) (interface{}, error) {
-	can allegedly do this:
-	      containers:
-		        - name: envbin
-		          image: mtinside/envbin:latest
-		          volumeMounts:
-		            - mountPath: /var/run/secrets/tokens
-		              name: vault-token
-		      volumes:
-		        - name: vault-token
-		          projected:
-		            sources:
-		            - serviceAccountToken:
-		                path: vault-token
-		                expirationSeconds: 7200
-		                audience: vault
-
-	but even with `minikube start --feature-gates='TokenRequest=true,TokenRequestProjection=true'`, Pods don't start
-
-
-	    // verify rs256 alg
-
-		asn1, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt") - no!
-		if err != nil {
-			log.Fatalf("Can't read ca cert: %v", err)
-		}
-
-		block, _ := pem.Decode(asn1)
-		if block == nil || block.Type != "CERTIFICATE" {
-			log.Fatalf("Can't decode PEM: %v", err)
-		}
-
-		cert, err := x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			log.Fatalf("Can't parse ca cert: %v", err)
-		}
-
-		var pub *rsa.PublicKey
-		var ok bool
-		if pub, ok = cert.PublicKey.(*rsa.PublicKey); !ok {
-			log.Fatalf("can't get public key from cert; %v", err)
-		}
-
-		return pub, nil
-	}*/
-
+	// if err != nil {
+	// Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
+	//vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Identity")
+	//return
+	// }
 	claims, ok := token.Claims.(*k8sClaims)
-	if !ok /*|| !token.Valid*/ {
-		log.Error(fmt.Errorf("ServiceAccount token invalid"), "Can't read k8s info")
+	if !ok {
+		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Identity")
 		return
 	}
-	vals <- Insert(Some(claims.Namespace), "Cloud", "Kubernetes", "Pod", "Namespace")
-	vals <- Insert(Some(claims.Name), "Cloud", "Kubernetes", "Pod", "ServiceAccount")
+	vals <- Insert(Some(claims.Kubernetes.Namespace), "Cloud", "Kubernetes", "Namespace", "Name")
+	vals <- Insert(Some(claims.Kubernetes.ServiceAccount.Name), "Cloud", "Kubernetes", "Pod", "ServiceAccount")
+
+	// Nodes
+
+	nodes, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Nodes")
+		// Keep going becuase we might have permission to read other stuff
+	}
+	for i, n := range nodes.Items {
+		vals <- Insert(Some(n.Status.NodeInfo.Architecture), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Architecture")
+		vals <- Insert(Some(quantity2str(n.Status.Capacity.Cpu())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Cores")
+		vals <- Insert(Some(quantity2str(n.Status.Capacity.Memory())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "RAM")
+		vals <- Insert(Some(quantity2str(n.Status.Capacity.Storage())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Storage")
+		vals <- Insert(Some(quantity2str(n.Status.Capacity.StorageEphemeral())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Ephemeral")
+		for k, v := range n.Labels {
+			vals <- Insert(Some(v), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Labels", k)
+		}
+	}
+
+	// Pods in this Namespace
+
+	pods, err := clientSet.CoreV1().Pods(claims.Kubernetes.Namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Namespace", "Pods")
+		return
+	}
+	for i, p := range pods.Items {
+		vals <- Insert(Some(p.Name), "Cloud", "Kubernetes", "Namespace", "Pods", strconv.Itoa(i), "Name")
+		for j, c := range p.Spec.Containers {
+			vals <- Insert(Some(c.Image), "Cloud", "Kubernetes", "Namespace", "Pods", strconv.Itoa(i), "Containers", strconv.Itoa(j), "Image")
+		}
+	}
+
+	// Containers in this Pod
 
 	hostname, _ := os.Hostname()
-	pod, err := clientSet.CoreV1().Pods(claims.Namespace).Get(ctx, hostname, metav1.GetOptions{})
+	pod, err := clientSet.CoreV1().Pods(claims.Kubernetes.Namespace).Get(ctx, hostname, metav1.GetOptions{})
 	if err != nil {
-		if k8sErrors.IsForbidden(err) {
-			log.Error(err, "Forbidden getting own Pod info; check RBAC")
-			vals <- Insert(Forbidden(), "Cloud", "Kubernetes", "Pod")
-		} else if err == context.DeadlineExceeded {
-			log.Error(err, "Timed out getting own Pod info")
-			vals <- Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod") // TODO Timeout(but need to find the time)
-		} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
-			log.Error(err, "Timed out getting own Pod info")
-			vals <- Insert(Some("Timeout"), "Cloud", "Kubernetes", "Pod") // TODO Timeout(but need to find the time)
-		} else {
-			log.Error(err, "Error getting own Pod info")
-		}
-	} else {
-		vals <- Insert(Some(strconv.Itoa(len(pod.Spec.Containers))), "Cloud", "Kubernetes", "Pod", "ContainersCount")
-
-		images := []string{}
-		for _, c := range pod.Spec.Containers {
-			images = append(images, c.Image)
-		}
-		vals <- Insert(Some(strings.Join(images, ",")), "Cloud", "Kubernetes", "Pod", "ContainersImages")
-
-		if node, err := clientSet.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{}); err != nil {
-			if k8sErrors.IsForbidden(err) {
-				log.Error(err, "Forbidden getting own Node info; check RBAC")
-				vals <- Insert(Forbidden(), "Cloud", "Kubernetes", "Node")
-			} else if err == context.DeadlineExceeded {
-				log.Error(err, "Timed out getting own Node info")
-				vals <- Insert(Some("Timeout"), "Cloud", "Kubernetes", "Node")
-			} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline? Is also an IsServerTimeout() to show the apiserver popped its deadline
-				log.Error(err, "Timed out getting own Node info")
-				vals <- Insert(Some("Timeout"), "Cloud", "Kubernetes", "Node")
-			} else {
-				log.Error(err, "Error getting own Node info")
-			}
-		} else {
-			vals <- Insert(Some(node.Status.Addresses[0].Address+" / "+node.Status.Addresses[1].Address), "Cloud", "Kubernetes", "Node", "Address") // TODO loop
-			vals <- Insert(Some(fmt.Sprintf("%s %s/%s", node.Status.NodeInfo.KubeletVersion, node.Status.NodeInfo.OperatingSystem, node.Status.NodeInfo.Architecture)), "Cloud", "Kubernetes", "Node", "Version")
-			vals <- Insert(Some(node.Status.NodeInfo.ContainerRuntimeVersion), "Cloud", "Kubernetes", "Node", "ContainerRuntime")
-			vals <- Insert(Some(node.Status.NodeInfo.OSImage), "Cloud", "Kubernetes", "Node", "OS")
-			vals <- Insert(Some(findSuffix(node.Labels, "node-role.kubernetes.io/")), "Cloud", "Kubernetes", "Node", "Role")
-			vals <- Insert(Some(node.Labels["node.kubernetes.io/instance-type"]), "Cloud", "Kubernetes", "Node", "InstanceType")
-			vals <- Insert(Some(node.Labels["topology.kubernetes.io/region"]), "Cloud", "Kubernetes", "Node", "Region")
-			vals <- Insert(Some(node.Labels["topology.kubernetes.io/zone"]), "Cloud", "Kubernetes", "Node", "Zone")
-		}
+		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Pod")
+		return
 	}
+	for i, c := range pod.Spec.Containers {
+		vals <- Insert(Some(c.Name), "Cloud", "Kubernetes", "Pod", "Container", strconv.Itoa(i), "Name")
+		vals <- Insert(Some(c.Image), "Cloud", "Kubernetes", "Pod", "Container", strconv.Itoa(i), "Image")
+	}
+
+	vals <- Insert(Some(pod.Spec.NodeName), "Cloud", "Kubernetes", "Pod", "NodeName")
 
 	// TODO: get own namespace pods list
 	// TODO: get nodes list: vals <- Insert(Some(strconv.Itoa(len(nodes.Items))), "Cloud", "Kubernetes", "Cluster", "NodesCount")
 	// TODO: search for parent ownerrefs, and build kubectl tree style location
 }
-
-func findSuffix(m map[string]string, pre string) string {
-	for k := range m {
-		if strings.HasPrefix(k, pre) {
-			return strings.TrimPrefix(k, pre)
-		}
+func k8sFromError(log logr.Logger, err error) Value {
+	if k8sErrors.IsForbidden(err) {
+		log.Error(err, "Kubernetes error: Forbidden; check RBAC")
+		return Forbidden()
+	} else if err == context.DeadlineExceeded {
+		log.Error(err, "Kubernetes error: Timed out")
+		return Timeout(time.Second) // TODO: use the actual timeout!
+	} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline?
+		log.Error(err, "Kubernetes error: Timed out")
+		return Timeout(time.Second) // TODO: use actual timeout!
+		// Is also an IsServerTimeout() to show the apiserver popped its deadline
+	} else {
+		log.Error(err, "Kubernetes error: Other")
+		return Error(errors.New("Unknown kubernetes error"))
 	}
-	return ""
+}
+
+// func svcRange(ctx context.Context, k8s kubernetes.Interface) {
+// 	svc := &corev1.Service{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      "fake",
+// 			Namespace: "kube-system",
+// 		},
+// 		Spec: corev1.ServiceSpec{
+// 			Ports: []corev1.ServicePort{
+// 				corev1.ServicePort{
+// 					Port: 443,
+// 				},
+// 			},
+// 			ClusterIP: "1.1.1.1",
+// 		},
+// 	}
+
+// 	_, err := k8s.CoreV1().Services("kube-system").Create(ctx, svc, metav1.CreateOptions{})
+// 	var se *k8sErrors.StatusError
+// 	if err != nil {
+// 		if errors.As(err, &se) {
+// 			cause := se.ErrStatus.Details.Causes[0]
+// 			if cause.Type == metav1.CauseTypeFieldValueInvalid && cause.Field == "spec.clusterIPs" {
+// 				fmt.Println(cause.Message[strings.LastIndex(cause.Message, " ")+1:])
+// 				return
+// 			}
+// 		}
+// 	}
+// 	panic("Unexpectedly no error, wrong error, etc. Some error with the error.")
+// }
+
+func quantity2int64(q *resource.Quantity) int64 {
+	x, ok := q.AsInt64()
+	if !ok {
+		panic("Failed to unwrap k8s resource.Quantity - overflows int64")
+	}
+	return x
+}
+func quantity2str(q *resource.Quantity) string {
+	n := quantity2int64(q)
+	return strconv.FormatInt(n, 10)
 }

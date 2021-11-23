@@ -1,8 +1,10 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,9 +20,7 @@ import (
 	"github.com/mt-inside/go-usvc"
 	"github.com/urfave/cli/v2"
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
@@ -105,12 +105,6 @@ func appMain(c *cli.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	svcRange(ctx, k8s)
-
-	k8sNodes, err := k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
 	// _, err = clientset.CoreV1().Pods("default").Get(context.TODO(), "example-xxxxx", metav1.GetOptions{})
 	// if errors.IsNotFound(err) {
 	// 	fmt.Printf("Pod example-xxxxx not found in default namespace\n")
@@ -121,13 +115,6 @@ func appMain(c *cli.Context) error {
 	// } else {
 	// 	fmt.Printf("Found example-xxxxx pod in default namespace\n")
 	// }
-
-	version, err := k8s.Discovery().ServerVersion()
-	if err != nil {
-		return fmt.Errorf("Can't get cluster version: %w", err)
-	}
-	fmt.Printf("Kubernetes %s %s", version.GitVersion, version.Platform)
-	fmt.Println()
 
 	nodes := []NodeDetails{}
 	boms := map[NodeBom]int{}
@@ -210,37 +197,18 @@ func appMain(c *cli.Context) error {
 		render(k8sNodes, "Zones", "topology.kubernetes.io/zone")
 	}
 
+	// TODO:
+	// * find current node, print stuff like this
+	vals <- Insert(Some(node.Status.Addresses[0].Address+" / "+node.Status.Addresses[1].Address), "Cloud", "Kubernetes", "Node", "Address") // TODO loop
+	vals <- Insert(Some(fmt.Sprintf("%s %s/%s", node.Status.NodeInfo.KubeletVersion, node.Status.NodeInfo.OperatingSystem, node.Status.NodeInfo.Architecture)), "Cloud", "Kubernetes", "Node", "Version")
+	vals <- Insert(Some(node.Status.NodeInfo.ContainerRuntimeVersion), "Cloud", "Kubernetes", "Node", "ContainerRuntime")
+	vals <- Insert(Some(node.Status.NodeInfo.OSImage), "Cloud", "Kubernetes", "Node", "OS")
+	vals <- Insert(Some(findSuffix(node.Labels, "node-role.kubernetes.io/")), "Cloud", "Kubernetes", "Node", "Role")
+	vals <- Insert(Some(node.Labels["node.kubernetes.io/instance-type"]), "Cloud", "Kubernetes", "Node", "InstanceType")
+	vals <- Insert(Some(node.Labels["topology.kubernetes.io/region"]), "Cloud", "Kubernetes", "Node", "Region")
+	vals <- Insert(Some(node.Labels["topology.kubernetes.io/zone"]), "Cloud", "Kubernetes", "Node", "Zone")
+
 	return nil
-}
-
-func svcRange(ctx context.Context, k8s kubernetes.Interface) {
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "fake",
-			Namespace: "kube-system",
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				corev1.ServicePort{
-					Port: 443,
-				},
-			},
-			ClusterIP: "1.1.1.1",
-		},
-	}
-
-	_, err := k8s.CoreV1().Services("kube-system").Create(ctx, svc, metav1.CreateOptions{})
-	var se *kerrors.StatusError
-	if err != nil {
-		if errors.As(err, &se) {
-			cause := se.ErrStatus.Details.Causes[0]
-			if cause.Type == metav1.CauseTypeFieldValueInvalid && cause.Field == "spec.clusterIPs" {
-				fmt.Println(cause.Message[strings.LastIndex(cause.Message, " ")+1:])
-				return
-			}
-		}
-	}
-	panic("Unexpectedly no error, wrong error, etc. Some error with the error.")
 }
 
 func render(nodes *corev1.NodeList, title string, label string) {
@@ -302,4 +270,13 @@ func getClientSet(log logr.Logger, kubeConfigPath string, masterURL string) (kub
 	}
 
 	return kubeClientSet, nil
+}
+
+func findSuffix(m map[string]string, pre string) string {
+	for k := range m {
+		if strings.HasPrefix(k, pre) {
+			return strings.TrimPrefix(k, pre)
+		}
+	}
+	return ""
 }

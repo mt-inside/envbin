@@ -15,11 +15,11 @@ func init() {
 	data.RegisterPlugin(getAwsData)
 }
 
-func getAwsData(ctx context.Context, log logr.Logger, t *Trie) {
+func getAwsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		// Technically, no client configured (this will pass on a workstation that interracts with AWS)
-		t.Insert(NotPresent(), "Cloud", "AWS")
+		vals <- Insert(NotPresent(), "Cloud", "AWS")
 		return
 	}
 
@@ -27,13 +27,13 @@ func getAwsData(ctx context.Context, log logr.Logger, t *Trie) {
 
 	iid, err := aws.GetInstanceIdentityDocument(ctx, nil)
 	if err != nil {
-		t.Insert(NotPresent(), "Cloud", "AWS")
+		vals <- Insert(NotPresent(), "Cloud", "AWS")
 		return
 	}
-	t.Insert(Some("AWS"), "Cloud", "Provider")
-	t.Insert(Some(iid.AccountID), "Cloud", "AccountID")
-	t.Insert(Some(iid.Region), "Cloud", "Region")
-	t.Insert(Some(iid.AvailabilityZone), "Cloud", "Zone")
-	t.Insert(Some(iid.InstanceType), "Cloud", "Instance", "Type")
-	t.Insert(Some(iid.ImageID), "Cloud", "Instance", "ImageID")
+	vals <- Insert(Some("AWS"), "Cloud", "Provider")
+	vals <- Insert(Some(iid.AccountID), "Cloud", "AccountID")
+	vals <- Insert(Some(iid.Region), "Cloud", "Region")
+	vals <- Insert(Some(iid.AvailabilityZone), "Cloud", "Zone")
+	vals <- Insert(Some(iid.InstanceType), "Cloud", "Instance", "Type")
+	vals <- Insert(Some(iid.ImageID), "Cloud", "Instance", "ImageID")
 }

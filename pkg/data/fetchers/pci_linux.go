@@ -15,13 +15,13 @@ func init() {
 	data.RegisterPlugin(getPciData)
 }
 
-func getPciData(ctx context.Context, log logr.Logger, t *Trie) {
+func getPciData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	prefix := []string{"Hardware", "Bus", "PCI"}
 
 	pci, err := ghw.PCI()
 	if err != nil {
 		log.Error(err, "Can't read PCI data")
-		t.Insert(Error(err), prefix...)
+		vals <- Insert(Error(err), prefix...)
 		return
 	}
 
@@ -34,18 +34,18 @@ func getPciData(ctx context.Context, log logr.Logger, t *Trie) {
 		bus := addrs[1]
 		device := addrs[2]
 
-		t.Insert(Some(domain), "Hardware", "Bus", "PCI", addr, "Domain")
-		t.Insert(Some(bus), "Hardware", "Bus", "PCI", addr, "Bus")
-		t.Insert(Some(device), "Hardware", "Bus", "PCI", addr, "Device")
-		t.Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
-		t.Insert(Some(d.Vendor.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Vendor")
-		t.Insert(Some(d.Product.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Product")
-		t.Insert(Some(d.Revision), "Hardware", "Bus", "PCI", addr, "Functions", function, "Revision")
-		t.Insert(Some(d.Class.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Class")
-		t.Insert(Some(d.Subclass.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Subclass")
-		t.Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
+		vals <- Insert(Some(domain), "Hardware", "Bus", "PCI", addr, "Domain")
+		vals <- Insert(Some(bus), "Hardware", "Bus", "PCI", addr, "Bus")
+		vals <- Insert(Some(device), "Hardware", "Bus", "PCI", addr, "Device")
+		vals <- Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
+		vals <- Insert(Some(d.Vendor.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Vendor")
+		vals <- Insert(Some(d.Product.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Product")
+		vals <- Insert(Some(d.Revision), "Hardware", "Bus", "PCI", addr, "Functions", function, "Revision")
+		vals <- Insert(Some(d.Class.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Class")
+		vals <- Insert(Some(d.Subclass.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Subclass")
+		vals <- Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
 		for _, iface := range d.Subclass.ProgrammingInterfaces {
-			t.Insert(Some(iface.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Interfaces", iface.ID)
+			vals <- Insert(Some(iface.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Interfaces", iface.ID)
 		}
 	}
 }

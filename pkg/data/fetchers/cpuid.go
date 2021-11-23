@@ -16,13 +16,13 @@ func init() {
 	data.RegisterPlugin(getCpuidData)
 }
 
-func getCpuidData(ctx context.Context, log logr.Logger, t *Trie) {
-	t.InsertTree(enrichments.EnrichCpuModel(ctx, log, cpuid.CPU.BrandName), "Hardware", "CPU", "Model")
-	t.Insert(Some(cpuid.CPU.BrandName), "Hardware", "CPU", "Model", "Name")
-	t.Insert(Some(strconv.Itoa(cpuid.CPU.PhysicalCores)), "Hardware", "CPU", "Cores")
-	t.Insert(Some(strconv.Itoa(cpuid.CPU.LogicalCores)), "Hardware", "CPU", "Threads")
-	t.Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L1D)), "Hardware", "CPU", "Cache", "L1D")
-	t.Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L1I)), "Hardware", "CPU", "Cache", "L1I")
-	t.Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L2)), "Hardware", "CPU", "Cache", "L2")
-	t.Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L3)), "Hardware", "CPU", "Cache", "L3")
+func getCpuidData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	enrichments.EnrichCpuModel(ctx, log, cpuid.CPU.BrandName, PrefixChan(vals, "Hardware", "CPU", "Model"))
+	vals <- Insert(Some(cpuid.CPU.BrandName), "Hardware", "CPU", "Model", "Name")
+	vals <- Insert(Some(strconv.Itoa(cpuid.CPU.PhysicalCores)), "Hardware", "CPU", "Cores")
+	vals <- Insert(Some(strconv.Itoa(cpuid.CPU.LogicalCores)), "Hardware", "CPU", "Threads")
+	vals <- Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L1D)), "Hardware", "CPU", "Cache", "L1D")
+	vals <- Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L1I)), "Hardware", "CPU", "Cache", "L1I")
+	vals <- Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L2)), "Hardware", "CPU", "Cache", "L2")
+	vals <- Insert(Some(strconv.Itoa(cpuid.CPU.Cache.L3)), "Hardware", "CPU", "Cache", "L3")
 }

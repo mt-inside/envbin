@@ -15,7 +15,7 @@ func init() {
 	data.RegisterPlugin(getV4l2Data)
 }
 
-func getV4l2Data(ctx context.Context, log logr.Logger, t *Trie) {
+func getV4l2Data(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	for i := 0; i < 64; i++ {
 		nodeName := "/dev/video" + strconv.Itoa(i)
 		device, err := v4l2.Open(nodeName)
@@ -24,17 +24,17 @@ func getV4l2Data(ctx context.Context, log logr.Logger, t *Trie) {
 		}
 		defer device.Close()
 
-		t.Insert(Some(device.MustCard()), "Hardware", "V4l2", nodeName, "Name")
-		t.Insert(Some(device.MustDriver()), "Hardware", "V4l2", nodeName, "Driver")
-		t.Insert(Some(device.MustBusInfo()), "Hardware", "V4l2", nodeName, "Location")
-		t.Insert(Some(device.MustVersion()), "Hardware", "V4l2", nodeName, "Version")
-		t.Insert(Some(strconv.FormatBool(device.MustHasCapability(v4l2.CapabilityVideoOutput))), "Hardware", "V4l2", nodeName, "Capabilities", "VideoOutput")
-		t.Insert(Some(strconv.FormatBool(device.MustHasCapability(v4l2.CapabilityVideoCapture))), "Hardware", "V4l2", nodeName, "Capabilities", "VideoCapture")
-		t.Insert(Some(strconv.FormatBool(device.MustHasCapability(v4l2.CapabilityStreaming))), "Hardware", "V4l2", nodeName, "Capabilities", "StreamingIO")
+		vals <- Insert(Some(device.MustCard()), "Hardware", "V4l2", nodeName, "Name")
+		vals <- Insert(Some(device.MustDriver()), "Hardware", "V4l2", nodeName, "Driver")
+		vals <- Insert(Some(device.MustBusInfo()), "Hardware", "V4l2", nodeName, "Location")
+		vals <- Insert(Some(device.MustVersion()), "Hardware", "V4l2", nodeName, "Version")
+		vals <- Insert(Some(strconv.FormatBool(device.MustHasCapability(v4l2.CapabilityVideoOutput))), "Hardware", "V4l2", nodeName, "Capabilities", "VideoOutput")
+		vals <- Insert(Some(strconv.FormatBool(device.MustHasCapability(v4l2.CapabilityVideoCapture))), "Hardware", "V4l2", nodeName, "Capabilities", "VideoCapture")
+		vals <- Insert(Some(strconv.FormatBool(device.MustHasCapability(v4l2.CapabilityStreaming))), "Hardware", "V4l2", nodeName, "Capabilities", "StreamingIO")
 
 		ffs, err := device.FormatFamilies()
 		if err != nil {
-			t.Insert(Error(err), "Hardware", "V4l2", nodeName, "Formats")
+			vals <- Insert(Error(err), "Hardware", "V4l2", nodeName, "Formats")
 			continue
 		}
 		defer ffs.Close()
@@ -43,13 +43,13 @@ func getV4l2Data(ctx context.Context, log logr.Logger, t *Trie) {
 		for ffs.Next() {
 			err := ffs.Decode(&ff)
 			if err != nil {
-				t.Insert(Error(err), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f))
+				vals <- Insert(Error(err), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f))
 				continue
 			}
-			t.Insert(Some(ff.PixelFormat().String()), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Name")
-			t.Insert(Some(ff.Description()), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Description")
-			t.Insert(Some(strconv.FormatBool(ff.HasFlags(v4l2.FormatFamilyFlagCompressed))), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Compressed")
-			t.Insert(Some(strconv.FormatBool(ff.HasFlags(v4l2.FormatFamilyFlagEmulated))), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Emulated")
+			vals <- Insert(Some(ff.PixelFormat().String()), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Name")
+			vals <- Insert(Some(ff.Description()), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Description")
+			vals <- Insert(Some(strconv.FormatBool(ff.HasFlags(v4l2.FormatFamilyFlagCompressed))), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Compressed")
+			vals <- Insert(Some(strconv.FormatBool(ff.HasFlags(v4l2.FormatFamilyFlagEmulated))), "Hardware", "V4l2", nodeName, "Formats", strconv.Itoa(f), "Emulated")
 			f = f + 1
 		}
 	}

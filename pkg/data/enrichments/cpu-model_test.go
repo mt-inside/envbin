@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mt-inside/envbin/pkg/data/trie"
 	"github.com/mt-inside/go-usvc"
 )
 
@@ -46,7 +47,13 @@ func TestFormatBase10(t *testing.T) {
 	}
 
 	for _, cse := range cases {
-		res := EnrichCpuModel(context.Background(), log, cse.name)
+		res := trie.BuildFromSyncFn(
+			log,
+			/* Ugly go syntax for partial application */
+			func(c chan<- trie.InsertMsg) {
+				EnrichCpuModel(context.Background(), log, cse.name, c)
+			},
+		)
 
 		// TODO: compare lens to ensure no extra values in the result
 

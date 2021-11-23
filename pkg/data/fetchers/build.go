@@ -32,10 +32,10 @@ func BuildTime() time.Time {
 	return time.Unix(unix, 0)
 }
 
-func getBuildData(ctx context.Context, log logr.Logger, t *Trie) {
-	t.Insert(Some(Version), "Build", "Version")
-	t.Insert(Some(BuildTime().Format(time.Stamp)), "Build", "Time")
-	t.Insert(Some(runtime.Version()), "Build", "Runtime")
-	t.Insert(Some(runtime.GOARCH), "Hardware", "CPU", "Arch")
-	t.Insert(Some(runtime.GOOS), "OS", "Kernel", "Type")
+func getBuildData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	vals <- Insert(Some(Version), "Build", "Version")
+	vals <- Insert(Some(BuildTime().Format(time.Stamp)), "Build", "Time")
+	vals <- Insert(Some(runtime.Version()), "Build", "Runtime")
+	vals <- Insert(Some(runtime.GOARCH), "Hardware", "CPU", "Arch")
+	vals <- Insert(Some(runtime.GOOS), "OS", "Kernel", "Type")
 }

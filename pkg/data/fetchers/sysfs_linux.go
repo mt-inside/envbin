@@ -16,25 +16,25 @@ func init() {
 	data.RegisterPlugin(getFirmwareData)
 }
 
-func getFirmwareData(ctx context.Context, log logr.Logger, t *Trie) {
+func getFirmwareData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	_, err := os.Stat("/sys/firmware/efi")
 	if os.IsNotExist(err) {
-		t.Insert(Some("BIOS"), "Hardware", "Firmware", "BootType")
+		vals <- Insert(Some("BIOS"), "Hardware", "Firmware", "BootType")
 	} else {
-		t.Insert(Some("EFI"), "Hardware", "Firmware", "BootType")
+		vals <- Insert(Some("EFI"), "Hardware", "Firmware", "BootType")
 
 		files, err := filepath.Glob("/sys/firmware/efi/efivars/SecureBoot-*")
 		if err != nil || len(files) != 1 {
-			t.Insert(Error(err), "Hardware", "Firmware", "SecureBoot")
+			vals <- Insert(Error(err), "Hardware", "Firmware", "SecureBoot")
 			return
 		}
 
 		bytes, err := os.ReadFile(files[0])
 		if err != nil {
-			t.Insert(Error(err), "Hardware", "Firmware", "SecureBoot")
+			vals <- Insert(Error(err), "Hardware", "Firmware", "SecureBoot")
 			return
 		}
 
-		t.Insert(Some(strconv.Itoa(int(bytes[4]))), "Hardware", "Firmware", "SecureBoot")
+		vals <- Insert(Some(strconv.Itoa(int(bytes[4]))), "Hardware", "Firmware", "SecureBoot")
 	}
 }

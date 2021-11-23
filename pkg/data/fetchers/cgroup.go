@@ -15,10 +15,10 @@ func init() {
 	data.RegisterPlugin(getCgroupData)
 }
 
-func getCgroupData(ctx context.Context, log logr.Logger, t *Trie) {
+func getCgroupData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	fsen, err := os.Open("/proc/filesystems")
 	if err != nil {
-		t.Insert(Error(err), "OS", "Isolation", "CGroups")
+		vals <- Insert(Error(err), "OS", "Isolation", "CGroups")
 		return
 	}
 	defer fsen.Close()
@@ -26,15 +26,15 @@ func getCgroupData(ctx context.Context, log logr.Logger, t *Trie) {
 	fsen_scanner := bufio.NewScanner(fsen)
 	for fsen_scanner.Scan() {
 		if strings.HasSuffix(fsen_scanner.Text(), "cgroup") {
-			t.Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v1", "Supported")
+			vals <- Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v1", "Supported")
 		} else if strings.HasSuffix(fsen_scanner.Text(), "cgroup2") {
-			t.Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v2", "Supported")
+			vals <- Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v2", "Supported")
 		}
 	}
 
 	mounts, err := os.Open("/proc/mounts")
 	if err != nil {
-		t.Insert(Error(err), "OS", "Isolation", "CGroups")
+		vals <- Insert(Error(err), "OS", "Isolation", "CGroups")
 		return
 	}
 	defer mounts.Close()
@@ -42,9 +42,9 @@ func getCgroupData(ctx context.Context, log logr.Logger, t *Trie) {
 	mounts_scanner := bufio.NewScanner(mounts)
 	for mounts_scanner.Scan() {
 		if strings.HasPrefix(mounts_scanner.Text(), "cgroup2") {
-			t.Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v2", "Enabled")
+			vals <- Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v2", "Enabled")
 		} else if strings.HasPrefix(mounts_scanner.Text(), "cgroup") {
-			t.Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v1", "Enabled")
+			vals <- Insert(Some("Yes"), "OS", "Isolation", "CGroups", "v1", "Enabled")
 		}
 	}
 }

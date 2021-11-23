@@ -14,19 +14,19 @@ func init() {
 	data.RegisterPlugin(getPsutilData)
 }
 
-func getPsutilData(ctx context.Context, log logr.Logger, t *Trie) {
+func getPsutilData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	is, err := host.Info()
 	if err != nil {
 		log.Error(err, "Can't read PsUtil data")
 		return
 	}
 
-	t.Insert(Some(is.VirtualizationSystem+" "+is.VirtualizationRole), "Hardware", "Virtualisation")
+	vals <- Insert(Some(is.VirtualizationSystem+" "+is.VirtualizationRole), "Hardware", "Virtualisation")
 
-	t.Insert(Some(is.KernelVersion), "OS", "Kernel", "Version")
+	vals <- Insert(Some(is.KernelVersion), "OS", "Kernel", "Version")
 
 	// NB this is the distro in the CONTAINER. Distroless shows up as debian
-	t.Insert(Some(is.PlatformFamily), "OS", "Distro", "Family")
-	t.Insert(Some(is.Platform), "OS", "Distro", "Name")
-	t.Insert(Some(is.PlatformVersion), "OS", "Distro", "Version")
+	vals <- Insert(Some(is.PlatformFamily), "OS", "Distro", "Family")
+	vals <- Insert(Some(is.Platform), "OS", "Distro", "Name")
+	vals <- Insert(Some(is.PlatformVersion), "OS", "Distro", "Version")
 }

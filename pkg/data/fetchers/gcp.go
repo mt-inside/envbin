@@ -15,18 +15,18 @@ func init() {
 	data.RegisterPlugin(getGcpData)
 }
 
-func getGcpData(ctx context.Context, log logr.Logger, t *Trie) {
+func getGcpData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	if !metadata.OnGCE() {
-		t.Insert(NotPresent(), "Cloud", "GCP")
+		vals <- Insert(NotPresent(), "Cloud", "GCP")
 		return
 	}
-	t.Insert(Some("GCP"), "Cloud", "Provider")
+	vals <- Insert(Some("GCP"), "Cloud", "Provider")
 
-	t.Insert(unwrapGcp(metadata.ProjectID()), "Cloud", "AccountID")
-	t.Insert(unwrapGcp(metadata.Zone()), "Cloud", "Zone")
-	t.Insert(unwrapGcp(metadata.InstanceID()), "Cloud", "InstanceID")
-	t.Insert(unwrapGcp(metadata.InstanceName()), "Cloud", "InstanceName")
-	t.Insert(unwrapGcpSlice(metadata.InstanceTags()), "Cloud", "InstanceTags")
+	vals <- Insert(unwrapGcp(metadata.ProjectID()), "Cloud", "AccountID")
+	vals <- Insert(unwrapGcp(metadata.Zone()), "Cloud", "Zone")
+	vals <- Insert(unwrapGcp(metadata.InstanceID()), "Cloud", "InstanceID")
+	vals <- Insert(unwrapGcp(metadata.InstanceName()), "Cloud", "InstanceName")
+	vals <- Insert(unwrapGcpSlice(metadata.InstanceTags()), "Cloud", "InstanceTags")
 }
 
 func unwrapGcp(s string, err error) Value {

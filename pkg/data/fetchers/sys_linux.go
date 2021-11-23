@@ -15,7 +15,7 @@ func init() {
 	data.RegisterPlugin(getSysUnixData)
 }
 
-func getSysUnixData(ctx context.Context, log logr.Logger, t *Trie) {
+func getSysUnixData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	var si unix.Sysinfo_t
 	err := unix.Sysinfo(&si)
 	if err != nil {
@@ -23,5 +23,5 @@ func getSysUnixData(ctx context.Context, log logr.Logger, t *Trie) {
 		return
 	}
 
-	t.Insert(Some(time.Duration(time.Duration(si.Uptime)*time.Second).String()), "OS", "Uptime")
+	vals <- Insert(Some(time.Duration(time.Duration(si.Uptime)*time.Second).String()), "OS", "Uptime")
 }

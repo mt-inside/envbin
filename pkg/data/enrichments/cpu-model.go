@@ -11,7 +11,7 @@ import (
 	. "github.com/mt-inside/envbin/pkg/data/trie"
 )
 
-func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
+func EnrichCpuModel(ctx context.Context, log logr.Logger, name string, vals chan<- InsertMsg) {
 	// https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures
 	// TODO: really should look up the whole model number using the regexs in one of these articles, and get: (uArch, based-on, generation, process)
 	intelXeonGens := []string{ // https://en.wikipedia.org/wiki/List_of_Intel_Xeon_processors
@@ -70,79 +70,67 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string) *Trie {
 			var series, series_num, generation, sku, flags string
 			fmt.Sscanf(name, "Intel(R) Xeon(R) %s %1s%1s%2s%1s CPU", &series, &series_num, &generation, &sku, &flags)
 
-			t := NewTrie(log)
-			t.Insert(Some(series), "Series")
-			t.Insert(Some(sku), "SKU")
-			t.Insert(Some(generation), "Generation")
-			t.Insert(Some(flags), "Flags")
+			vals <- Insert(Some(series), "Series")
+			vals <- Insert(Some(sku), "SKU")
+			vals <- Insert(Some(generation), "Generation")
+			vals <- Insert(Some(flags), "Flags")
 
 			nGen, err := strconv.Atoi(generation)
 			if err != nil {
-				t.Insert(Error(err), "Microarchitecture")
+				vals <- Insert(Error(err), "Microarchitecture")
 			} else {
-				t.Insert(Some(intelScalableXeonGens[nGen]), "Microarchitecture")
+				vals <- Insert(Some(intelScalableXeonGens[nGen]), "Microarchitecture")
 			}
-			return t
 		} else {
 			// "Intel Xeon Processors"
 			var series, ways, socket, sku, generation string
 			fmt.Sscanf(name, "Intel(R) Xeon(R) CPU %2s-%1s%1s%2s v%s", &series, &ways, &socket, &sku, &generation)
 
-			t := NewTrie(log)
-			t.Insert(Some(series), "Series")
-			t.Insert(Some(ways), "Ways")
-			t.Insert(Some(socket), "Socket")
-			t.Insert(Some(sku), "SKU")
-			t.Insert(Some(generation), "Generation")
+			vals <- Insert(Some(series), "Series")
+			vals <- Insert(Some(ways), "Ways")
+			vals <- Insert(Some(socket), "Socket")
+			vals <- Insert(Some(sku), "SKU")
+			vals <- Insert(Some(generation), "Generation")
 
 			nGen, err := strconv.Atoi(generation)
 			if err != nil {
-				t.Insert(Error(err), "Microarchitecture")
+				vals <- Insert(Error(err), "Microarchitecture")
 			} else {
-				t.Insert(Some(intelXeonGens[nGen+1]), "Microarchitecture")
+				vals <- Insert(Some(intelXeonGens[nGen+1]), "Microarchitecture")
 			}
-			return t
 		}
 	} else if strings.Contains(name, "Core(TM)") {
 		var series, sku, generation, flags string
 		fmt.Sscanf(name, "Intel(R) Core(TM) %2s-%1s%3s%1s", &series, &generation, &sku, &flags)
 
-		t := NewTrie(log)
-		t.Insert(Some(series), "Series")
-		t.Insert(Some(sku), "SKU")
-		t.Insert(Some(generation), "Generation")
-		t.Insert(Some(flags), "Flags")
+		vals <- Insert(Some(series), "Series")
+		vals <- Insert(Some(sku), "SKU")
+		vals <- Insert(Some(generation), "Generation")
+		vals <- Insert(Some(flags), "Flags")
 
 		nGen, err := strconv.Atoi(generation)
 		if err != nil {
-			t.Insert(Error(err), "Microarchitecture")
+			vals <- Insert(Error(err), "Microarchitecture")
 		} else {
-			t.Insert(Some(intelCoreGens[nGen]), "Microarchitecture")
+			vals <- Insert(Some(intelCoreGens[nGen]), "Microarchitecture")
 		}
-		return t
 	} else if strings.Contains(name, "EPYC") {
 		var series, sku, generation string
 		fmt.Sscanf(name, "AMD EPYC %1s%2s%1s", &series, &sku, &generation)
 
-		t := NewTrie(log)
-		t.Insert(Some(series), "Series")
-		t.Insert(Some(sku), "SKU")
-		t.Insert(Some(generation), "Generation")
-		t.Insert(Some(amdEpycGens[generation]), "Microarchitecture")
-		return t
+		vals <- Insert(Some(series), "Series")
+		vals <- Insert(Some(sku), "SKU")
+		vals <- Insert(Some(generation), "Generation")
+		vals <- Insert(Some(amdEpycGens[generation]), "Microarchitecture")
 	} else if strings.Contains(name, "Ryzen") {
 		var series, sku, generation string
 		fmt.Sscanf(name, "AMD Ryzen %s %1s%3s", &series, &generation, &sku)
 
-		t := NewTrie(log)
-		t.Insert(Some(series), "Series")
-		t.Insert(Some(sku), "SKU")
-		t.Insert(Some(generation), "Generation")
-		t.Insert(Some(amdRyzenGens[generation]), "Microarchitecture")
-		return t
+		vals <- Insert(Some(series), "Series")
+		vals <- Insert(Some(sku), "SKU")
+		vals <- Insert(Some(generation), "Generation")
+		vals <- Insert(Some(amdRyzenGens[generation]), "Microarchitecture")
 	}
 
-	t := NewTrie(log)
-	t.Insert(Some("Unknown"), "Details")
-	return t
+	vals <- Insert(Some("Unknown"), "Details")
 }

@@ -19,47 +19,47 @@ func init() {
 	data.RegisterPlugin(getNetworkData)
 }
 
-func getNetworkData(ctx context.Context, log logr.Logger, t *Trie) {
+func getNetworkData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	hostname, _ := os.Hostname()
 
-	t.Insert(Some(hostname), "Network", "Hostname")
+	vals <- Insert(Some(hostname), "Network", "Hostname")
 
-	getIfaces(log, t)
+	getIfaces(log, vals)
 
-	getDefaultIP(log, t)
+	getDefaultIP(log, vals)
 
 	extIP, err := enrichments.ExternalIp(ctx, log)
 	if err != nil {
 		log.Error(err, "Can't get external IP address")
 		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-			t.Insert(Timeout(time.Second), "Network", "ExternalIP")
+			vals <- Insert(Timeout(time.Second), "Network", "ExternalIP")
 		} else {
-			t.Insert(Error(err), "Network", "ExternalIP")
+			vals <- Insert(Error(err), "Network", "ExternalIP")
 		}
 		return
 	}
 
-	t.Insert(Some(extIP), "Network", "ExternalIP", "Address")
+	vals <- Insert(Some(extIP), "Network", "ExternalIP", "Address")
 
 	extIpInfo, err := enrichments.EnrichIpRendered(ctx, log, extIP)
 	if err != nil {
 		log.Error(err, "Can't get IP info", "ip", extIP)
 		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-			t.Insert(Timeout(time.Second), "Network", "ExternalIP", "Info")
+			vals <- Insert(Timeout(time.Second), "Network", "ExternalIP", "Info")
 		} else {
-			t.Insert(Error(err), "Network", "ExternalIP", "Info")
+			vals <- Insert(Error(err), "Network", "ExternalIP", "Info")
 		}
 		return
 	}
 
-	t.Insert(Some(extIpInfo), "Network", "ExternalIP", "Info")
+	vals <- Insert(Some(extIpInfo), "Network", "ExternalIP", "Info")
 }
 
-func getIfaces(log logr.Logger, t *Trie) {
+func getIfaces(log logr.Logger, vals chan<- InsertMsg) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		log.Error(err, "Can't show system network interfaces")
-		t.Insert(Error(err), "Network", "Interfaces")
+		vals <- Insert(Error(err), "Network", "Interfaces")
 		return
 	}
 
@@ -70,23 +70,23 @@ func getIfaces(log logr.Logger, t *Trie) {
 				continue
 			}
 			k := strconv.Itoa(iface.Index)
-			t.Insert(Some(iface.Name), "Network", "Interfaces", k, "Name")
-			t.Insert(Some(addr.String()), "Network", "Interfaces", k, "Address")
-			t.Insert(Some(iface.Flags.String()), "Network", "Interfaces", k, "Flags")
+			vals <- Insert(Some(iface.Name), "Network", "Interfaces", k, "Name")
+			vals <- Insert(Some(addr.String()), "Network", "Interfaces", k, "Address")
+			vals <- Insert(Some(iface.Flags.String()), "Network", "Interfaces", k, "Flags")
 		}
 	}
 }
 
-func getDefaultIP(log logr.Logger, t *Trie) {
+func getDefaultIP(log logr.Logger, vals chan<- InsertMsg) {
 	conn, err := net.Dial("udp", "8.8.8.8:53")
 	if err != nil {
 		log.Error(err, "Can't get default IP")
-		t.Insert(Error(err), "Network", "DefaultIP")
+		vals <- Insert(Error(err), "Network", "DefaultIP")
 		return
 	}
 	defer conn.Close()
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	t.Insert(Some(localAddr.IP.String()), "Network", "DefaultIP")
+	vals <- Insert(Some(localAddr.IP.String()), "Network", "DefaultIP")
 }

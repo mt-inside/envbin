@@ -15,36 +15,36 @@ func init() {
 	data.RegisterPlugin(getDmiData)
 }
 
-func getDmiData(ctx context.Context, log logr.Logger, t *Trie) {
+func getDmiData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	dmi := dmidecode.New()
 	// TODO: try to detect when it's a permissions error (even if we just check our UID or some /sys file access), and set Forbidden
 	if err := dmi.Run(); err != nil {
-		t.Insert(Error(err), "Hardware", "DMI")
+		vals <- Insert(Error(err), "Hardware", "DMI")
 		log.Error(err, "Can't read DMI")
 		return
 	}
 
-	getDmiSystem(log, dmi, t)
+	getDmiSystem(log, dmi, vals)
 
-	getDmiMobo(log, dmi, t)
+	getDmiMobo(log, dmi, vals)
 
-	getDmiFw(log, dmi, t)
+	getDmiFw(log, dmi, vals)
 
 	cpus, _ := dmi.SearchByType(4) // CPUs
 	for i, cpu := range cpus {
-		t.Insert(Some(cpu["Socket Designation"]), "Hardware", "CPU", strconv.Itoa(i), "Socket")
-		t.Insert(Some(cpu["Max Speed"]), "Hardware", "CPU", strconv.Itoa(i), "Max Speed")
+		vals <- Insert(Some(cpu["Socket Designation"]), "Hardware", "CPU", strconv.Itoa(i), "Socket")
+		vals <- Insert(Some(cpu["Max Speed"]), "Hardware", "CPU", strconv.Itoa(i), "Max Speed")
 	}
 
 	dimms, _ := dmi.SearchByType(17) // DIMMs
 	for i, dimm := range dimms {
-		t.Insert(Some(dimm["Bank Locator"]), "Hardware", "Memory", strconv.Itoa(i), "Channel")
-		t.Insert(Some(dimm["Locator"]), "Hardware", "Memory", strconv.Itoa(i), "Slot")
-		t.Insert(Some(dimm["Rank"]), "Hardware", "Memory", strconv.Itoa(i), "Ranks")
-		t.Insert(Some(dimm["Size"]), "Hardware", "Memory", strconv.Itoa(i), "Size")
-		t.Insert(Some(dimm["Speed"]), "Hardware", "Memory", strconv.Itoa(i), "Speed")
-		t.Insert(Some(dimm["Type"]), "Hardware", "Memory", strconv.Itoa(i), "Type")
-		t.Insert(Some(dimm["Type Detail"]), "Hardware", "Memory", strconv.Itoa(i), "Sub Type")
+		vals <- Insert(Some(dimm["Bank Locator"]), "Hardware", "Memory", strconv.Itoa(i), "Channel")
+		vals <- Insert(Some(dimm["Locator"]), "Hardware", "Memory", strconv.Itoa(i), "Slot")
+		vals <- Insert(Some(dimm["Rank"]), "Hardware", "Memory", strconv.Itoa(i), "Ranks")
+		vals <- Insert(Some(dimm["Size"]), "Hardware", "Memory", strconv.Itoa(i), "Size")
+		vals <- Insert(Some(dimm["Speed"]), "Hardware", "Memory", strconv.Itoa(i), "Speed")
+		vals <- Insert(Some(dimm["Type"]), "Hardware", "Memory", strconv.Itoa(i), "Type")
+		vals <- Insert(Some(dimm["Type Detail"]), "Hardware", "Memory", strconv.Itoa(i), "Sub Type")
 	}
 
 	// for _, record := range dmi.Data {
@@ -54,38 +54,38 @@ func getDmiData(ctx context.Context, log logr.Logger, t *Trie) {
 	// }
 }
 
-func getDmiSystem(log logr.Logger, dmi *dmidecode.DMI, t *Trie) {
+func getDmiSystem(log logr.Logger, dmi *dmidecode.DMI, vals chan<- InsertMsg) {
 	syss, _ := dmi.SearchByType(1) // system info
 	if len(syss) != 1 {
 		log.Info("Unexpectedly many DMI 'system info' entries; skipping all")
 		return
 	}
 	sys := syss[0]
-	t.Insert(Some(sys["Manufacturer"]), "Hardware", "System", "Manufacturer")
-	t.Insert(Some(sys["Product Name"]), "Hardware", "System", "Product")
+	vals <- Insert(Some(sys["Manufacturer"]), "Hardware", "System", "Manufacturer")
+	vals <- Insert(Some(sys["Product Name"]), "Hardware", "System", "Product")
 }
 
-func getDmiMobo(log logr.Logger, dmi *dmidecode.DMI, t *Trie) {
+func getDmiMobo(log logr.Logger, dmi *dmidecode.DMI, vals chan<- InsertMsg) {
 	mbs, _ := dmi.SearchByType(2) // mobo
 	if len(mbs) != 1 {
 		log.Info("Unexpectedly many DMI 'motherboard' entries; skipping all")
 		return
 	}
 	mb := mbs[0]
-	t.Insert(Some(mb["Manufacturer"]), "Hardware", "Motherboard", "Manufacturer")
-	t.Insert(Some(mb["Product Name"]), "Hardware", "Motherboard", "Product")
+	vals <- Insert(Some(mb["Manufacturer"]), "Hardware", "Motherboard", "Manufacturer")
+	vals <- Insert(Some(mb["Product Name"]), "Hardware", "Motherboard", "Product")
 }
 
-func getDmiFw(log logr.Logger, dmi *dmidecode.DMI, t *Trie) {
+func getDmiFw(log logr.Logger, dmi *dmidecode.DMI, vals chan<- InsertMsg) {
 	fws, _ := dmi.SearchByType(0) // firmware
 	if len(fws) != 1 {
 		log.Info("Unexpectedly many DMI 'firmware' entries; skipping all")
 		return
 	}
 	fw := fws[0]
-	t.Insert(Some(fw["Manufacturer"]), "Hardware", "Firmware", "Manufacturer")
-	t.Insert(Some(fw["Product Name"]), "Hardware", "Firmware", "Version")
-	t.Insert(Some(fw["BIOS Revision"]), "Hardware", "Firmware", "Revision")
-	t.Insert(Some(fw["Release Date"]), "Hardware", "Firmware", "Date")
-	t.Insert(Some(fw["ROM Size"]), "Hardware", "Firmware", "ROM Size")
+	vals <- Insert(Some(fw["Manufacturer"]), "Hardware", "Firmware", "Manufacturer")
+	vals <- Insert(Some(fw["Product Name"]), "Hardware", "Firmware", "Version")
+	vals <- Insert(Some(fw["BIOS Revision"]), "Hardware", "Firmware", "Revision")
+	vals <- Insert(Some(fw["Release Date"]), "Hardware", "Firmware", "Date")
+	vals <- Insert(Some(fw["ROM Size"]), "Hardware", "Firmware", "ROM Size")
 }

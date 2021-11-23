@@ -15,7 +15,7 @@ func init() {
 	data.RegisterPlugin(getTerminalData)
 }
 
-func getTerminalData(ctx context.Context, log logr.Logger, t *Trie) {
+func getTerminalData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	var tty string
 	if isatty.IsTerminal(os.Stdout.Fd()) {
 		if ttyDev, err := os.Readlink("/proc/self/fd/1"); err == nil {
@@ -26,5 +26,5 @@ func getTerminalData(ctx context.Context, log logr.Logger, t *Trie) {
 	} else {
 		tty = "n/a"
 	}
-	t.Insert(Some(tty), "Processes", "0", "Session", "TTY")
+	vals <- Insert(Some(tty), "Processes", "0", "Session", "TTY")
 }

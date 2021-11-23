@@ -14,13 +14,13 @@ func init() {
 	data.RegisterPlugin(getOsDistributionData)
 }
 
-func getOsDistributionData(ctx context.Context, log logr.Logger, t *Trie) {
+func getOsDistributionData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	osRelease, err := godotenv.Read("/etc/os-release")
 	if err != nil {
-		t.Insert(Error(err), "OS", "Distro")
+		vals <- Insert(Error(err), "OS", "Distro")
 		log.Error(err, "Can't get OS info")
 		return
 	}
 	// /etc/os-release:PRETTY_VERSION seems to be universal
-	t.Insert(Some(osRelease["PRETTY_NAME"]), "OS", "Distro", "Release")
+	vals <- Insert(Some(osRelease["PRETTY_NAME"]), "OS", "Distro", "Release")
 }

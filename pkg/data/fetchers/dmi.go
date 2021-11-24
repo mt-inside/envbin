@@ -65,6 +65,10 @@ func getDmiMotherboard(ctx context.Context, log logr.Logger, vals chan<- InsertM
 		return
 	}
 
+	if len(data) == 0 {
+		return
+	}
+
 	vals <- Insert(Some(data[0].Manufacturer), "Hardware", "Motherboard", "Vendor")
 	vals <- Insert(Some(data[0].ProductName), "Hardware", "Motherboard", "Product")
 	vals <- Insert(Some(data[0].Version), "Hardware", "Motherboard", "Version")

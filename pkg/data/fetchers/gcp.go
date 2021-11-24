@@ -20,13 +20,12 @@ func getGcpData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 		vals <- Insert(NotPresent(), "Cloud", "GCP")
 		return
 	}
-	vals <- Insert(Some("GCP"), "Cloud", "Provider")
 
-	vals <- Insert(unwrapGcp(metadata.ProjectID()), "Cloud", "AccountID")
-	vals <- Insert(unwrapGcp(metadata.Zone()), "Cloud", "Zone")
-	vals <- Insert(unwrapGcp(metadata.InstanceID()), "Cloud", "InstanceID")
-	vals <- Insert(unwrapGcp(metadata.InstanceName()), "Cloud", "InstanceName")
-	vals <- Insert(unwrapGcpSlice(metadata.InstanceTags()), "Cloud", "InstanceTags")
+	vals <- Insert(unwrapGcp(metadata.ProjectID()), "Cloud", "GCP", "AccountID")
+	vals <- Insert(unwrapGcp(metadata.Zone()), "Cloud", "GCP", "Zone")
+	vals <- Insert(unwrapGcp(metadata.InstanceID()), "Cloud", "GCP", "Instance", "ID")
+	vals <- Insert(unwrapGcp(metadata.InstanceName()), "Cloud", "GCP", "Instance", "Name")
+	vals <- Insert(unwrapGcpSlice(metadata.InstanceTags()), "Cloud", "GCP", "Instance", "Tags")
 }
 
 func unwrapGcp(s string, err error) Value {

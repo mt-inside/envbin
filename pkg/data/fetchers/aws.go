@@ -30,10 +30,9 @@ func getAwsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 		vals <- Insert(NotPresent(), "Cloud", "AWS")
 		return
 	}
-	vals <- Insert(Some("AWS"), "Cloud", "Provider")
-	vals <- Insert(Some(iid.AccountID), "Cloud", "AccountID")
-	vals <- Insert(Some(iid.Region), "Cloud", "Region")
-	vals <- Insert(Some(iid.AvailabilityZone), "Cloud", "Zone")
-	vals <- Insert(Some(iid.InstanceType), "Cloud", "Instance", "Type")
-	vals <- Insert(Some(iid.ImageID), "Cloud", "Instance", "ImageID")
+	vals <- Insert(Some(iid.AccountID), "Cloud", "AWS", "AccountID")
+	vals <- Insert(Some(iid.Region), "Cloud", "AWS", "Region")
+	vals <- Insert(Some(iid.AvailabilityZone), "Cloud", "AWS", "Zone")
+	vals <- Insert(Some(iid.InstanceType), "Cloud", "AWS", "Instance", "Type")
+	vals <- Insert(Some(iid.ImageID), "Cloud", "AWS", "Instance", "ImageID")
 }

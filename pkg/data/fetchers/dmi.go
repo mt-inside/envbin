@@ -4,88 +4,193 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/dselans/dmidecode"
 	"github.com/go-logr/logr"
+	"github.com/yumaojun03/dmidecode"
+	"github.com/yumaojun03/dmidecode/parser/processor"
 
 	"github.com/mt-inside/envbin/pkg/data"
 	. "github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
-	data.RegisterPlugin(getDmiData)
+	data.RegisterPlugin(getDmiFirmware)
+	data.RegisterPlugin(getDmiMotherboard)
+	data.RegisterPlugin(getDmiSystem)
+	data.RegisterPlugin(getDmiRAM)
+	data.RegisterPlugin(getDmiCPU)
+	data.RegisterPlugin(getDmiCPUCache)
 }
 
-func getDmiData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
-	dmi := dmidecode.New()
-	// TODO: try to detect when it's a permissions error (even if we just check our UID or some /sys file access), and set Forbidden
-	if err := dmi.Run(); err != nil {
-		vals <- Insert(Error(err), "Hardware", "DMI")
+func u8(n byte) string {
+	return strconv.FormatInt(int64(n), 10)
+}
+func u16(n uint16) string {
+	return strconv.FormatInt(int64(n), 10)
+}
+
+func getDmiFirmware(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	dmi, err := dmidecode.New()
+	if err != nil {
 		log.Error(err, "Can't read DMI")
+		vals <- Insert(Error(err), "Hardware", "DMI")
 		return
 	}
 
-	getDmiSystem(log, dmi, vals)
-
-	getDmiMobo(log, dmi, vals)
-
-	getDmiFw(log, dmi, vals)
-
-	cpus, _ := dmi.SearchByType(4) // CPUs
-	for i, cpu := range cpus {
-		vals <- Insert(Some(cpu["Socket Designation"]), "Hardware", "CPU", strconv.Itoa(i), "Socket")
-		vals <- Insert(Some(cpu["Max Speed"]), "Hardware", "CPU", strconv.Itoa(i), "Max Speed")
+	data, err := dmi.BIOS()
+	if err != nil {
+		log.Error(err, "Can't get DMI Firmware info")
+		vals <- Insert(Error(err), "Hardware", "Firmware")
+		return
 	}
 
-	dimms, _ := dmi.SearchByType(17) // DIMMs
-	for i, dimm := range dimms {
-		vals <- Insert(Some(dimm["Bank Locator"]), "Hardware", "Memory", strconv.Itoa(i), "Channel")
-		vals <- Insert(Some(dimm["Locator"]), "Hardware", "Memory", strconv.Itoa(i), "Slot")
-		vals <- Insert(Some(dimm["Rank"]), "Hardware", "Memory", strconv.Itoa(i), "Ranks")
-		vals <- Insert(Some(dimm["Size"]), "Hardware", "Memory", strconv.Itoa(i), "Size")
-		vals <- Insert(Some(dimm["Speed"]), "Hardware", "Memory", strconv.Itoa(i), "Speed")
-		vals <- Insert(Some(dimm["Type"]), "Hardware", "Memory", strconv.Itoa(i), "Type")
-		vals <- Insert(Some(dimm["Type Detail"]), "Hardware", "Memory", strconv.Itoa(i), "Sub Type")
-	}
-
-	// for _, record := range dmi.Data {
-	// 	for _, v := range record {
-	// 		spew.Dump(v)
-	// 	}
-	// }
+	vals <- Insert(Some(data[0].Vendor), "Hardware", "Firmware", "Vendor")
+	vals <- Insert(Some(data[0].BIOSVersion), "Hardware", "Firmware", "Version")
+	vals <- Insert(Some(data[0].ReleaseDate), "Hardware", "Firmware", "Date")
+	vals <- Insert(Some(u8(data[0].SystemBIOSMajorRelease)), "Hardware", "Firmware", "Major")
+	vals <- Insert(Some(u8(data[0].SystemBIOSMinorRelease)), "Hardware", "Firmware", "Minor")
 }
 
-func getDmiSystem(log logr.Logger, dmi *dmidecode.DMI, vals chan<- InsertMsg) {
-	syss, _ := dmi.SearchByType(1) // system info
-	if len(syss) != 1 {
-		log.Info("Unexpectedly many DMI 'system info' entries; skipping all")
+func getDmiMotherboard(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	dmi, err := dmidecode.New()
+	if err != nil {
+		log.Error(err, "Can't read DMI")
+		vals <- Insert(Error(err), "Hardware", "DMI")
 		return
 	}
-	sys := syss[0]
-	vals <- Insert(Some(sys["Manufacturer"]), "Hardware", "System", "Manufacturer")
-	vals <- Insert(Some(sys["Product Name"]), "Hardware", "System", "Product")
+
+	data, err := dmi.BaseBoard()
+	if err != nil {
+		log.Error(err, "Can't get DMI Motherboard info")
+		vals <- Insert(Error(err), "Hardware", "Motherboard")
+		return
+	}
+
+	vals <- Insert(Some(data[0].Manufacturer), "Hardware", "Motherboard", "Vendor")
+	vals <- Insert(Some(data[0].ProductName), "Hardware", "Motherboard", "Product")
+	vals <- Insert(Some(data[0].Version), "Hardware", "Motherboard", "Version")
+	vals <- Insert(Some(data[0].SerialNumber), "Hardware", "Motherboard", "Serial")
 }
 
-func getDmiMobo(log logr.Logger, dmi *dmidecode.DMI, vals chan<- InsertMsg) {
-	mbs, _ := dmi.SearchByType(2) // mobo
-	if len(mbs) != 1 {
-		log.Info("Unexpectedly many DMI 'motherboard' entries; skipping all")
+func getDmiSystem(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	dmi, err := dmidecode.New()
+	if err != nil {
+		log.Error(err, "Can't read DMI")
+		vals <- Insert(Error(err), "Hardware", "DMI")
 		return
 	}
-	mb := mbs[0]
-	vals <- Insert(Some(mb["Manufacturer"]), "Hardware", "Motherboard", "Manufacturer")
-	vals <- Insert(Some(mb["Product Name"]), "Hardware", "Motherboard", "Product")
+
+	chassis, err := dmi.Chassis()
+	if err != nil {
+		log.Error(err, "Can't get DMI Chassis info")
+		vals <- Insert(Error(err), "Hardware", "Chassis")
+		return
+	}
+
+	vals <- Insert(Some(chassis[0].Manufacturer), "Hardware", "Chassis", "Vendor")
+	vals <- Insert(Some(chassis[0].SKUNumber), "Hardware", "Chassis", "Product")
+	vals <- Insert(Some(chassis[0].Version), "Hardware", "Chassis", "Version")
+	vals <- Insert(Some(chassis[0].SerialNumber), "Hardware", "Chassis", "Serial")
+
+	system, err := dmi.System()
+	if err != nil {
+		log.Error(err, "Can't get DMI Chassis info")
+		vals <- Insert(Error(err), "Hardware", "System")
+		return
+	}
+
+	vals <- Insert(Some(system[0].Manufacturer), "Hardware", "System", "Vendor")
+	vals <- Insert(Some(system[0].ProductName), "Hardware", "System", "Product")
+	vals <- Insert(Some(system[0].Family), "Hardware", "System", "Family")
+	vals <- Insert(Some(system[0].SKUNumber), "Hardware", "System", "SKU")
+	vals <- Insert(Some(system[0].Version), "Hardware", "System", "Version")
+	vals <- Insert(Some(system[0].SerialNumber), "Hardware", "System", "Serial")
 }
 
-func getDmiFw(log logr.Logger, dmi *dmidecode.DMI, vals chan<- InsertMsg) {
-	fws, _ := dmi.SearchByType(0) // firmware
-	if len(fws) != 1 {
-		log.Info("Unexpectedly many DMI 'firmware' entries; skipping all")
+func getDmiRAM(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	dmi, err := dmidecode.New()
+	if err != nil {
+		log.Error(err, "Can't read DMI")
+		vals <- Insert(Error(err), "Hardware", "DMI")
 		return
 	}
-	fw := fws[0]
-	vals <- Insert(Some(fw["Manufacturer"]), "Hardware", "Firmware", "Manufacturer")
-	vals <- Insert(Some(fw["Product Name"]), "Hardware", "Firmware", "Version")
-	vals <- Insert(Some(fw["BIOS Revision"]), "Hardware", "Firmware", "Revision")
-	vals <- Insert(Some(fw["Release Date"]), "Hardware", "Firmware", "Date")
-	vals <- Insert(Some(fw["ROM Size"]), "Hardware", "Firmware", "ROM Size")
+
+	data, err := dmi.MemoryDevice()
+	if err != nil {
+		log.Error(err, "Can't get DMI RAM info")
+		vals <- Insert(Error(err), "Hardware", "RAM")
+		return
+	}
+
+	for i, m := range data {
+		vals <- Insert(Some(m.BankLocator), "Hardware", "RAM", strconv.Itoa(i), "Channel")
+		vals <- Insert(Some(m.DeviceLocator), "Hardware", "RAM", strconv.Itoa(i), "Slot")
+		vals <- Insert(Some(m.Manufacturer), "Hardware", "RAM", strconv.Itoa(i), "Vendor")
+		vals <- Insert(Some(m.PartNumber), "Hardware", "RAM", strconv.Itoa(i), "Product")
+		vals <- Insert(Some(m.SerialNumber), "Hardware", "RAM", strconv.Itoa(i), "Serial")
+		vals <- Insert(Some(m.Type.String()), "Hardware", "RAM", strconv.Itoa(i), "Type")
+		vals <- Insert(Some(m.TypeDetail.String()), "Hardware", "RAM", strconv.Itoa(i), "Subtype")
+		vals <- Insert(Some(m.FormFactor.String()), "Hardware", "RAM", strconv.Itoa(i), "Form Factor")
+		vals <- Insert(Some(u16(m.Size)), "Hardware", "RAM", strconv.Itoa(i), "Size MB")
+		vals <- Insert(Some(u16(m.Speed)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Speed", "Max MT/s")
+		vals <- Insert(Some(u16(m.ConfiguredMemoryClockSpeed)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Speed", "Current MT/s")
+		vals <- Insert(Some(u16(m.MinimumVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "Minimum mV")
+		vals <- Insert(Some(u16(m.ConfiguredVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "Current mV")
+		vals <- Insert(Some(u16(m.MaximumVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "Maximum mV")
+		vals <- Insert(Some(u16(m.TotalWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Total")
+		vals <- Insert(Some(u16(m.DataWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Data") // Will be less if ECC
+	}
+}
+
+func getDmiCPU(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	dmi, err := dmidecode.New()
+	if err != nil {
+		log.Error(err, "Can't read DMI")
+		vals <- Insert(Error(err), "Hardware", "DMI")
+		return
+	}
+
+	data, err := dmi.Processor()
+	if err != nil {
+		log.Error(err, "Can't get DMI CPU info")
+		vals <- Insert(Error(err), "Hardware", "CPU")
+		return
+	}
+
+	vals <- Insert(Some(data[0].Manufacturer), "Hardware", "CPU", "Vendor")
+	vals <- Insert(Some(data[0].Version), "Hardware", "CPU", "Product")
+	vals <- Insert(Some(data[0].Family.String()), "Hardware", "CPU", "Family")
+	vals <- Insert(Some(data[0].SerialNumber), "Hardware", "CPU", "Serial")
+	vals <- Insert(Some(u8(data[0].CoreCount)), "Hardware", "CPU", "Cores")
+	vals <- Insert(Some(u8(data[0].ThreadCount)), "Hardware", "CPU", "Threads")
+	vals <- Insert(Some(data[0].Voltage.String()), "Hardware", "CPU", "Voltage")
+	vals <- Insert(Some(u16(data[0].ExternalClock)), "Hardware", "CPU", "Clock", "Bus")
+	vals <- Insert(Some(u16(data[0].CurrentSpeed)), "Hardware", "CPU", "Clock", "Current")
+	vals <- Insert(Some(u16(data[0].MaxSpeed)), "Hardware", "CPU", "Clock", "Max")
+}
+
+func cacheSizeK(c processor.CacheSize) string {
+	grans := [...]int64{
+		1024,
+		65536,
+	}
+	return strconv.FormatInt(grans[c.Granularity]*int64(c.Size), 10)
+}
+func getDmiCPUCache(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+	dmi, err := dmidecode.New()
+	if err != nil {
+		log.Error(err, "Can't read DMI")
+		vals <- Insert(Error(err), "Hardware", "DMI")
+		return
+	}
+
+	data, err := dmi.ProcessorCache()
+	if err != nil {
+		log.Error(err, "Can't get DMI CPU Cache info")
+		vals <- Insert(Error(err), "Hardware", "CPU", "Cache")
+		return
+	}
+
+	for _, c := range data {
+		vals <- Insert(Some(cacheSizeK(c.InstalledSize)), "Hardware", "CPU", "Cache", "Totals", c.SocketDesignation)
+	}
 }

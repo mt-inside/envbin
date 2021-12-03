@@ -28,6 +28,12 @@ func GetData(ctx context.Context, log logr.Logger) *trie.Trie {
 		f := p // Avoid capture of the loop variable
 		go func() {
 			f(ctx, log, vals)
+			log.V(1).Info("Plugin done")
+			// If one of the plugins is sticking and you wanna see which one it is
+			// err := pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+			// if err != nil {
+			// 	panic(err)
+			// }
 			wg.Done()
 		}()
 	}

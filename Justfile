@@ -17,10 +17,10 @@ install: lint
 	./deploy/git-hooks/install-local
 
 run-server: lint
-	go run -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... serve
+	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... serve
 
 run-dump: lint
-	go run -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... dump
+	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... dump
 
 run-client: lint
 	go run -ldflags "$(build/ldflags.sh)" ./cmd/client/...

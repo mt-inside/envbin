@@ -24,10 +24,10 @@ func NewTrie(log logr.Logger) *Trie {
 
 func (t *Trie) Insert(value Value, path ...string) {
 	log := t.log.WithName("Insert")
-	log.V(1).Info("called", "path", path, "value", value)
+	log.V(2).Info("called", "path", path, "value", value)
 
 	if len(path) == 0 {
-		log.V(1).Info("making leaf")
+		log.V(2).Info("making leaf")
 		t.leaf = true
 		t.value = value
 		return
@@ -47,7 +47,7 @@ func (t *Trie) Insert(value Value, path ...string) {
 
 func (t *Trie) InsertTree(child *Trie, path ...string) {
 	log := t.log.WithName("InsertTree")
-	log.V(1).Info("called", "path", path)
+	log.V(2).Info("called", "path", path)
 
 	if t.children == nil {
 		t.children = map[string]*Trie{}
@@ -69,14 +69,14 @@ func (t *Trie) InsertTree(child *Trie, path ...string) {
 
 func (t *Trie) Get(path ...string) (Value, bool) {
 	log := t.log.WithName("Get")
-	log.V(1).Info("called", "path", path, "leaf?", t.leaf)
+	log.V(2).Info("called", "path", path, "leaf?", t.leaf)
 
 	if len(path) == 0 {
 		if !t.leaf {
 			log.Info("trie fuckup")
 			return nil, false
 		} else {
-			log.V(1).Info("leaf, Some", "value", t.value)
+			log.V(2).Info("leaf, Some", "value", t.value)
 			return t.value, true
 		}
 	} else {
@@ -86,7 +86,7 @@ func (t *Trie) Get(path ...string) (Value, bool) {
 				log.Info("trie fuckup")
 				return nil, false
 			default:
-				log.V(1).Info("leaf, !Some", "value", t.value)
+				log.V(2).Info("leaf, !Some", "value", t.value)
 				return t.value, true
 			}
 		} else {
@@ -100,7 +100,7 @@ func (t *Trie) Get(path ...string) (Value, bool) {
 				return nil, false
 			}
 
-			log.V(1).Info("recursing")
+			log.V(2).Info("recursing")
 			return t.children[path[0]].Get(path[1:]...)
 		}
 	}

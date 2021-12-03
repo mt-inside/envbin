@@ -5,7 +5,7 @@ func (t *Trie) Walk(cb func(path []string, value Value)) {
 }
 func (t *Trie) walkInternal(cb func(path []string, value Value), path []string) {
 	log := t.log.WithName("walkInternal")
-	log.V(1).Info("called", "path", path, "leaf?", t.leaf)
+	log.V(2).Info("called", "path", path, "leaf?", t.leaf)
 
 	if t.leaf {
 		cb(path, t.value)
@@ -16,7 +16,7 @@ func (t *Trie) walkInternal(cb func(path []string, value Value), path []string) 
 
 		cb(path, some{""})
 
-		log.V(1).Info("recursing")
+		log.V(2).Info("recursing")
 		for name, c := range t.children {
 			c.walkInternal(cb, append(path, name))
 		}

@@ -1,12 +1,9 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
-	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/mt-inside/envbin/pkg/data/enrichments"
 	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
@@ -20,6 +17,8 @@ var (
 	CtxKeyConn = &ctxKey{"conn"}
 )
 
+// FIXME this function unused
+
 func MiddlewareStack(
 	log logr.Logger,
 	next func(log logr.Logger, w http.ResponseWriter, r *http.Request, d *trie.Trie) []byte,
@@ -27,10 +26,11 @@ func MiddlewareStack(
 	return recoveryMiddleware( // let it crash
 		proxyHeaders( // Sets header x-envbin-proxy-chain any and all forwarded addresses
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-				defer cancel()
+				// ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+				// defer cancel()
 
-				d := enrichments.GetDataWithRequest(ctx, log, r)
+				d := trie.NewTrie(log)
+				//reqData := extractors.RequestData(ctx, log, r)
 
 				bs := next(log, w, r, d)
 

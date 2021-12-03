@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/go-logr/logr"
+
+	. "github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 const baseUrl = "https://ipapi.co"
@@ -25,6 +28,7 @@ type IpInfo struct {
 	Reason  string `json:"reason"`
 }
 
+// Not ideal that this is here
 func ExternalIp(ctx context.Context, log logr.Logger) (string, error) {
 	// TODO Can force to v4?
 
@@ -36,17 +40,28 @@ func ExternalIp(ctx context.Context, log logr.Logger) (string, error) {
 	return info.Ip, nil
 }
 
-func EnrichIpRendered(ctx context.Context, log logr.Logger, ip string) (string, error) {
+func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- InsertMsg) {
 	if ip == "" {
 		panic("Empty IP is a special parameter to ipapi.co (gets apparent external IP) and shouldn't be provided through this path")
 	}
 
 	info, err := ipApiFetch(ctx, log, ip)
 	if err != nil {
-		return "", err
+		log.Error(err, "Can't get IP info", "ip", ip)
+		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
+			vals <- Insert(Timeout(time.Second), "Details") // FIXME: duration
+		} else {
+			vals <- Insert(Error(fmt.Errorf("Can't get external IP info from ipapi.co: %w", err)), "Details")
+		}
+		return
 	}
 
-	return fmt.Sprintf("%s, %s, %s, %s (AS: %s, %s)", info.City, info.Region, info.Postal, info.Country, info.Asn, info.As), nil
+	vals <- Insert(Some(info.Postal), "Postal")
+	vals <- Insert(Some(info.City), "City")
+	vals <- Insert(Some(info.Region), "Region")
+	vals <- Insert(Some(info.Country), "Country")
+	vals <- Insert(Some(info.As), "AS")
+	vals <- Insert(Some(info.Asn), "ASN")
 }
 
 func ipApiFetch(ctx context.Context, log logr.Logger, ip string) (IpInfo, error) {

@@ -39,20 +39,8 @@ func getNetworkData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg)
 		return
 	}
 
+	enrichments.EnrichIp(ctx, log, extIP, PrefixChan(vals, "Network", "ExternalIP"))
 	vals <- Insert(Some(extIP), "Network", "ExternalIP", "Address")
-
-	extIpInfo, err := enrichments.EnrichIpRendered(ctx, log, extIP)
-	if err != nil {
-		log.Error(err, "Can't get IP info", "ip", extIP)
-		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-			vals <- Insert(Timeout(time.Second), "Network", "ExternalIP", "Info")
-		} else {
-			vals <- Insert(Error(err), "Network", "ExternalIP", "Info")
-		}
-		return
-	}
-
-	vals <- Insert(Some(extIpInfo), "Network", "ExternalIP", "Info")
 }
 
 func getIfaces(log logr.Logger, vals chan<- InsertMsg) {

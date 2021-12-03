@@ -56,9 +56,9 @@ func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- Inser
 }
 
 func enrichFromInfo(info IpInfo, vals chan<- InsertMsg) {
-	vals <- Insert(Some(info.Postal), "Postal")
 	vals <- Insert(Some(info.City), "City")
 	vals <- Insert(Some(info.Region), "Region")
+	vals <- Insert(Some(info.Postal), "Postal") // postal code
 	vals <- Insert(Some(info.Country), "Country")
 	vals <- Insert(Some(info.As), "AS")
 	vals <- Insert(Some(info.Asn), "ASN")

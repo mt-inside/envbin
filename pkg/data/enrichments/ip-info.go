@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"time"
 
 	"github.com/go-logr/logr"
 
@@ -28,16 +26,18 @@ type IpInfo struct {
 	Reason  string `json:"reason"`
 }
 
-// Not ideal that this is here
-func ExternalIp(ctx context.Context, log logr.Logger) (string, error) {
+func EnrichedExternalIp(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	// TODO Can force to v4?
 
 	info, err := ipApiFetch(ctx, log, "")
 	if err != nil {
-		return "", err
+		log.Error(err, "Can't get external IP and its info")
+		vals <- Insert(Error(fmt.Errorf("Can't get external IP info from ipapi.co: %w", err)), "Details")
+		return
 	}
 
-	return info.Ip, nil
+	enrichFromInfo(info, vals)
+	vals <- Insert(Some(info.Ip), "Address")
 }
 
 func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- InsertMsg) {
@@ -48,14 +48,14 @@ func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- Inser
 	info, err := ipApiFetch(ctx, log, ip)
 	if err != nil {
 		log.Error(err, "Can't get IP info", "ip", ip)
-		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-			vals <- Insert(Timeout(time.Second), "Details") // FIXME: duration
-		} else {
-			vals <- Insert(Error(fmt.Errorf("Can't get external IP info from ipapi.co: %w", err)), "Details")
-		}
+		vals <- Insert(Error(fmt.Errorf("Can't get IP info from ipapi.co: %w", err)), "Details")
 		return
 	}
 
+	enrichFromInfo(info, vals)
+}
+
+func enrichFromInfo(info IpInfo, vals chan<- InsertMsg) {
 	vals <- Insert(Some(info.Postal), "Postal")
 	vals <- Insert(Some(info.City), "City")
 	vals <- Insert(Some(info.Region), "Region")
@@ -65,9 +65,7 @@ func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- Inser
 }
 
 func ipApiFetch(ctx context.Context, log logr.Logger, ip string) (IpInfo, error) {
-	client := http.Client{
-		Timeout: time.Second * 2,
-	}
+	client := http.Client{}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/%s/json", baseUrl, ip), nil)
 	if err != nil {

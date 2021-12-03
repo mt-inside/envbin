@@ -2,6 +2,7 @@ package trie
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -35,8 +36,13 @@ type erro struct {
 	Err error
 }
 
-func Error(err error) erro {
-	return erro{err}
+func Error(err error) Value {
+	// TODO 401 -> Forbidden() etc
+	if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
+		return Timeout(time.Second) // FIXME: duration
+	} else {
+		return erro{err}
+	}
 }
 
 func (e erro) Render() string {

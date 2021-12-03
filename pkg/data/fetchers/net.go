@@ -3,10 +3,8 @@ package fetchers
 import (
 	"context"
 	"net"
-	"net/url"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/mt-inside/envbin/pkg/data"
@@ -28,19 +26,7 @@ func getNetworkData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg)
 
 	getDefaultIP(log, vals)
 
-	extIP, err := enrichments.ExternalIp(ctx, log)
-	if err != nil {
-		log.Error(err, "Can't get external IP address")
-		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
-			vals <- Insert(Timeout(time.Second), "Network", "ExternalIP")
-		} else {
-			vals <- Insert(Error(err), "Network", "ExternalIP")
-		}
-		return
-	}
-
-	enrichments.EnrichIp(ctx, log, extIP, PrefixChan(vals, "Network", "ExternalIP"))
-	vals <- Insert(Some(extIP), "Network", "ExternalIP", "Address")
+	enrichments.EnrichedExternalIp(ctx, log, PrefixChan(vals, "Network", "ExternalIP"))
 }
 
 func getIfaces(log logr.Logger, vals chan<- InsertMsg) {

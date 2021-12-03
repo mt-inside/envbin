@@ -14,10 +14,12 @@ import (
 
 func RequestData(ctx context.Context, log logr.Logger, r *http.Request, vals chan<- InsertMsg) {
 
-	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+	// TODO This will be the last proxy; look at x-forwarded-for if you want to be better
+	if host, port, err := net.SplitHostPort(r.RemoteAddr); err == nil {
 		enrichments.EnrichIp(ctx, log, host, PrefixChan(vals, "RemoteAddr"))
+		vals <- Insert(Some(host), "RemoteAddr", "Address")
+		vals <- Insert(Some(port), "RemoteAddr", "Port")
 	}
-	vals <- Insert(Some(r.RemoteAddr), "RemoteAddr", "Address") // TODO This will be the last proxy; look at x-forwarded-for if you want to be better
 
 	vals <- Insert(Some(r.Host), "Headers", "Host") // go's http client promotes this header to here then deletes from Header map
 	for k, v := range r.Header {

@@ -13,16 +13,16 @@ import (
 
 func GetEnv(log logr.Logger, r *gin.RouterGroup) {
 	r.GET("/", func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
-		data := data.GetData(ctx, log) // TODO refresh on GET. TODO push updates to web UI (gin seems to support push)
-
-		reqData := trie.BuildFromSyncFn(
-			log,
-			func(vals chan<- trie.InsertMsg) { extractors.RequestData(ctx, log, c.Request, vals) }, // partial application
+		// Have to register this as a plugin so that it's run in the pool with the rest, cause it needs to be in parallel with them cause it does i/o.
+		data.RegisterPlugin(
+			func(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
+				extractors.RequestData(ctx, log, c.Request, trie.PrefixChan(vals, "Request"))
+			}, // partial application
 		)
-		data.InsertTree(reqData, "Request")
+		data := data.GetData(ctx, log) // TODO refresh on GET. TODO push updates to web UI (gin seems to support push)
 
 		c.JSON(200, data)
 	})

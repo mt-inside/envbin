@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"strings"
 
 	"github.com/go-logr/logr"
 
@@ -36,8 +38,9 @@ func EnrichedExternalIp(ctx context.Context, log logr.Logger, vals chan<- Insert
 		return
 	}
 
-	enrichFromInfo(info, vals)
 	vals <- Insert(Some(info.Ip), "Address")
+	enrichFromInfo(info, vals)
+	reverseDNS(info.Ip, vals)
 }
 
 func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- InsertMsg) {
@@ -53,6 +56,7 @@ func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- Inser
 	}
 
 	enrichFromInfo(info, vals)
+	reverseDNS(info.Ip, vals)
 }
 
 func enrichFromInfo(info IpInfo, vals chan<- InsertMsg) {
@@ -62,6 +66,15 @@ func enrichFromInfo(info IpInfo, vals chan<- InsertMsg) {
 	vals <- Insert(Some(info.Country), "Country")
 	vals <- Insert(Some(info.As), "AS")
 	vals <- Insert(Some(info.Asn), "ASN")
+}
+
+func reverseDNS(ip string, vals chan<- InsertMsg) {
+	hosts, err := net.LookupAddr(ip)
+	if err != nil {
+		vals <- Insert(Error(err), "ReverseDNS")
+	}
+
+	vals <- Insert(Some(strings.Join(hosts, ",")), "ReverseDNS")
 }
 
 func ipApiFetch(ctx context.Context, log logr.Logger, ip string) (IpInfo, error) {

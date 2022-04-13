@@ -1,3 +1,7 @@
+// TODO: read namespace labels and annotations
+// TODO: read pod labels and annotions
+// TODO: can find the Service(s)? Find endpoint with same IP, that has a ref to the service?
+
 package fetchers
 
 import (

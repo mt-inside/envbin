@@ -3,10 +3,16 @@ package main
 import (
 	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mt-inside/envbin/pkg/data/fetchers"
 	"github.com/mt-inside/go-usvc"
 	"github.com/urfave/cli/v2"
 )
+
+func init() {
+	spew.Config.DisableMethods = true
+	spew.Config.DisablePointerMethods = true
+}
 
 func main() {
 	log := usvc.GetLogger(true, 1)

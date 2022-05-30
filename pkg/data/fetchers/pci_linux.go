@@ -8,20 +8,20 @@ import (
 	"github.com/jaypipes/ghw"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
 	data.RegisterPlugin(getPciData)
 }
 
-func getPciData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getPciData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	prefix := []string{"Hardware", "Bus", "PCI"}
 
 	pci, err := ghw.PCI()
 	if err != nil {
-		log.Error(err, "Can't read PCI data")
-		vals <- Insert(Error(err), prefix...)
+		log.trie.Error(err, "Can't read PCI data")
+		vals <- trie.Insert(trie.Error(err), prefix...)
 		return
 	}
 
@@ -34,18 +34,18 @@ func getPciData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 		bus := addrs[1]
 		device := addrs[2]
 
-		vals <- Insert(Some(domain), "Hardware", "Bus", "PCI", addr, "Domain")
-		vals <- Insert(Some(bus), "Hardware", "Bus", "PCI", addr, "Bus")
-		vals <- Insert(Some(device), "Hardware", "Bus", "PCI", addr, "Device")
-		vals <- Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
-		vals <- Insert(Some(d.Vendor.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Vendor")
-		vals <- Insert(Some(d.Product.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Product")
-		vals <- Insert(Some(d.Revision), "Hardware", "Bus", "PCI", addr, "Functions", function, "Revision")
-		vals <- Insert(Some(d.Class.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Class")
-		vals <- Insert(Some(d.Subclass.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Subclass")
-		vals <- Insert(Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
+		vals <- trie.Insert(trie.Some(domain), "Hardware", "Bus", "PCI", addr, "Domain")
+		vals <- trie.Insert(trie.Some(bus), "Hardware", "Bus", "PCI", addr, "Bus")
+		vals <- trie.Insert(trie.Some(device), "Hardware", "Bus", "PCI", addr, "Device")
+		vals <- trie.Insert(trie.Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
+		vals <- trie.Insert(trie.Some(d.Vendor.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Vendor")
+		vals <- trie.Insert(trie.Some(d.Product.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Product")
+		vals <- trie.Insert(trie.Some(d.Revision), "Hardware", "Bus", "PCI", addr, "Functions", function, "Revision")
+		vals <- trie.Insert(trie.Some(d.Class.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Class")
+		vals <- trie.Insert(trie.Some(d.Subclass.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Subclass")
+		vals <- trie.Insert(trie.Some(d.Driver), "Hardware", "Bus", "PCI", addr, "Functions", function, "Driver")
 		for _, iface := range d.Subclass.ProgrammingInterfaces {
-			vals <- Insert(Some(iface.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Interfaces", iface.ID)
+			vals <- trie.Insert(trie.Some(iface.Name), "Hardware", "Bus", "PCI", addr, "Functions", function, "Interfaces", iface.ID)
 		}
 	}
 }

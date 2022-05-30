@@ -16,7 +16,7 @@ import (
 	"github.com/google/gousb/usbid"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
@@ -32,17 +32,17 @@ func unwrap(s string, err error) string {
 
 func orElse(s string, err error) string {
 	if err != nil {
-		return err.Error()
+		return err.trie.Error()
 	}
 	return s
 }
 
-func getUsbData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	prefix := []string{"Hardware", "Bus", "USB"}
 
 	err := usbid.LoadFromURL(usbid.LinuxUsbDotOrg)
 	if err != nil {
-		log.Error(err, "Can't load USB IDs")
+		log.trie.Error(err, "Can't load USB IDs")
 		// Don't return, will just have worse device naming
 	}
 
@@ -53,8 +53,8 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 		return true
 	})
 	if err != nil {
-		vals <- Insert(Error(err), prefix...)
-		log.Error(err, "Can't read USB data")
+		vals <- trie.Insert(trie.Error(err), prefix...)
+		log.trie.Error(err, "Can't read USB data")
 		return
 	}
 
@@ -64,15 +64,15 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 
 		phyAddr, err := findPhysicalAddr(d.Bus, d.Address)
 		if err != nil {
-			log.Error(err, "Can't find usb device")
+			log.trie.Error(err, "Can't find usb device")
 			continue // The virtual Root Hub devices, which are annoying
 		}
 
 		addr := fmt.Sprintf("%d-%s", d.Bus, phyAddr)
 
-		vals <- Insert(Some(strconv.Itoa(d.Bus)), "Hardware", "Bus", "USB", addr, "Bus")
-		vals <- Insert(Some(phyAddr), "Hardware", "Bus", "USB", addr, "Physical Address")
-		vals <- Insert(Some(strconv.Itoa(d.Address)), "Hardware", "Bus", "USB", addr, "Logical Device")
+		vals <- trie.Insert(trie.Some(strconv.Itoa(d.Bus)), "Hardware", "Bus", "USB", addr, "Bus")
+		vals <- trie.Insert(trie.Some(phyAddr), "Hardware", "Bus", "USB", addr, "Physical Address")
+		vals <- trie.Insert(trie.Some(strconv.Itoa(d.Address)), "Hardware", "Bus", "USB", addr, "Logical Device")
 
 		var m, p string
 		mx, ok := usbid.Vendors[d.Vendor]
@@ -89,13 +89,13 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 			p = unwrap(dev.Product())
 		}
 
-		vals <- Insert(Some(d.Vendor.String()), "Hardware", "Bus", "USB", addr, "VendorID")
-		vals <- Insert(Some(d.Product.String()), "Hardware", "Bus", "USB", addr, "ProductID")
-		vals <- Insert(Some(m), "Hardware", "Bus", "USB", addr, "Manufacturer")
-		vals <- Insert(Some(p), "Hardware", "Bus", "USB", addr, "Product")
-		vals <- Insert(Some(orElse(dev.SerialNumber())), "Hardware", "Bus", "USB", addr, "Serial")
-		vals <- Insert(Some(d.Spec.String()), "Hardware", "Bus", "USB", addr, "Spec")
-		vals <- Insert(Some(d.Speed.String()), "Hardware", "Bus", "USB", addr, "Speed")
+		vals <- trie.Insert(trie.Some(d.Vendor.String()), "Hardware", "Bus", "USB", addr, "VendorID")
+		vals <- trie.Insert(trie.Some(d.Product.String()), "Hardware", "Bus", "USB", addr, "ProductID")
+		vals <- trie.Insert(trie.Some(m), "Hardware", "Bus", "USB", addr, "Manufacturer")
+		vals <- trie.Insert(trie.Some(p), "Hardware", "Bus", "USB", addr, "Product")
+		vals <- trie.Insert(trie.Some(orElse(dev.SerialNumber())), "Hardware", "Bus", "USB", addr, "Serial")
+		vals <- trie.Insert(trie.Some(d.Spec.String()), "Hardware", "Bus", "USB", addr, "Spec")
+		vals <- trie.Insert(trie.Some(d.Speed.String()), "Hardware", "Bus", "USB", addr, "Speed")
 
 		for _, c := range d.Configs {
 			pow := "0mA"
@@ -103,16 +103,16 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 				pow = fmt.Sprintf("%dmA", c.MaxPower)
 			}
 
-			vals <- Insert(Some(pow), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Power")
-			vals <- Insert(Some(strconv.FormatBool(c.RemoteWakeup)), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Wakeup")
+			vals <- trie.Insert(trie.Some(pow), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Power")
+			vals <- trie.Insert(trie.Some(strconv.FormatBool(c.RemoteWakeup)), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Wakeup")
 			for _, i := range c.Interfaces {
 				// I've never seen a device with differing properties across alts of an interface, so we just read item 0. If you do need to iterate Alts, nb that you want a.Alternate, not a.Number
-				vals <- Insert(Some(usbid.Classify(i.AltSettings[0])), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Description")
+				vals <- trie.Insert(trie.Some(usbid.Classify(i.AltSettings[0])), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Description")
 				driver, err := findDriver(d.Bus, phyAddr, c.Number, i.Number)
 				if err == nil {
-					vals <- Insert(Some(driver), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
+					vals <- trie.Insert(trie.Some(driver), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
 				} else {
-					vals <- Insert(Error(err), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
+					vals <- trie.Insert(trie.Error(err), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
 				}
 			}
 		}

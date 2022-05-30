@@ -7,27 +7,27 @@ import (
 	"github.com/syndtr/gocapability/capability"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
 	data.RegisterPlugin(getCapsData)
 }
 
-func getCapsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getCapsData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	caps, err := capability.NewPid2(0)
 	if err != nil {
-		log.Error(err, "Can't construct caps object for current process")
-		vals <- Insert(Error(err), "Processes", "0", "Capabilities")
+		log.trie.Error(err, "Can't construct caps object for current process")
+		vals <- trie.Insert(trie.Error(err), "Processes", "0", "Capabilities")
 		return
 	}
 
 	err = caps.Load()
 	if err != nil {
-		log.Error(err, "Can't load caps for current process")
-		vals <- Insert(Error(err), "Processes", "0", "Capabilities")
+		log.trie.Error(err, "Can't load caps for current process")
+		vals <- trie.Insert(trie.Error(err), "Processes", "0", "Capabilities")
 		return
 	}
 
-	vals <- Insert(Some(caps.String()), "Processes", "0", "Capabilities")
+	vals <- trie.Insert(trie.Some(caps.String()), "Processes", "0", "Capabilities")
 }

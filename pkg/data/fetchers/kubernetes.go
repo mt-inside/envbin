@@ -6,7 +6,7 @@ package fetchers
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -21,7 +21,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
@@ -33,17 +33,16 @@ func init() {
 // both to return a trie
 // * cmdline thing to share a renderer with "dump"
 
-func getK8sDataInCluster(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getK8sDataInCluster(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		vals <- Insert(NotPresent(), "Cloud", "Kubernetes")
+		vals <- trie.Insert(trie.NotPresent(), "Cloud", "Kubernetes")
 		return
 	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		vals <- Insert(Error(err), "Cloud", "Kubernetes")
-		log.Error(err, "Can't connect to k8s apiserver")
+		vals <- trie.Insert(trie.Error(fmt.Errorf("can't connect to apiserver: %w", err)), "Cloud", "Kubernetes")
 		return
 	}
 
@@ -66,15 +65,14 @@ type k8sClaims struct {
 	} `json:"kubernetes.io"`
 }
 
-func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clientset, vals chan<- InsertMsg) {
+func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clientset, vals chan<- trie.InsertMsg) {
 	// Control Plane
 	version, err := clientSet.Discovery().ServerVersion()
 	if err != nil {
-		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Masters")
-		log.Error(err, "Can't get cluster version")
+		vals <- trie.Insert(k8sFromError(log, fmt.Errorf("can't get cluster version: %w", err)), "Cloud", "Kubernetes", "Masters")
 	} else {
-		vals <- Insert(Some(version.GitVersion), "Cloud", "Kubernetes", "Masters", "Version")
-		vals <- Insert(Some(version.Platform), "Cloud", "Kubernetes", "Masters", "Platform")
+		vals <- trie.Insert(trie.Some(version.GitVersion), "Cloud", "Kubernetes", "Masters", "Version")
+		vals <- trie.Insert(trie.Some(version.Platform), "Cloud", "Kubernetes", "Masters", "Platform")
 	}
 
 	// IP Ranges
@@ -89,32 +87,32 @@ func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clie
 	token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil)
 	// if err != nil {
 	// Will fail atm because we pass a nil keyFunc, but the token is still parsed, just not validated
-	//vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Identity")
+	//vals <- trie.Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Identity")
 	//return
 	// }
 	claims, ok := token.Claims.(*k8sClaims)
 	if !ok {
-		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Identity")
+		vals <- trie.Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Identity")
 		return
 	}
-	vals <- Insert(Some(claims.Kubernetes.Namespace), "Cloud", "Kubernetes", "Namespace", "Name")
-	vals <- Insert(Some(claims.Kubernetes.ServiceAccount.Name), "Cloud", "Kubernetes", "Pod", "ServiceAccount")
+	vals <- trie.Insert(trie.Some(claims.Kubernetes.Namespace), "Cloud", "Kubernetes", "Namespace", "Name")
+	vals <- trie.Insert(trie.Some(claims.Kubernetes.ServiceAccount.Name), "Cloud", "Kubernetes", "Pod", "ServiceAccount")
 
 	// Nodes
 
 	nodes, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Nodes")
+		vals <- trie.Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Nodes")
 		// Keep going becuase we might have permission to read other stuff
 	}
 	for i, n := range nodes.Items {
-		vals <- Insert(Some(n.Status.NodeInfo.Architecture), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Architecture")
-		vals <- Insert(Some(quantity2str(n.Status.Capacity.Cpu())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Cores")
-		vals <- Insert(Some(quantity2str(n.Status.Capacity.Memory())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "RAM")
-		vals <- Insert(Some(quantity2str(n.Status.Capacity.Storage())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Storage")
-		vals <- Insert(Some(quantity2str(n.Status.Capacity.StorageEphemeral())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Ephemeral")
+		vals <- trie.Insert(trie.Some(n.Status.NodeInfo.Architecture), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Architecture")
+		vals <- trie.Insert(trie.Some(quantity2str(n.Status.Capacity.Cpu())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Cores")
+		vals <- trie.Insert(trie.Some(quantity2str(n.Status.Capacity.Memory())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "RAM")
+		vals <- trie.Insert(trie.Some(quantity2str(n.Status.Capacity.Storage())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Storage")
+		vals <- trie.Insert(trie.Some(quantity2str(n.Status.Capacity.StorageEphemeral())), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Ephemeral")
 		for k, v := range n.Labels {
-			vals <- Insert(Some(v), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Labels", k)
+			vals <- trie.Insert(trie.Some(v), "Cloud", "Kubernetes", "Nodes", strconv.Itoa(i), "Labels", k)
 		}
 	}
 
@@ -122,13 +120,13 @@ func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clie
 
 	pods, err := clientSet.CoreV1().Pods(claims.Kubernetes.Namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Namespace", "Pods")
+		vals <- trie.Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Namespace", "Pods")
 		return
 	}
 	for i, p := range pods.Items {
-		vals <- Insert(Some(p.Name), "Cloud", "Kubernetes", "Namespace", "Pods", strconv.Itoa(i), "Name")
+		vals <- trie.Insert(trie.Some(p.Name), "Cloud", "Kubernetes", "Namespace", "Pods", strconv.Itoa(i), "Name")
 		for j, c := range p.Spec.Containers {
-			vals <- Insert(Some(c.Image), "Cloud", "Kubernetes", "Namespace", "Pods", strconv.Itoa(i), "Containers", strconv.Itoa(j), "Image")
+			vals <- trie.Insert(trie.Some(c.Image), "Cloud", "Kubernetes", "Namespace", "Pods", strconv.Itoa(i), "Containers", strconv.Itoa(j), "Image")
 		}
 	}
 
@@ -137,34 +135,30 @@ func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clie
 	hostname, _ := os.Hostname()
 	pod, err := clientSet.CoreV1().Pods(claims.Kubernetes.Namespace).Get(ctx, hostname, metav1.GetOptions{})
 	if err != nil {
-		vals <- Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Pod")
+		vals <- trie.Insert(k8sFromError(log, err), "Cloud", "Kubernetes", "Pod")
 		return
 	}
 	for i, c := range pod.Spec.Containers {
-		vals <- Insert(Some(c.Name), "Cloud", "Kubernetes", "Pod", "Containers", strconv.Itoa(i), "Name")
-		vals <- Insert(Some(c.Image), "Cloud", "Kubernetes", "Pod", "Containers", strconv.Itoa(i), "Image")
+		vals <- trie.Insert(trie.Some(c.Name), "Cloud", "Kubernetes", "Pod", "Containers", strconv.Itoa(i), "Name")
+		vals <- trie.Insert(trie.Some(c.Image), "Cloud", "Kubernetes", "Pod", "Containers", strconv.Itoa(i), "Image")
 	}
 
-	vals <- Insert(Some(pod.Spec.NodeName), "Cloud", "Kubernetes", "Pod", "NodeName")
+	vals <- trie.Insert(trie.Some(pod.Spec.NodeName), "Cloud", "Kubernetes", "Pod", "NodeName")
 
 	// TODO: get own namespace pods list
-	// TODO: get nodes list: vals <- Insert(Some(strconv.Itoa(len(nodes.Items))), "Cloud", "Kubernetes", "Cluster", "NodesCount")
+	// TODO: get nodes list: vals <- trie.Insert(trie.Some(strconv.Itoa(len(nodes.Items))), "Cloud", "Kubernetes", "Cluster", "NodesCount")
 	// TODO: search for parent ownerrefs, and build kubectl tree style location
 }
-func k8sFromError(log logr.Logger, err error) Value {
+func k8sFromError(log logr.Logger, err error) trie.Value {
 	if k8sErrors.IsForbidden(err) {
-		log.Error(err, "Kubernetes error: Forbidden; check RBAC")
-		return Forbidden()
+		return trie.Forbidden()
 	} else if err == context.DeadlineExceeded {
-		log.Error(err, "Kubernetes error: Timed out")
-		return Timeout(time.Second) // TODO: use the actual timeout!
+		return trie.Timeout(time.Second) // TODO: use the actual timeout!
 	} else if k8sErrors.IsTimeout(err) { // client-go blew its own deadline?
-		log.Error(err, "Kubernetes error: Timed out")
-		return Timeout(time.Second) // TODO: use actual timeout!
+		return trie.Timeout(time.Second) // TODO: use actual timeout!
 		// Is also an IsServerTimeout() to show the apiserver popped its deadline
 	} else {
-		log.Error(err, "Kubernetes error: Other")
-		return Error(errors.New("Unknown kubernetes error"))
+		return trie.Error(fmt.Errorf("unknown kubernetes error: %w", err))
 	}
 }
 

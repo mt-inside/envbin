@@ -8,18 +8,18 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
 	data.RegisterPlugin(getAwsData)
 }
 
-func getAwsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getAwsData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		// Technically, no client configured (this will pass on a workstation that interracts with AWS)
-		vals <- Insert(NotPresent(), "Cloud", "AWS")
+		vals <- trie.Insert(trie.NotPresent(), "Cloud", "AWS")
 		return
 	}
 
@@ -27,12 +27,12 @@ func getAwsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 
 	iid, err := aws.GetInstanceIdentityDocument(ctx, nil)
 	if err != nil {
-		vals <- Insert(NotPresent(), "Cloud", "AWS")
+		vals <- trie.Insert(trie.NotPresent(), "Cloud", "AWS")
 		return
 	}
-	vals <- Insert(Some(iid.AccountID), "Cloud", "AWS", "AccountID")
-	vals <- Insert(Some(iid.Region), "Cloud", "AWS", "Region")
-	vals <- Insert(Some(iid.AvailabilityZone), "Cloud", "AWS", "Zone")
-	vals <- Insert(Some(iid.InstanceType), "Cloud", "AWS", "Instance", "Type")
-	vals <- Insert(Some(iid.ImageID), "Cloud", "AWS", "Instance", "ImageID")
+	vals <- trie.Insert(trie.Some(iid.AccountID), "Cloud", "AWS", "AccountID")
+	vals <- trie.Insert(trie.Some(iid.Region), "Cloud", "AWS", "Region")
+	vals <- trie.Insert(trie.Some(iid.AvailabilityZone), "Cloud", "AWS", "Zone")
+	vals <- trie.Insert(trie.Some(iid.InstanceType), "Cloud", "AWS", "Instance", "Type")
+	vals <- trie.Insert(trie.Some(iid.ImageID), "Cloud", "AWS", "Instance", "ImageID")
 }

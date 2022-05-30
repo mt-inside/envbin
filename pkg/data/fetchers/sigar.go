@@ -12,7 +12,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
@@ -21,96 +21,88 @@ func init() {
 	data.RegisterPlugin(getOsData)
 }
 
-func getMemData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getMemData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	mem := sigar.Mem{}
 	err := mem.Get()
 	if err != nil {
-		log.Error(err, "Can't read memory information")
-		vals <- Insert(Error(err), "Hardware", "Memory")
+		vals <- trie.Insert(trie.Error(err), "Hardware", "Memory")
 		return
 	}
 
-	vals <- Insert(Some(strconv.FormatUint(mem.Total, 10)), "Hardware", "Memory", "Total")
+	vals <- trie.Insert(trie.Some(strconv.FormatUint(mem.Total, 10)), "Hardware", "Memory", "Total")
 }
 
-func getProcsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getProcsData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	procs := sigar.ProcList{}
 	err := procs.Get()
 	if err != nil {
-		log.Error(err, "Can't read process information")
-		vals <- Insert(Error(err), "OS", "Processes")
+		vals <- trie.Insert(trie.Error(err), "OS", "Processes")
 		return
 	}
 
-	vals <- Insert(Some(strconv.Itoa(len(procs.List)-1)), "OS", "Processes", "Count")
+	vals <- trie.Insert(trie.Some(strconv.Itoa(len(procs.List)-1)), "OS", "Processes", "Count")
 }
 
-func getOsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getOsData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	pid := os.Getpid()
 	i := 0
 	for {
 		var ps sigar.ProcState
 		err := ps.Get(pid)
 		if err != nil {
-			log.Error(err, "Can't get process", "PID", pid)
-			vals <- Insert(Error(err), "Processes", strconv.Itoa(i))
+			vals <- trie.Insert(trie.Error(err), "Processes", strconv.Itoa(i))
 			break
 		}
-		vals <- Insert(Some(strconv.Itoa(pid)), "Processes", strconv.Itoa(i), "PID")
-		vals <- Insert(Some(strconv.Itoa(ps.Pgid)), "Processes", strconv.Itoa(i), "PGID")
-		vals <- Insert(Some(ps.Name), "Processes", strconv.Itoa(i), "Name")
-		vals <- Insert(Some(strconv.Itoa(ps.Priority)), "Processes", strconv.Itoa(i), "Priority")
-		vals <- Insert(Some(strconv.Itoa(ps.Nice)), "Processes", strconv.Itoa(i), "Nice")
+		vals <- trie.Insert(trie.Some(strconv.Itoa(pid)), "Processes", strconv.Itoa(i), "PID")
+		vals <- trie.Insert(trie.Some(strconv.Itoa(ps.Pgid)), "Processes", strconv.Itoa(i), "PGID")
+		vals <- trie.Insert(trie.Some(ps.Name), "Processes", strconv.Itoa(i), "Name")
+		vals <- trie.Insert(trie.Some(strconv.Itoa(ps.Priority)), "Processes", strconv.Itoa(i), "Priority")
+		vals <- trie.Insert(trie.Some(strconv.Itoa(ps.Nice)), "Processes", strconv.Itoa(i), "Nice")
 
 		var args sigar.ProcArgs
 		err = args.Get(pid)
 		if err != nil {
-			log.Error(err, "Can't get process args", "PID", pid)
-			vals <- Insert(Error(err), "Processes", strconv.Itoa(i), "Details")
+			vals <- trie.Insert(trie.Error(err), "Processes", strconv.Itoa(i), "Cmdline")
 			break
 		}
-		vals <- Insert(Some(strings.Join(args.List, " ")), "Processes", strconv.Itoa(i), "Cmdline")
+		vals <- trie.Insert(trie.Some(strings.Join(args.List, " ")), "Processes", strconv.Itoa(i), "Cmdline")
 
 		var exe sigar.ProcExe
 		err = exe.Get(pid)
 		if err != nil {
-			log.Error(err, "Can't get process exe", "PID", pid)
-			vals <- Insert(Error(err), "Processes", strconv.Itoa(i), "Details")
+			vals <- trie.Insert(trie.Error(err), "Processes", strconv.Itoa(i), "Exe")
 			break
 		}
-		vals <- Insert(Some(exe.Name), "Processes", strconv.Itoa(i), "Exe")
-		vals <- Insert(Some(exe.Cwd), "Processes", strconv.Itoa(i), "Cwd")
-		vals <- Insert(Some(exe.Root), "Processes", strconv.Itoa(i), "Root")
+		vals <- trie.Insert(trie.Some(exe.Name), "Processes", strconv.Itoa(i), "Exe")
+		vals <- trie.Insert(trie.Some(exe.Cwd), "Processes", strconv.Itoa(i), "Cwd")
+		vals <- trie.Insert(trie.Some(exe.Root), "Processes", strconv.Itoa(i), "Root")
 
 		var env sigar.ProcEnv
 		err = env.Get(pid)
 		if err != nil {
-			log.Error(err, "Can't get process env", "PID", pid)
-			vals <- Insert(Error(err), "Processes", strconv.Itoa(i), "Details")
+			vals <- trie.Insert(trie.Error(err), "Processes", strconv.Itoa(i), "Path")
 			break
 		}
-		vals <- Insert(Some(env.Vars["PATH"]), "Processes", strconv.Itoa(i), "Path")
+		vals <- trie.Insert(trie.Some(env.Vars["PATH"]), "Processes", strconv.Itoa(i), "Path")
 
 		// Note: these are all properties of the process, but remember procs run _as_ users (unless they have the sticky bit set), so there's not really a concept of a proc identity
-		vals <- Insert(Some(ps.Username), "Processes", strconv.Itoa(i), "User", "Name")
+		vals <- trie.Insert(trie.Some(ps.Username), "Processes", strconv.Itoa(i), "User", "Name")
 		u, err := user.Lookup(ps.Username)
 		if err != nil {
-			log.Error(err, "Can't get process user", "PID", pid)
-			vals <- Insert(Error(err), "Processes", strconv.Itoa(i), "User", "Details")
+			vals <- trie.Insert(trie.Error(err), "Processes", strconv.Itoa(i), "User")
 			break
 		}
-		vals <- Insert(Some(u.Uid), "Processes", strconv.Itoa(i), "User", "UID")
-		vals <- Insert(Some(u.Name), "Processes", strconv.Itoa(i), "User", "Full Name")
-		vals <- Insert(Some(u.HomeDir), "Processes", strconv.Itoa(i), "User", "Home")
+		vals <- trie.Insert(trie.Some(u.Uid), "Processes", strconv.Itoa(i), "User", "UID")
+		vals <- trie.Insert(trie.Some(u.Name), "Processes", strconv.Itoa(i), "User", "Full Name")
+		vals <- trie.Insert(trie.Some(u.HomeDir), "Processes", strconv.Itoa(i), "User", "Home")
 
-		vals <- Insert(Some(u.Gid), "Processes", strconv.Itoa(i), "Group", "GID")
+		vals <- trie.Insert(trie.Some(u.Gid), "Processes", strconv.Itoa(i), "Group", "GID")
 		g, err := user.LookupGroupId(u.Gid)
 		if err != nil {
-			log.Error(err, "Can't get process group", "PID", pid)
-			vals <- Insert(Error(err), "Processes", strconv.Itoa(i), "Group", "Details")
+			vals <- trie.Insert(trie.Error(err), "Processes", strconv.Itoa(i), "Group")
 			break
 		}
-		vals <- Insert(Some(g.Name), "Processes", strconv.Itoa(i), "Group", "Name")
+		vals <- trie.Insert(trie.Some(g.Name), "Processes", strconv.Itoa(i), "Group", "Name")
 
 		if pid == 1 {
 			break
@@ -121,6 +113,6 @@ func getOsData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
 	}
 
 	if groups, err := os.Getgroups(); err == nil {
-		vals <- Insert(Some(fmt.Sprint(groups)), "Processes", "0", "Group", "Others")
+		vals <- trie.Insert(trie.Some(fmt.Sprint(groups)), "Processes", "0", "Group", "Others")
 	}
 }

@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 const baseUrl = "https://ipapi.co"
@@ -28,30 +28,28 @@ type IpInfo struct {
 	Reason  string `json:"reason"`
 }
 
-func EnrichedExternalIp(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func EnrichedExternalIp(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	// TODO Can force to v4?
 
 	info, err := ipApiFetch(ctx, log, "")
 	if err != nil {
-		log.Error(err, "Can't get external IP and its info")
-		vals <- Insert(Error(fmt.Errorf("Can't get external IP info from ipapi.co: %w", err)), "Details")
+		vals <- trie.Insert(trie.Error(fmt.Errorf("can't get external IP info from ipapi.co: %w", err)), "Details")
 		return
 	}
 
-	vals <- Insert(Some(info.Ip), "Address")
+	vals <- trie.Insert(trie.Some(info.Ip), "Address")
 	enrichFromInfo(info, vals)
 	reverseDNS(info.Ip, vals)
 }
 
-func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- InsertMsg) {
+func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- trie.InsertMsg) {
 	if ip == "" {
 		panic("Empty IP is a special parameter to ipapi.co (gets apparent external IP) and shouldn't be provided through this path")
 	}
 
 	info, err := ipApiFetch(ctx, log, ip)
 	if err != nil {
-		log.Error(err, "Can't get IP info", "ip", ip)
-		vals <- Insert(Error(fmt.Errorf("Can't get IP info from ipapi.co: %w", err)), "Details")
+		vals <- trie.Insert(trie.Error(fmt.Errorf("can't get IP info from ipapi.co: %w", err)), "Details")
 		return
 	}
 
@@ -59,22 +57,22 @@ func EnrichIp(ctx context.Context, log logr.Logger, ip string, vals chan<- Inser
 	reverseDNS(info.Ip, vals)
 }
 
-func enrichFromInfo(info IpInfo, vals chan<- InsertMsg) {
-	vals <- Insert(Some(info.City), "City")
-	vals <- Insert(Some(info.Region), "Region")
-	vals <- Insert(Some(info.Postal), "Postal") // postal code
-	vals <- Insert(Some(info.Country), "Country")
-	vals <- Insert(Some(info.As), "AS")
-	vals <- Insert(Some(info.Asn), "ASN")
+func enrichFromInfo(info IpInfo, vals chan<- trie.InsertMsg) {
+	vals <- trie.Insert(trie.Some(info.City), "City")
+	vals <- trie.Insert(trie.Some(info.Region), "Region")
+	vals <- trie.Insert(trie.Some(info.Postal), "Postal") // postal code
+	vals <- trie.Insert(trie.Some(info.Country), "Country")
+	vals <- trie.Insert(trie.Some(info.As), "AS")
+	vals <- trie.Insert(trie.Some(info.Asn), "ASN")
 }
 
-func reverseDNS(ip string, vals chan<- InsertMsg) {
+func reverseDNS(ip string, vals chan<- trie.InsertMsg) {
 	hosts, err := net.LookupAddr(ip)
 	if err != nil {
-		vals <- Insert(Error(err), "ReverseDNS")
+		vals <- trie.Insert(trie.Error(err), "ReverseDNS")
 	}
 
-	vals <- Insert(Some(strings.Join(hosts, ",")), "ReverseDNS")
+	vals <- trie.Insert(trie.Some(strings.Join(hosts, ",")), "ReverseDNS")
 }
 
 func ipApiFetch(ctx context.Context, log logr.Logger, ip string) (IpInfo, error) {

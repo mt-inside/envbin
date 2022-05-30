@@ -2,38 +2,38 @@ package fetchers
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"strconv"
 
 	"github.com/go-logr/logr"
+
 	"github.com/mt-inside/envbin/pkg/data"
 	"github.com/mt-inside/envbin/pkg/data/enrichments"
-
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
 	data.RegisterPlugin(getNetworkData)
 }
 
-func getNetworkData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getNetworkData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	hostname, _ := os.Hostname()
 
-	vals <- Insert(Some(hostname), "Network", "Hostname")
+	vals <- trie.Insert(trie.Some(hostname), "Network", "Hostname")
 
 	getIfaces(log, vals)
 
 	getDefaultIP(log, vals)
 
-	enrichments.EnrichedExternalIp(ctx, log, PrefixChan(vals, "Network", "ExternalIP"))
+	enrichments.EnrichedExternalIp(ctx, log, trie.PrefixChan(vals, "Network", "ExternalIP"))
 }
 
-func getIfaces(log logr.Logger, vals chan<- InsertMsg) {
+func getIfaces(log logr.Logger, vals chan<- trie.InsertMsg) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
-		log.Error(err, "Can't show system network interfaces")
-		vals <- Insert(Error(err), "Network", "Interfaces")
+		vals <- trie.Insert(trie.Error(fmt.Errorf("can't get network interfaces: %w", err)), "Network", "Interfaces")
 		return
 	}
 
@@ -44,23 +44,22 @@ func getIfaces(log logr.Logger, vals chan<- InsertMsg) {
 				continue
 			}
 			k := strconv.Itoa(iface.Index)
-			vals <- Insert(Some(iface.Name), "Network", "Interfaces", k, "Name")
-			vals <- Insert(Some(addr.String()), "Network", "Interfaces", k, "Address")
-			vals <- Insert(Some(iface.Flags.String()), "Network", "Interfaces", k, "Flags")
+			vals <- trie.Insert(trie.Some(iface.Name), "Network", "Interfaces", k, "Name")
+			vals <- trie.Insert(trie.Some(addr.String()), "Network", "Interfaces", k, "Address")
+			vals <- trie.Insert(trie.Some(iface.Flags.String()), "Network", "Interfaces", k, "Flags")
 		}
 	}
 }
 
-func getDefaultIP(log logr.Logger, vals chan<- InsertMsg) {
+func getDefaultIP(log logr.Logger, vals chan<- trie.InsertMsg) {
 	conn, err := net.Dial("udp", "8.8.8.8:53")
 	if err != nil {
-		log.Error(err, "Can't get default IP")
-		vals <- Insert(Error(err), "Network", "DefaultIP")
+		vals <- trie.Insert(trie.Error(fmt.Errorf("can't get default IP: %w", err)), "Network", "DefaultIP")
 		return
 	}
 	defer conn.Close()
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	vals <- Insert(Some(localAddr.IP.String()), "Network", "DefaultIP")
+	vals <- trie.Insert(trie.Some(localAddr.IP.String()), "Network", "DefaultIP")
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 const Binary = "envbin"
@@ -32,10 +32,10 @@ func BuildTime() time.Time {
 	return time.Unix(unix, 0)
 }
 
-func getBuildData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
-	vals <- Insert(Some(Version), "Build", "Version")
-	vals <- Insert(Some(BuildTime().Format(time.Stamp)), "Build", "Time")
-	vals <- Insert(Some(runtime.Version()), "Build", "Runtime")
-	vals <- Insert(Some(runtime.GOARCH), "Hardware", "CPU", "Arch")
-	vals <- Insert(Some(runtime.GOOS), "OS", "Kernel", "Type")
+func getBuildData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
+	vals <- trie.Insert(trie.Some(Version), "Build", "Version")
+	vals <- trie.Insert(trie.Some(BuildTime().Format(time.Stamp)), "Build", "Time")
+	vals <- trie.Insert(trie.Some(runtime.Version()), "Build", "Runtime")
+	vals <- trie.Insert(trie.Some(runtime.GOARCH), "Hardware", "CPU", "Arch")
+	vals <- trie.Insert(trie.Some(runtime.GOOS), "OS", "Kernel", "Type")
 }

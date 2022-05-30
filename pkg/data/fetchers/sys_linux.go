@@ -8,20 +8,20 @@ import (
 	"golang.org/x/sys/unix"
 
 	"github.com/mt-inside/envbin/pkg/data"
-	. "github.com/mt-inside/envbin/pkg/data/trie"
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func init() {
 	data.RegisterPlugin(getSysUnixData)
 }
 
-func getSysUnixData(ctx context.Context, log logr.Logger, vals chan<- InsertMsg) {
+func getSysUnixData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	var si unix.Sysinfo_t
 	err := unix.Sysinfo(&si)
 	if err != nil {
-		log.Error(err, "Can't read sysinfo information")
+		log.trie.Error(err, "Can't read sysinfo information")
 		return
 	}
 
-	vals <- Insert(Some(time.Duration(time.Duration(si.Uptime)*time.Second).String()), "OS", "Uptime")
+	vals <- trie.Insert(trie.Some(time.Duration(time.Duration(si.Uptime)*time.Second).String()), "OS", "Uptime")
 }

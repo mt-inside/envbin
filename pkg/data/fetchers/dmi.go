@@ -9,6 +9,7 @@ import (
 	"github.com/yumaojun03/dmidecode/parser/processor"
 
 	"github.com/mt-inside/envbin/pkg/data"
+	"github.com/mt-inside/envbin/pkg/data/enrichments"
 	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
@@ -133,6 +134,8 @@ func getDmiRAM(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg)
 		vals <- trie.Insert(trie.Some(u16(m.MaximumVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "Maximum mV")
 		vals <- trie.Insert(trie.Some(u16(m.TotalWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Total")
 		vals <- trie.Insert(trie.Some(u16(m.DataWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Data") // Will be less if ECC
+
+		enrichments.EnrichRamSpecs(ctx, log, m.Type, uint(m.Speed), uint(m.DataWidth), trie.PrefixChan(vals, "Hardware", "RAM", strconv.Itoa(i)))
 	}
 }
 

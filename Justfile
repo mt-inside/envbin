@@ -1,9 +1,18 @@
 REPO:="docker.io/mtinside/envbin"
 TAG:="latest"
 
+default:
+	@just --list
+
+install-tools:
+	go install golang.org/x/tools/cmd/stringer@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install honnef.co/go/tools/cmd/staticcheck@latest
+
 lint:
 	go fmt ./...
 	go vet ./...
+	staticcheck ./...
 	golangci-lint run ./...
 	go test ./...
 

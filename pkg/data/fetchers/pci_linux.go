@@ -20,7 +20,6 @@ func getPciData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 
 	pci, err := ghw.PCI()
 	if err != nil {
-		log.trie.Error(err, "Can't read PCI data")
 		vals <- trie.Insert(trie.Error(err), prefix...)
 		return
 	}

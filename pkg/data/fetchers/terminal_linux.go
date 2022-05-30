@@ -21,7 +21,7 @@ func getTerminalData(ctx context.Context, log logr.Logger, vals chan<- trie.Inse
 		if ttyDev, err := os.Readlink("/proc/self/fd/1"); err == nil {
 			tty = ttyDev
 		} else {
-			tty = err.trie.Error()
+			tty = err.Error()
 		}
 	} else {
 		tty = "n/a"

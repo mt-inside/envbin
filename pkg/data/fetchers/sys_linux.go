@@ -19,7 +19,6 @@ func getSysUnixData(ctx context.Context, log logr.Logger, vals chan<- trie.Inser
 	var si unix.Sysinfo_t
 	err := unix.Sysinfo(&si)
 	if err != nil {
-		log.trie.Error(err, "Can't read sysinfo information")
 		return
 	}
 

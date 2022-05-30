@@ -2,6 +2,7 @@ package fetchers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/syndtr/gocapability/capability"
@@ -17,15 +18,13 @@ func init() {
 func getCapsData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	caps, err := capability.NewPid2(0)
 	if err != nil {
-		log.trie.Error(err, "Can't construct caps object for current process")
-		vals <- trie.Insert(trie.Error(err), "Processes", "0", "Capabilities")
+		vals <- trie.Insert(trie.Error(fmt.Errorf("can't construct caps object for current process: %w", err)), "Processes", "0", "Capabilities")
 		return
 	}
 
 	err = caps.Load()
 	if err != nil {
-		log.trie.Error(err, "Can't load caps for current process")
-		vals <- trie.Insert(trie.Error(err), "Processes", "0", "Capabilities")
+		vals <- trie.Insert(trie.Error(fmt.Errorf("can't load caps for current process: %w", err)), "Processes", "0", "Capabilities")
 		return
 	}
 

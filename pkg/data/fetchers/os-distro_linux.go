@@ -18,7 +18,6 @@ func getOsDistributionData(ctx context.Context, log logr.Logger, vals chan<- tri
 	osRelease, err := godotenv.Read("/etc/os-release")
 	if err != nil {
 		vals <- trie.Insert(trie.Error(err), "OS", "Distro")
-		log.trie.Error(err, "Can't get OS info")
 		return
 	}
 	// /etc/os-release:PRETTY_VERSION seems to be universal

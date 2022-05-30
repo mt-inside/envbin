@@ -42,7 +42,7 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 
 	err := usbid.LoadFromURL(usbid.LinuxUsbDotOrg)
 	if err != nil {
-		log.trie.Error(err, "Can't load USB IDs")
+		log.Error(err, "Can't load USB IDs")
 		// Don't return, will just have worse device naming
 	}
 
@@ -54,7 +54,6 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 	})
 	if err != nil {
 		vals <- trie.Insert(trie.Error(err), prefix...)
-		log.trie.Error(err, "Can't read USB data")
 		return
 	}
 
@@ -64,7 +63,6 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 
 		phyAddr, err := findPhysicalAddr(d.Bus, d.Address)
 		if err != nil {
-			log.trie.Error(err, "Can't find usb device")
 			continue // The virtual Root Hub devices, which are annoying
 		}
 

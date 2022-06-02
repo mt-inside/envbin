@@ -13,7 +13,7 @@ import (
 
 func EnrichRamSpecs(
 	ctx context.Context, log logr.Logger,
-	typ memory.MemoryDeviceType, busClockMHz uint, busWidthBits uint,
+	typ memory.MemoryDeviceType, busTransferRateMHz uint, busWidthBits uint,
 	vals chan<- trie.InsertMsg) {
 
 	supportedTypes := map[memory.MemoryDeviceType]bool{
@@ -26,10 +26,11 @@ func EnrichRamSpecs(
 
 	if supportedTypes[typ] {
 		gen := typ.String()[3:]
-		transfersPerSecondMHz := busClockMHz * 2 // DDR
-		dataPerSecondMB := transfersPerSecondMHz * busWidthBits / 8
+		busClockMHz := busTransferRateMHz / 2 // DDR
+		dataPerSecondMB := busTransferRateMHz * busWidthBits / 8
 
-		vals <- trie.Insert(trie.Some(fmt.Sprintf("%s-%d", typ.String(), transfersPerSecondMHz)), "Standard")
+		vals <- trie.Insert(trie.Some(fmt.Sprintf("%d", busClockMHz)), "Bus Speed")
+		vals <- trie.Insert(trie.Some(fmt.Sprintf("%s-%d", typ.String(), busTransferRateMHz)), "Standard")
 		vals <- trie.Insert(trie.Some(fmt.Sprintf("PC%s-%d", gen, dataPerSecondMB)), "Module")
 	}
 }

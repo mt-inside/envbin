@@ -135,7 +135,8 @@ func getDmiRAM(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg)
 		vals <- trie.Insert(trie.Some(u16(m.TotalWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Total")
 		vals <- trie.Insert(trie.Some(u16(m.DataWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Data") // Will be less if ECC
 
-		enrichments.EnrichRamSpecs(ctx, log, m.Type, uint(m.Speed), uint(m.DataWidth), trie.PrefixChan(vals, "Hardware", "RAM", strconv.Itoa(i)))
+		// DMI-reported "speed" is bus's MT/s (double bus frequency for DDR)
+		enrichments.EnrichRamSpecs(ctx, log, m.Type, uint(m.ConfiguredMemoryClockSpeed), uint(m.DataWidth), trie.PrefixChan(vals, "Hardware", "RAM", strconv.Itoa(i)))
 	}
 }
 

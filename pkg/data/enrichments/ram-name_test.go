@@ -14,18 +14,18 @@ func TestEnrichRamSpecs(t *testing.T) {
 	log := usvc.GetLogger(true, 0)
 
 	cases := []struct {
-		typ          memory.MemoryDeviceType
-		busClockMHz  uint
-		busWidthBits uint
-		results      map[string]string
+		typ                memory.MemoryDeviceType
+		busTransferRateMHz uint
+		busWidthBits       uint
+		results            map[string]string
 	}{
 		{
-			memory.MemoryDeviceTypeDDR, 200, 64,
-			map[string]string{"Standard": "DDR-400", "Module": "PC-3200"},
+			memory.MemoryDeviceTypeDDR, 400, 64,
+			map[string]string{"Bus Speed": "200", "Standard": "DDR-400", "Module": "PC-3200"},
 		},
 		{
-			memory.MemoryDeviceTypeDDR4, 1800, 64,
-			map[string]string{"Standard": "DDR4-3600", "Module": "PC4-28800"},
+			memory.MemoryDeviceTypeDDR4, 3600, 64,
+			map[string]string{"Bus Speed": "1800", "Standard": "DDR4-3600", "Module": "PC4-28800"},
 		},
 	}
 
@@ -34,7 +34,7 @@ func TestEnrichRamSpecs(t *testing.T) {
 			log,
 			/* Ugly go syntax for partial application */
 			func(c chan<- trie.InsertMsg) {
-				EnrichRamSpecs(context.Background(), log, cse.typ, cse.busClockMHz, cse.busWidthBits, c)
+				EnrichRamSpecs(context.Background(), log, cse.typ, cse.busTransferRateMHz, cse.busWidthBits, c)
 			},
 		)
 

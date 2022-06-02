@@ -23,20 +23,6 @@ func init() {
 	data.RegisterPlugin(getUsbData)
 }
 
-func unwrap(s string, err error) string {
-	if err != nil {
-		panic(err)
-	}
-	return s
-}
-
-func orElse(s string, err error) string {
-	if err != nil {
-		return err.trie.Error()
-	}
-	return s
-}
-
 func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	prefix := []string{"Hardware", "Bus", "USB"}
 
@@ -151,7 +137,7 @@ func findPhysicalAddr(bus int, dev int) (string, error) {
 		return strings.TrimSpace(string(devpathRaw)), nil
 	}
 
-	return "", fmt.Errorf("Can't find USB device at bus %d addr %d", bus, dev)
+	return "", fmt.Errorf("can't find USB device at bus %d addr %d", bus, dev)
 }
 
 func findDriver(bus int, phyAddr string, config int, iface int) (string, error) {

@@ -20,19 +20,19 @@ build-daemon: lint
 	go build -ldflags "$(build/ldflags.sh)" ./cmd/daemon/...
 
 build-client: lint
-	go build -ldflags "$(build/ldflags.sh)" ./cmd/client/...
+	go build -ldflags "$(build/ldflags.sh)" ./cmd/client
 
 install: lint
 	./deploy/git-hooks/install-local
 
 run-server: lint
-	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... serve
+	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon serve
 
 run-dump: lint
-	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon/... dump
+	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon dump
 
 run-client: lint
-	go run -ldflags "$(build/ldflags.sh)" ./cmd/client/...
+	go run -ldflags "$(build/ldflags.sh)" ./cmd/client
 
 package:
 	docker buildx build --load -t {{REPO}}:{{TAG}} .

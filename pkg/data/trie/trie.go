@@ -71,7 +71,7 @@ func (t *Trie) Get(path ...string) (Value, bool) {
 	log := t.log.WithName("Get")
 	log.V(2).Info("called", "path", path, "leaf?", t.leaf)
 
-	if len(path) == 0 {
+	if len(path) == 0 { // Asking for a leaf
 		if !t.leaf {
 			log.Info("trie fuckup")
 			return nil, false
@@ -79,29 +79,64 @@ func (t *Trie) Get(path ...string) (Value, bool) {
 			log.V(2).Info("leaf, Some", "value", t.value)
 			return t.value, true
 		}
-	} else {
-		if t.leaf {
+	} else { // Asking to resurse
+		if t.leaf { // At a leaf
 			switch t.value.(type) {
 			case some:
+				// Not ok if this is a non-error leaf (a node shouldn't have a value and children - TODO enforce at insert time)
 				log.Info("trie fuckup")
 				return nil, false
 			default:
+				// we found a sub-tree error on the way to your key
 				log.V(2).Info("leaf, !Some", "value", t.value)
 				return t.value, true
 			}
-		} else {
+		} else { // Not at a leaf
 			if t.children == nil {
+				// empty sub-tree; no value, no childen (TODO fix up this damn data type. The type itself shouldn't allow it (golang permitting), else enforce at insert time. Abstract the .leaf into a .Leaf() which should just be able to look at run-time type or children length?)
 				log.Info("trie fuckup")
 				return nil, false
 			}
 
 			if _, ok := t.children[path[0]]; !ok {
+				// sub-tree doesn't contain the path you asked for
 				log.Info("trie fuckup")
 				return nil, false
 			}
 
 			log.V(2).Info("recursing")
 			return t.children[path[0]].Get(path[1:]...)
+		}
+	}
+}
+
+func (t *Trie) GetSubTree(path ...string) (*Trie, bool) {
+	log := t.log.WithName("Get")
+	log.V(2).Info("called", "path", path, "leaf?", t.leaf)
+
+	if len(path) == 0 { // Asking for a leaf
+		// makes no sense
+		log.Info("trie fuckup")
+		return nil, false
+	} else { // Asking to resurse
+		if t.leaf { // At a leaf
+			// makes no sense
+			log.Info("trie fuckup")
+			return nil, false
+		} else { // Not at a leaf
+			if t.children == nil {
+				// empty sub-tree; no value, no childen (TODO fix up this damn data type. The type itself shouldn't allow it (golang permitting), else enforce at insert time. Abstract the .leaf into a .Leaf() which should just be able to look at run-time type or children length?)
+				log.Info("trie fuckup")
+				return nil, false
+			}
+
+			if _, ok := t.children[path[0]]; !ok {
+				// sub-tree doesn't contain the path you asked for
+				log.Info("trie fuckup")
+				return nil, false
+			}
+
+			return t.children[path[0]], true
 		}
 	}
 }

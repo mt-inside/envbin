@@ -2,6 +2,7 @@ package fetchers
 
 import (
 	"context"
+	"runtime"
 
 	"github.com/go-logr/logr"
 	"github.com/shirou/gopsutil/v3/host"
@@ -25,7 +26,10 @@ func getPsutilData(ctx context.Context, log logr.Logger, vals chan<- trie.Insert
 	vals <- trie.Insert(trie.Some(is.KernelVersion), "OS", "Kernel", "Version")
 
 	// NB this is the distro in the CONTAINER. Distroless shows up as debian
-	vals <- trie.Insert(trie.Some(is.PlatformFamily), "OS", "Distro", "Family")
-	vals <- trie.Insert(trie.Some(is.Platform), "OS", "Distro", "Name")
+	if runtime.GOOS != "darwin" {
+		// These aren't so useful / accurate on macos, and the macos-specific code pulls a lot of them in
+		vals <- trie.Insert(trie.Some(is.PlatformFamily), "OS", "Distro", "Family")
+		vals <- trie.Insert(trie.Some(is.Platform), "OS", "Distro", "Name")
+	}
 	vals <- trie.Insert(trie.Some(is.PlatformVersion), "OS", "Distro", "Version")
 }

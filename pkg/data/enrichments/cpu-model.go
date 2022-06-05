@@ -130,6 +130,15 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string, vals chan
 		vals <- trie.Insert(trie.Some(generation), "Generation")
 		vals <- trie.Insert(trie.Some(amdRyzenGens[generation]), "Microarchitecture")
 	}
+}
 
-	vals <- trie.Insert(trie.Some("Unknown"), "Details")
+func EnrichMacProcs(ctx context.Context, log logr.Logger, procs string, vals chan<- trie.InsertMsg) {
+	// proc 10:8:2
+	coresByType := strings.Split(procs, ":")
+	if len(coresByType) != 3 {
+		panic("can't parse macOS cores info")
+	}
+
+	vals <- trie.Insert(trie.Some(coresByType[1]), "Cores", "Performance")
+	vals <- trie.Insert(trie.Some(coresByType[2]), "Cores", "Efficiency")
 }

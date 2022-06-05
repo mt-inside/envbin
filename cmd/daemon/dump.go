@@ -47,5 +47,4 @@ func renderCb(path []string, value trie.Value) {
 	norm.Print(strings.Repeat("  ", depth-1))
 	whiteBold.Printf("%s: ", path[depth-1])
 	norm.Printf("%s\n", value.Render())
-	// }
 }

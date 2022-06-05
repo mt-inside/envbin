@@ -8,7 +8,7 @@ import (
 	"github.com/mt-inside/go-usvc"
 )
 
-func TestFormatBase10(t *testing.T) {
+func TestEnrichCpuModel(t *testing.T) {
 	// TODO: test logger support
 	log := usvc.GetLogger(true, 0)
 
@@ -42,7 +42,7 @@ func TestFormatBase10(t *testing.T) {
 		},
 		{
 			"Random string",
-			map[string]string{"Details": "Unknown"},
+			map[string]string{},
 		},
 	}
 
@@ -54,6 +54,49 @@ func TestFormatBase10(t *testing.T) {
 				EnrichCpuModel(context.Background(), log, cse.name, c)
 			},
 		)
+
+		// TODO: compare lens to ensure no extra values in the result
+		// - better: do a set diff to print a better error message
+
+		for k, v := range cse.results {
+			val, ok := res.Get(k)
+			if !ok {
+				t.Errorf("Key missing from result; expected: %s.", k)
+				continue
+			}
+			if v != val.Render() {
+				t.Errorf("Answer was wrong for key %s; expected: %s, got: %v.", k, v, val)
+			}
+
+		}
+	}
+}
+
+func TestEnrichMacProcs(t *testing.T) {
+	// TODO: test logger support
+	log := usvc.GetLogger(true, 0)
+
+	cases := []struct {
+		name    string
+		results map[string]string
+	}{
+		{
+			"proc 10:8:2",
+			map[string]string{"Performance": "8", "Efficiency": "2"},
+		},
+	}
+
+	for _, cse := range cases {
+		res := trie.BuildFromSyncFn(
+			log,
+			/* Ugly go syntax for partial application */
+			func(c chan<- trie.InsertMsg) {
+				EnrichMacProcs(context.Background(), log, cse.name, c)
+			},
+		)
+
+		// HACK
+		res, _ = res.GetSubTree("Cores")
 
 		// TODO: compare lens to ensure no extra values in the result
 

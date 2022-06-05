@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"os/exec"
+	"strconv"
 
 	"github.com/go-logr/logr"
+	"howett.net/plist"
+
 	"github.com/mt-inside/envbin/pkg/data"
 	"github.com/mt-inside/envbin/pkg/data/enrichments"
 	"github.com/mt-inside/envbin/pkg/data/trie"
-	"howett.net/plist"
 )
 
 func init() {
@@ -90,8 +92,22 @@ func getSPHw(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	vals <- trie.Insert(trie.Some(spHwOverview["serial_number"].(string)), "Hardware", "System", "Serial")
 	vals <- trie.Insert(trie.Some(spHwOverview["platform_UUID"].(string)), "Hardware", "System", "UUID")
 
-	vals <- trie.Insert(trie.Some(spHwOverview["chip_type"].(string)), "Hardware", "CPU", "Product")
-	enrichments.EnrichMacProcs(ctx, log, spHwOverview["number_processors"].(string), trie.PrefixChan(vals, "Hardware", "CPU"))
+	// Seems like cpu_type is set in Intel machines (with a discrete CPU), chip_type is set on Apple Silicon (which are a SoC). Never seen both set, but incase they are, prefer the more specific
+	if spHwOverview["cpu_type"] != nil {
+		vals <- trie.Insert(trie.Some(spHwOverview["cpu_type"].(string)), "Hardware", "CPU", "Product")
+	} else if spHwOverview["chip_type"] != nil {
+		vals <- trie.Insert(trie.Some(spHwOverview["chip_type"].(string)), "Hardware", "CPU", "Product")
+	}
+
+	switch nrProc := spHwOverview["number_processors"].(type) {
+	case string:
+		enrichments.EnrichMacProcs(ctx, log, nrProc, trie.PrefixChan(vals, "Hardware", "CPU"))
+	case float64:
+		// TODO: make Trie ok with overwrites that have the same value, panic if the value is different (this should be the same write as psutils)
+		vals <- trie.Insert(trie.Some(strconv.Itoa(int(nrProc))), "Hardware", "CPU", "Cores")
+	default:
+		panic("Unknown nrProc.(type)")
+	}
 
 	vals <- trie.Insert(trie.Some(spHwOverview["boot_rom_version"].(string)), "Hardware", "Firmware", "Version")
 }

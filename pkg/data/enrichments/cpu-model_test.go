@@ -41,6 +41,10 @@ func TestEnrichCpuModel(t *testing.T) {
 			map[string]string{"Series": "7", "SKU": "71", "Generation": "3"},
 		},
 		{
+			"Apple M1 Pro",
+			map[string]string{"Generation": "1", "Series": "Pro", "Microarchitecture": "Firestorm+Icestorm"},
+		},
+		{
 			"Random string",
 			map[string]string{},
 		},

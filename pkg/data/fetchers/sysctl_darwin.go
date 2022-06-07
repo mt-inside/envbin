@@ -87,17 +87,22 @@ func getSPHw(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	spHwOverview := spHw["SPHardwareDataType"].([]interface{})[0].(map[string]interface{})
 
 	vals <- trie.Insert(trie.Some("Apple"), "Hardware", "System", "Vendor")
-	vals <- trie.Insert(trie.Some(spHwOverview["machine_name"].(string)), "Hardware", "System", "Product")
 	vals <- trie.Insert(trie.Some(spHwOverview["machine_model"].(string)), "Hardware", "System", "Family")
+	vals <- trie.Insert(trie.Some(spHwOverview["machine_name"].(string)), "Hardware", "System", "Model")
 	vals <- trie.Insert(trie.Some(spHwOverview["serial_number"].(string)), "Hardware", "System", "Serial")
 	vals <- trie.Insert(trie.Some(spHwOverview["platform_UUID"].(string)), "Hardware", "System", "UUID")
 
 	// Seems like cpu_type is set in Intel machines (with a discrete CPU), chip_type is set on Apple Silicon (which are a SoC). Never seen both set, but incase they are, prefer the more specific
+	cpuModel := spHwOverview["chip_type"].(string)
+	cpuVendor := "Apple"
 	if spHwOverview["cpu_type"] != nil {
-		vals <- trie.Insert(trie.Some(spHwOverview["cpu_type"].(string)), "Hardware", "CPU", "Product")
-	} else if spHwOverview["chip_type"] != nil {
-		vals <- trie.Insert(trie.Some(spHwOverview["chip_type"].(string)), "Hardware", "CPU", "Product")
+		cpuModel = spHwOverview["cpu_type"].(string)
+		cpuVendor = "Intel"
+		// FIXME: vendor string must be available somwhere? It's in cpuModel for a start!
 	}
+	vals <- trie.Insert(trie.Some(cpuVendor), "Hardware", "CPU", "Vendor")
+	vals <- trie.Insert(trie.Some(cpuModel), "Hardware", "CPU", "Model")
+	enrichments.EnrichCpuModel(ctx, log, cpuModel, trie.PrefixChan(vals, "Hardware", "CPU", "Model"))
 
 	switch nrProc := spHwOverview["number_processors"].(type) {
 	case string:

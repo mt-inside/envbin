@@ -61,6 +61,9 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string, vals chan
 		"4": "zen2 APU",
 		"5": "zen3",
 	}
+	appleSiliconGens := map[string]string{
+		"1": "Firestorm+Icestorm",
+	}
 
 	if strings.Contains(name, "Xeon") {
 		// https://www.intel.co.uk/content/www/uk/en/processors/processor-numbers-data-center.html
@@ -129,6 +132,13 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string, vals chan
 		vals <- trie.Insert(trie.Some(sku), "SKU")
 		vals <- trie.Insert(trie.Some(generation), "Generation")
 		vals <- trie.Insert(trie.Some(amdRyzenGens[generation]), "Microarchitecture")
+	} else if strings.Contains(name, "Apple") {
+		var series, generation string
+		fmt.Sscanf(name, "Apple M%1s %s", &generation, &series)
+
+		vals <- trie.Insert(trie.Some(series), "Series")
+		vals <- trie.Insert(trie.Some(generation), "Generation")
+		vals <- trie.Insert(trie.Some(appleSiliconGens[generation]), "Microarchitecture")
 	}
 }
 

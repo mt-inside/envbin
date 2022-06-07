@@ -126,12 +126,12 @@ func getDmiRAM(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg)
 		vals <- trie.Insert(trie.Some(m.Type.String()), "Hardware", "RAM", strconv.Itoa(i), "Type")
 		vals <- trie.Insert(trie.Some(m.TypeDetail.String()), "Hardware", "RAM", strconv.Itoa(i), "Subtype")
 		vals <- trie.Insert(trie.Some(m.FormFactor.String()), "Hardware", "RAM", strconv.Itoa(i), "Form Factor")
-		vals <- trie.Insert(trie.Some(u16(m.Size)), "Hardware", "RAM", strconv.Itoa(i), "Size MB")
+		vals <- trie.Insert(trie.Some(u16(m.Size)), "Hardware", "RAM", strconv.Itoa(i), "SizeMB")
 		vals <- trie.Insert(trie.Some(u16(m.Speed)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Speed", "Max MT/s")
 		vals <- trie.Insert(trie.Some(u16(m.ConfiguredMemoryClockSpeed)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Speed", "Current MT/s")
-		vals <- trie.Insert(trie.Some(u16(m.MinimumVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "Minimum mV")
-		vals <- trie.Insert(trie.Some(u16(m.ConfiguredVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "Current mV")
-		vals <- trie.Insert(trie.Some(u16(m.MaximumVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "Maximum mV")
+		vals <- trie.Insert(trie.Some(u16(m.MinimumVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "MinimummV")
+		vals <- trie.Insert(trie.Some(u16(m.ConfiguredVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "CurrentmV")
+		vals <- trie.Insert(trie.Some(u16(m.MaximumVoltage)), "Hardware", "RAM", strconv.Itoa(i), "Voltage", "MaximummV")
 		vals <- trie.Insert(trie.Some(u16(m.TotalWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Total")
 		vals <- trie.Insert(trie.Some(u16(m.DataWidth)), "Hardware", "RAM", strconv.Itoa(i), "Bus", "Width", "Data") // Will be less if ECC
 
@@ -181,11 +181,13 @@ func getDmiCPUCache(ctx context.Context, log logr.Logger, vals chan<- trie.Inser
 
 	data, err := dmi.ProcessorCache()
 	if err != nil {
-		vals <- trie.Insert(trie.Error(err), "Hardware", "CPU", "Cache")
+		vals <- trie.Insert(trie.Error(err), "Hardware", "CPU", "Cache", "Totals")
 		return
 	}
 
 	for _, c := range data {
-		vals <- trie.Insert(trie.Some(cacheSizeK(c.InstalledSize)), "Hardware", "CPU", "Cache", "Totals", c.SocketDesignation)
+		level := c.Configuration.Level.String()
+		vals <- trie.Insert(trie.Some(cacheSizeK(c.InstalledSize)), "Hardware", "CPU", "Cache", "Totals", level)
+		//vals <- trie.Insert(trie.Some(c.CacheSpeed)), "Hardware", "CPU", "Cache", "Totals", level)
 	}
 }

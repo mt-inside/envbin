@@ -23,8 +23,12 @@ func getCpuidData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertM
 	}
 	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.PhysicalCores)), "Hardware", "CPU", "Cores")
 	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.LogicalCores)), "Hardware", "CPU", "Threads")
-	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.Cache.L1D)), "Hardware", "CPU", "Cache", "L1D")
-	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.Cache.L1I)), "Hardware", "CPU", "Cache", "L1I")
-	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.Cache.L2)), "Hardware", "CPU", "Cache", "L2")
-	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.Cache.L3)), "Hardware", "CPU", "Cache", "L3")
+
+	l1d := cpuid.CPU.Cache.L1D
+	l1i := cpuid.CPU.Cache.L1I
+	vals <- trie.Insert(trie.Some(strconv.Itoa(l1d)), "Hardware", "CPU", "Cache", "Individual", "Level1Data")
+	vals <- trie.Insert(trie.Some(strconv.Itoa(l1i)), "Hardware", "CPU", "Cache", "Individual", "Level1Instruction")
+	vals <- trie.Insert(trie.Some(strconv.Itoa(l1d+l1i)), "Hardware", "CPU", "Cache", "Individual", "Level1")
+	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.Cache.L2)), "Hardware", "CPU", "Cache", "Individual", "Level2")
+	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.Cache.L3)), "Hardware", "CPU", "Cache", "Individual", "Level3")
 }

@@ -197,6 +197,12 @@ func render(c *cli.Context) error {
 	return nil
 }
 
+func renderProduct(node *jsonquery.Node) {
+	white.Print(s(node, "Vendor"))
+	whiteBold.Print(" " + s(node, "Model"))
+	grey.Printf(" (%s, %s)", s(node, "SKU"), s(node, "Version"))
+}
+
 func renderSummary(root *jsonquery.Node) {
 	// FIXME: jsonquery doesn't seem to like a number as path element (map key), so we manually navigate. Except I don't think it's gaurenteed that '0' will be the first child
 	thisProc := jsonquery.FindOne(root, "Processes").FirstChild
@@ -228,15 +234,15 @@ func renderSummary(root *jsonquery.Node) {
 
 	norm.Println()
 
-	white.Print(s(root, "Hardware/System/Vendor"))
-	whiteBold.Print(" " + s(root, "Hardware/System/Product"))
-	grey.Printf(" (%s)", s(root, "Hardware/System/SKU"))
+	sys := jsonquery.FindOne(root, "Hardware/System")
+	renderProduct(sys)
 	norm.Println()
 
-	whiteBold.Print(s(root, "Hardware/CPU/Model/Name"))
+	cpu := jsonquery.FindOne(root, "Hardware/CPU")
+	renderProduct(cpu)
 	white.Printf(" %s/%s", s(root, "Hardware/CPU/Cores"), s(root, "Hardware/CPU/Threads"))
 	white.Printf(" %s", s(root, "Hardware/CPU/Arch"))
-	grey.Printf(" (%s)", s(root, "Hardware/CPU/Model/Microarchitecture"))
+	grey.Printf(" (%s, %s)", s(root, "Hardware/CPU/Model/Microarchitecture"), s(root, "Hardware/CPU/Package"))
 	white.Printf(" %d/%dMHz", i(root, "Hardware/CPU/Clock/Current"), i(root, "Hardware/CPU/Clock/Max"))
 	norm.Println()
 

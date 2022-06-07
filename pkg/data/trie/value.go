@@ -3,6 +3,7 @@ package trie
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -30,11 +31,11 @@ type some struct {
 }
 
 func Some(value string) some {
-	return some{value}
+	return some{strings.TrimSpace(value)}
 }
 func Optional(value string) Value {
 	if value != "" {
-		return some{value}
+		return Some(value)
 	}
 	return NotPresent()
 }

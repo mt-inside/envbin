@@ -18,7 +18,7 @@ func init() {
 
 func getCpuidData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	if cpuid.CPU.BrandName != "" {
-		vals <- trie.Insert(trie.Some(cpuid.CPU.BrandName), "Hardware", "CPU", "Model", "Name")
+		vals <- trie.Insert(trie.Some(cpuid.CPU.BrandName), "Hardware", "CPU", "Model")
 		enrichments.EnrichCpuModel(ctx, log, cpuid.CPU.BrandName, trie.PrefixChan(vals, "Hardware", "CPU", "Model"))
 	}
 	vals <- trie.Insert(trie.Some(strconv.Itoa(cpuid.CPU.PhysicalCores)), "Hardware", "CPU", "Cores")

@@ -35,8 +35,8 @@ func getBlockData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertM
 
 		for _, p := range d.Partitions {
 			vals <- trie.Insert(trie.Some(strconv.FormatUint(p.SizeBytes, 10)), "Hardware", "Block", d.Name, "Partitions", p.Name, "SizeBytes")
-			vals <- trie.Insert(trie.Some(p.Type), "Hardware", "Block", d.Name, "Partitions", p.Name, "Filesystem")
-			vals <- trie.Insert(trie.Some(p.MountPoint), "Hardware", "Block", d.Name, "Partitions", p.Name, "MountPoint")
+			vals <- trie.Insert(trie.Optional(p.Type), "Hardware", "Block", d.Name, "Partitions", p.Name, "Filesystem")
+			vals <- trie.Insert(trie.Optional(p.MountPoint), "Hardware", "Block", d.Name, "Partitions", p.Name, "MountPoint")
 			vals <- trie.Insert(trie.Some(strconv.FormatBool(p.IsReadOnly)), "Hardware", "Block", d.Name, "Partitions", p.Name, "ReadOnly")
 			vals <- trie.Insert(trie.Some(p.UUID), "Hardware", "Block", d.Name, "Partitions", p.Name, "UUID")
 		}

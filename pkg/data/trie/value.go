@@ -17,6 +17,12 @@ type some struct {
 func Some(value string) some {
 	return some{value}
 }
+func Optional(value string) Value {
+	if value != "" {
+		return some{value}
+	}
+	return NotPresent()
+}
 
 func (s some) Render() string {
 	return s.Value

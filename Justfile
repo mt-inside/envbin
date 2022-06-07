@@ -27,9 +27,13 @@ install: lint
 
 run-server: lint
 	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon serve
+run-server-root: lint build-daemon
+	sudo ./daemon serve
 
 run-dump: lint
 	go run -tags native -ldflags "$(build/ldflags.sh)" ./cmd/daemon dump
+run-dump-root: lint build-daemon
+	sudo ./daemon dump
 
 run-client: lint
 	go run -ldflags "$(build/ldflags.sh)" ./cmd/client

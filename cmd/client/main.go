@@ -155,6 +155,16 @@ func render(c *cli.Context) error {
 	norm.Println()
 
 	if true {
+		renderCache(root)
+		norm.Println()
+	}
+
+	if true {
+		renderRAM(root)
+		norm.Println()
+	}
+
+	if true {
 		renderNetIfaces(root)
 		norm.Println()
 	}
@@ -188,43 +198,93 @@ func render(c *cli.Context) error {
 }
 
 func renderSummary(root *jsonquery.Node) {
-	whiteBold.Print(jsonquery.FindOne(root, "Network/Hostname").InnerText())
-	norm.Print(" " + jsonquery.FindOne(root, "Network/DefaultIP").InnerText())
-	norm.Print(" / " + jsonquery.FindOne(root, "Network/ExternalIP/Address").InnerText())
-	grey.Printf(" (%s)", jsonquery.FindOne(root, "Network/ExternalIP/Info").InnerText())
+	// FIXME: jsonquery doesn't seem to like a number as path element (map key), so we manually navigate. Except I don't think it's gaurenteed that '0' will be the first child
+	thisProc := jsonquery.FindOne(root, "Processes").FirstChild
+	whiteBold.Print(s(thisProc, "Exe"))
+	norm.Print(" user ")
+	whiteBold.Print(s(thisProc, "User/Name"))
+	norm.Print(" group ")
+	whiteBold.Print(s(thisProc, "Group/Name"))
 	norm.Println()
-	whiteBold.Print(jsonquery.FindOne(root, "OS/Distro/Release").InnerText())
-	norm.Print(" " + jsonquery.FindOne(root, "OS/Distro/Version").InnerText())
-	grey.Printf(" (%s %s)", jsonquery.FindOne(root, "OS/Kernel/Type").InnerText(), jsonquery.FindOne(root, "OS/Kernel/Version").InnerText())
-	norm.Print(" up " + jsonquery.FindOne(root, "OS/Uptime").InnerText())
+
 	norm.Println()
+
+	whiteBold.Print(s(root, "Network/Hostname"))
+	norm.Print(" " + s(root, "Network/DefaultIP"))
+	norm.Print(" / " + s(root, "Network/ExternalIP/Address"))
+	grey.Printf(" (%s: %s, %s, %s, %s, %s)", s(root, "Network/ExternalIP/ReverseDNS"), s(root, "Network/ExternalIP/AS"), s(root, "Network/ExternalIP/City"), s(root, "Network/ExternalIP/Region"), s(root, "Network/ExternalIP/Postal"), s(root, "Network/ExternalIP/Country"))
+	norm.Println()
+
+	whiteBold.Print(s(root, "OS/Distro/Release"))
+	norm.Print(" " + s(root, "OS/Distro/Version"))
+	grey.Printf(" (%s %s)", s(root, "OS/Kernel/Type"), s(root, "OS/Kernel/Version"))
+	norm.Print(" up " + s(root, "OS/Uptime"))
+	norm.Println()
+
+	whiteBold.Print(s(root, "Hardware/Firmware/BootType"))
+	norm.Print(" boot ")
+	whiteBold.Print(s(root, "Hardware/Virtualisation"))
+	norm.Println()
+
+	norm.Println()
+
+	white.Print(s(root, "Hardware/System/Vendor"))
+	whiteBold.Print(" " + s(root, "Hardware/System/Product"))
+	grey.Printf(" (%s)", s(root, "Hardware/System/SKU"))
+	norm.Println()
+
 	whiteBold.Print(s(root, "Hardware/CPU/Model/Name"))
-	white.Printf(" %s/%s", jsonquery.FindOne(root, "Hardware/CPU/Cores").InnerText(), jsonquery.FindOne(root, "Hardware/CPU/Threads").InnerText())
-	white.Printf(" %s", jsonquery.FindOne(root, "Hardware/CPU/Arch").InnerText())
+	white.Printf(" %s/%s", s(root, "Hardware/CPU/Cores"), s(root, "Hardware/CPU/Threads"))
+	white.Printf(" %s", s(root, "Hardware/CPU/Arch"))
 	grey.Printf(" (%s)", s(root, "Hardware/CPU/Model/Microarchitecture"))
+	white.Printf(" %d/%dMHz", i(root, "Hardware/CPU/Clock/Current"), i(root, "Hardware/CPU/Clock/Max"))
 	norm.Println()
+
 	whiteBold.Print(units.BytesSize(f(root, "Hardware/Memory/Total")))
 	norm.Print(" RAM")
 	norm.Println()
-	whiteBold.Print(jsonquery.FindOne(root, "Hardware/Firmware/BootType").InnerText())
-	norm.Print(" boot ")
-	whiteBold.Print(jsonquery.FindOne(root, "Hardware/Virtualisation").InnerText())
+}
+
+func renderCache(root *jsonquery.Node) {
+	l1each := i(root, "Hardware/CPU/Cache/Individual/Level1")
+	l2each := i(root, "Hardware/CPU/Cache/Individual/Level2")
+	l3each := i(root, "Hardware/CPU/Cache/Individual/Level3")
+	l1total := i(root, "Hardware/CPU/Cache/Totals/Level1")
+	l2total := i(root, "Hardware/CPU/Cache/Totals/Level2")
+	l3total := i(root, "Hardware/CPU/Cache/Totals/Level3")
+
+	white.Print("Cache")
+	whiteBold.Printf(" L1 %dx%dkB", l1total/l1each, l1each>>10) // en attendant the unit system
+	whiteBold.Printf(" L2 %dx%dkB", l2total/l2each, l2each>>10)
+	whiteBold.Printf(" L3 %dx%dMB", l3total/l3each, l3each>>20)
 	norm.Println()
-	norm.Println()
-	norm.Print("Process ")
-	whiteBold.Print(jsonquery.FindOne(root, "Process/ID").InnerText())
-	norm.Print(" user ")
-	whiteBold.Print(jsonquery.FindOne(root, "Process/User/Name").InnerText())
-	norm.Print(" group ")
-	whiteBold.Print(jsonquery.FindOne(root, "Process/Group/Name").InnerText())
-	norm.Println()
+}
+
+func renderRAM(root *jsonquery.Node) {
+	for _, dimm := range jsonquery.Find(root, "Hardware/RAM/*") {
+		if i(dimm, "SizeMB") == 0 {
+			continue
+		}
+
+		white.Printf("%s %s", s(dimm, "Channel"), s(dimm, "Slot"))
+		whiteBold.Printf(" %sMB %s", s(dimm, "SizeMB"), s(dimm, "Standard"))
+		norm.Printf(" %dmV", i(dimm, "Voltage/CurrentmV"))
+		grey.Printf(" (%d/%dbits)", i(dimm, "Bus/Width/Data"), i(dimm, "Bus/Width/Total"))
+		norm.Println()
+	}
 }
 
 func renderNetIfaces(root *jsonquery.Node) {
 	for _, iface := range jsonquery.Find(root, "Network/Interfaces/*") {
-		whiteBold.Print(jsonquery.FindOne(iface, "Name").InnerText())
-		norm.Print(" " + jsonquery.FindOne(iface, "Address").InnerText())
-		grey.Print(" " + jsonquery.FindOne(iface, "Flags").InnerText())
+		whiteBold.Print(s(iface, "Name"))
+		grey.Printf(" %s %s", s(iface, "Driver"), s(iface, "IfaceFlags"))
+		norm.Print(" | ")
+		norm.Print(s(iface, "IPv4Address"))
+		norm.Print(" | ")
+		norm.Print(s(iface, "MACAddr"))
+		norm.Print(" | ")
+		norm.Printf("link %t, speed %d", b(iface, "PhysicalLink"), i(iface, "SpeedMbits"))
+		grey.Print("Mb/s")
 		norm.Println()
 	}
 }
@@ -239,10 +299,10 @@ func renderPCI(root *jsonquery.Node) {
 
 		for _, fn := range fns {
 			norm.Print("  ")
-			whiteBold.Print(jsonquery.FindOne(fn, "Vendor").InnerText())
-			whiteBold.Print(" " + jsonquery.FindOne(fn, "Product").InnerText())
-			grey.Print(" rev " + jsonquery.FindOne(fn, "Revision").InnerText())
-			grey.Printf(" (%s / %s, driver %s)", jsonquery.FindOne(fn, "Class").InnerText(), jsonquery.FindOne(fn, "Subclass").InnerText(), jsonquery.FindOne(fn, "Driver").InnerText())
+			whiteBold.Print(s(fn, "Vendor"))
+			whiteBold.Print(" " + s(fn, "Product"))
+			grey.Print(" rev " + s(fn, "Revision"))
+			grey.Printf(" (%s / %s, driver %s)", s(fn, "Class"), s(fn, "Subclass"), s(fn, "Driver"))
 			norm.Println()
 		}
 	}
@@ -251,11 +311,11 @@ func renderPCI(root *jsonquery.Node) {
 func renderUSB(root *jsonquery.Node) {
 	for _, dev := range jsonquery.Find(root, "Hardware/Bus/USB/*") {
 		white.Print(dev.Data)
-		whiteBold.Printf(" %s %s", jsonquery.FindOne(dev, "Manufacturer").InnerText(), jsonquery.FindOne(dev, "Product").InnerText())
+		whiteBold.Printf(" %s %s", s(dev, "Manufacturer"), s(dev, "Product"))
 
-		serial := jsonquery.FindOne(dev, "Serial").InnerText()
-		spec := jsonquery.FindOne(dev, "Spec").InnerText()
-		speed := jsonquery.FindOne(dev, "Speed").InnerText()
+		serial := s(dev, "Serial")
+		spec := s(dev, "Spec")
+		speed := s(dev, "Speed")
 
 		if serial != "" {
 			grey.Printf(" serial %s", serial)
@@ -273,9 +333,9 @@ func renderUSB(root *jsonquery.Node) {
 
 		for _, fn := range fns {
 			norm.Print("  ")
-			norm.Printf(" %s", jsonquery.FindOne(fn, "Power").InnerText())
+			norm.Printf(" %s", s(fn, "Power"))
 			norm.Print(" [")
-			if jsonquery.FindOne(fn, "Wakeup").InnerText() == "true" {
+			if s(fn, "Wakeup") == "true" {
 				norm.Printf("Wakeup")
 			}
 			norm.Print("]")
@@ -297,9 +357,9 @@ func renderUSB(root *jsonquery.Node) {
 func renderV4l2(root *jsonquery.Node) {
 	for _, dev := range jsonquery.Find(root, "Hardware/V4l2/*") {
 		white.Print(dev.Data)
-		whiteBold.Printf(" %s", jsonquery.FindOne(dev, "Name").InnerText())
-		white.Printf(" driver %s", jsonquery.FindOne(dev, "Driver").InnerText())
-		grey.Printf(" video out %s, capture %s, streaming %s", jsonquery.FindOne(dev, "Capabilities/VideoOutput").InnerText(), jsonquery.FindOne(dev, "Capabilities/VideoCapture").InnerText(), jsonquery.FindOne(dev, "Capabilities/StreamingIO").InnerText())
+		whiteBold.Printf(" %s", s(dev, "Name"))
+		white.Printf(" driver %s", s(dev, "Driver"))
+		grey.Printf(" video out %s, capture %s, streaming %s", s(dev, "Capabilities/VideoOutput"), s(dev, "Capabilities/VideoCapture"), s(dev, "Capabilities/StreamingIO"))
 
 		fmts := jsonquery.Find(dev, "Formats/*")
 		if len(fmts) != 1 {
@@ -308,8 +368,8 @@ func renderV4l2(root *jsonquery.Node) {
 
 		for _, fmt := range fmts {
 			norm.Print("  ")
-			norm.Print(jsonquery.FindOne(fmt, "Name").InnerText())
-			grey.Printf(" compressed %s, emulated %s", jsonquery.FindOne(fmt, "Compressed").InnerText(), jsonquery.FindOne(fmt, "Emulated").InnerText())
+			norm.Print(s(fmt, "Name"))
+			grey.Printf(" compressed %s, emulated %s", s(fmt, "Compressed"), s(fmt, "Emulated"))
 			norm.Println()
 		}
 	}
@@ -317,8 +377,8 @@ func renderV4l2(root *jsonquery.Node) {
 
 func renderAlsa(root *jsonquery.Node) {
 	for _, dev := range jsonquery.Find(root, "Hardware/Sound/Alsa/Cards/*") {
-		white.Print(jsonquery.FindOne(dev, "Path").InnerText())
-		whiteBold.Printf(" %s", jsonquery.FindOne(dev, "Name").InnerText())
+		white.Print(s(dev, "Path"))
+		whiteBold.Printf(" %s", s(dev, "Name"))
 
 		devs := jsonquery.Find(dev, "Devices/*")
 		if len(devs) != 1 {
@@ -330,16 +390,16 @@ func renderAlsa(root *jsonquery.Node) {
 		for _, dev := range devs {
 			norm.Print("  ")
 
-			white.Print(jsonquery.FindOne(dev, "Name").InnerText())
-			norm.Printf(" %s", jsonquery.FindOne(dev, "Type").InnerText())
+			white.Print(s(dev, "Name"))
+			norm.Printf(" %s", s(dev, "Type"))
 
 			norm.Printf(" %sch %s/s x %s", s(dev, "Channels"), s(dev, "Sample/Rate"), s(dev, "Sample/Format"))
 
 			flags := []string{}
-			if jsonquery.FindOne(dev, "Play").InnerText() == "true" {
+			if s(dev, "Play") == "true" {
 				flags = append(flags, "play")
 			}
-			if jsonquery.FindOne(dev, "Record").InnerText() == "true" {
+			if s(dev, "Record") == "true" {
 				flags = append(flags, "record")
 			}
 			grey.Printf(" [%s]", strings.Join(flags, ", "))
@@ -352,15 +412,15 @@ func renderAlsa(root *jsonquery.Node) {
 func renderBlock(root *jsonquery.Node) {
 	for _, blk := range jsonquery.Find(root, "Hardware/Block/*") {
 		white.Print(blk.Data)
-		whiteBold.Printf(" %s %s", jsonquery.FindOne(blk, "Vendor").InnerText(), jsonquery.FindOne(blk, "Model").InnerText())
+		whiteBold.Printf(" %s %s", s(blk, "Vendor"), s(blk, "Model"))
 
-		serial := jsonquery.FindOne(blk, "Serial").InnerText()
+		serial := s(blk, "Serial")
 		if serial != "" {
 			grey.Printf(" serial %s", serial)
 		}
 
 		norm.Printf(" [%s, %s bytes", s(blk, "ControllerType"), units.HumanSize(f(blk, "SizeBytes")))
-		if jsonquery.FindOne(blk, "Removable").InnerText() == "true" {
+		if s(blk, "Removable") == "true" {
 			norm.Printf("Removable")
 		}
 		norm.Print("]")
@@ -371,8 +431,14 @@ func renderBlock(root *jsonquery.Node) {
 		for _, p := range ps {
 			norm.Print("  ")
 			white.Print(p.Data)
-			whiteBold.Printf(" %s on %s", jsonquery.FindOne(p, "Filesystem").InnerText(), jsonquery.FindOne(p, "MountPoint").InnerText())
-			grey.Printf(" uuid %s", jsonquery.FindOne(p, "UUID").InnerText())
+			if s(p, "Filesystem") != "NotPresent" {
+				whiteBold.Printf(" %s", s(p, "Filesystem"))
+			}
+			if s(p, "MountPoint") != "NotPresent" {
+				norm.Print(" on")
+				whiteBold.Printf(" %s", s(p, "MountPoint"))
+			}
+			grey.Printf(" uuid %s", s(p, "UUID"))
 			norm.Println()
 		}
 	}

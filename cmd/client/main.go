@@ -57,38 +57,51 @@ var (
 	grey      = color.New(color.FgHiBlack)
 )
 
-// TODO: really want own printf formatter, where if any of the interpolations error, return "" for the whole thing. Possible?
-func s(node *jsonquery.Node, path string) string {
+// TODO: really want own printf formatter, where if any of the interpolations error, return "" for the whole thing.
+// - This is doable: return custom types and impliment Format() for them: https://stackoverflow.com/questions/61539121/golang-custom-type-fmt-printing
+// TODO: when we get type info with the values, just impliment Format() for jsonquery.Node (as the callsite won't need to state which type it is)
+func s(root *jsonquery.Node, path string) string {
+	node := jsonquery.FindOne(root, path)
+	if node != nil {
+		return node.InnerText()
+	}
+	return "<none>"
+}
+func b(node *jsonquery.Node, path string) bool {
 	item := jsonquery.FindOne(node, path)
 	if item == nil {
-		return "<null>"
+		return false // TODO this is why we need a proper formatter, because need to be able to print "unknown"
 	}
 
-	return item.InnerText()
+	t, err := strconv.ParseBool(item.InnerText())
+	if err != nil {
+		return false
+	}
+
+	return t
 }
+func i(node *jsonquery.Node, path string) int64 { //nolint:deadcode
+	item := jsonquery.FindOne(node, path)
+	if item == nil {
+		return 0
+	}
 
-// func i(node *jsonquery.Node, path string) int64 {
-// 	item := jsonquery.FindOne(node, path)
-// 	if item == nil {
-// 		return -1
-// 	}
+	n, err := strconv.ParseInt(item.InnerText(), 10, 64)
+	if err != nil {
+		return 0
+	}
 
-// 	n, err := strconv.ParseInt(item.InnerText(), 10, 64)
-// 	if err != nil {
-// 		return -1
-// 	}
-
-// 	return n
-// }
+	return n
+}
 func f(node *jsonquery.Node, path string) float64 {
 	item := jsonquery.FindOne(node, path)
 	if item == nil {
-		return -1
+		return 0
 	}
 
 	n, err := strconv.ParseFloat(item.InnerText(), 64)
 	if err != nil {
-		return -1
+		return 0
 	}
 
 	return n

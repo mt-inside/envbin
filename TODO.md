@@ -1,0 +1,3 @@
+* bus topology (intra-usb, and pci->usb controllers, and intra-pci (domain->bus->device))
+  * Build one unified topology tree (each entry has a bus type / device type). This lets clients render it as-is, or walk the tree and filter for certain types to give eg a list of USB devices. They can also filter for type and only print leaf nodes to avoid all those "root hubs"
+  * don't think thunderbolt controllers are multiplexers, think they just a) are a device on a bus (lane) and b) have lanes (busses) going through them transparently, which will magically have devices on them if anything's plugged into that TB port

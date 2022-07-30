@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os/exec"
+	"regexp"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -136,6 +137,11 @@ func getSPSw(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	}
 
 	spSwOSOverview := spSw["SPSoftwareDataType"].([]interface{})[0].(map[string]interface{})
+	distroFull := spSwOSOverview["os_version"].(string)
+	r := regexp.MustCompile(`macOS (.*) \((.*)\)`)
+	matches := r.FindStringSubmatch(distroFull)
 
-	vals <- trie.Insert(trie.Some(spSwOSOverview["os_version"].(string)), "OS", "Distro")
+	vals <- trie.Insert(trie.Some("macOS"), "OS", "Distro", "Name")
+	vals <- trie.Insert(trie.Some(matches[1]), "OS", "Distro", "Version")
+	vals <- trie.Insert(trie.Some(matches[2]), "OS", "Distro", "Build")
 }

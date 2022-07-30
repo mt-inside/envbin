@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getV4l2Data)
+	data.RegisterPlugin("v4linux 2", getV4l2Data)
 }
 
 func getV4l2Data(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

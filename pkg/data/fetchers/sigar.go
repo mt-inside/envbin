@@ -16,9 +16,9 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getMemData)
-	data.RegisterPlugin(getProcsData)
-	data.RegisterPlugin(getOsData)
+	data.RegisterPlugin("sigar memory", getMemData)
+	data.RegisterPlugin("sigar procs", getProcsData)
+	data.RegisterPlugin("sigar os", getOsData)
 }
 
 func getMemData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

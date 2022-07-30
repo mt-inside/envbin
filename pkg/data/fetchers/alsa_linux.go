@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getAlsaData)
+	data.RegisterPlugin("alsa", getAlsaData)
 }
 
 func getAlsaData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

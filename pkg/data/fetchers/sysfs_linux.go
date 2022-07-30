@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getFirmwareData)
+	data.RegisterPlugin("linux sysfs firmware", getFirmwareData)
 }
 
 func getFirmwareData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

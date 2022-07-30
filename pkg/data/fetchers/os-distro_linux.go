@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getOsDistributionData)
+	data.RegisterPlugin("os", getOsDistributionData)
 }
 
 func getOsDistributionData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

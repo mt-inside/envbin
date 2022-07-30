@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getTpmData)
+	data.RegisterPlugin("tpm", getTpmData)
 }
 
 func getTpmData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

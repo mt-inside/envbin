@@ -20,7 +20,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getUsbData)
+	data.RegisterPlugin("linux usb", getUsbData)
 }
 
 func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

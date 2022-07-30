@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getSysUnixData)
+	data.RegisterPlugin("x/sys/unix", getSysUnixData)
 }
 
 func getSysUnixData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

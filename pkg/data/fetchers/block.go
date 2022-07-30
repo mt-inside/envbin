@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getBlockData)
+	data.RegisterPlugin("block devices", getBlockData)
 }
 
 func getBlockData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

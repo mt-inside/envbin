@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getTestData)
+	data.RegisterPlugin("test", getTestData)
 }
 
 func getTestData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

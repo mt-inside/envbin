@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getSessionData)
+	data.RegisterPlugin("login session", getSessionData)
 }
 
 func getSessionData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

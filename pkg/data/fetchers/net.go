@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getNetworkData)
+	data.RegisterPlugin("network", getNetworkData)
 }
 
 func getNetworkData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

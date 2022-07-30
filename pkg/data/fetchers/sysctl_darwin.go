@@ -15,9 +15,9 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getIoreg)
-	data.RegisterPlugin(getSPHw)
-	data.RegisterPlugin(getSPSw)
+	data.RegisterPlugin("darwin ioreg", getIoreg)
+	data.RegisterPlugin("darwin system profiler hardware", getSPHw)
+	data.RegisterPlugin("darwin system profiler software", getSPSw)
 }
 
 /* Ways to get more info:

@@ -20,7 +20,7 @@ var (
 )
 
 func init() {
-	data.RegisterPlugin(getBuildData)
+	data.RegisterPlugin("build", getBuildData)
 }
 
 func BuildTime() time.Time {

@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getPsutilData)
+	data.RegisterPlugin("psutil", getPsutilData)
 }
 
 func getPsutilData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

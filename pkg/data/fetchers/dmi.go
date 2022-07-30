@@ -14,12 +14,12 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getDmiFirmware)
-	data.RegisterPlugin(getDmiMotherboard)
-	data.RegisterPlugin(getDmiSystem)
-	data.RegisterPlugin(getDmiRAM)
-	data.RegisterPlugin(getDmiCPU)
-	data.RegisterPlugin(getDmiCPUCache)
+	data.RegisterPlugin("dmi firmware", getDmiFirmware)
+	data.RegisterPlugin("dmi motherboard", getDmiMotherboard)
+	data.RegisterPlugin("dmi system", getDmiSystem)
+	data.RegisterPlugin("dmi ram", getDmiRAM)
+	data.RegisterPlugin("dmi cpu", getDmiCPU)
+	data.RegisterPlugin("dmi cpu cache", getDmiCPUCache)
 }
 
 func u8(n byte) string {

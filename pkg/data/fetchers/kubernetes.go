@@ -25,7 +25,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getK8sDataInCluster)
+	data.RegisterPlugin("k8s", getK8sDataInCluster)
 }
 
 // inCluster wraps generic getter

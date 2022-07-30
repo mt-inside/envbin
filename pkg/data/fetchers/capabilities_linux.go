@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getCapsData)
+	data.RegisterPlugin("process capabilities", getCapsData)
 }
 
 func getCapsData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

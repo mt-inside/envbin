@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getPciData)
+	data.RegisterPlugin("pci", getPciData)
 }
 
 func getPciData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

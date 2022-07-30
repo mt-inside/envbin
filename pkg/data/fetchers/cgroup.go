@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getCgroupData)
+	data.RegisterPlugin("cgroup", getCgroupData)
 }
 
 func getCgroupData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

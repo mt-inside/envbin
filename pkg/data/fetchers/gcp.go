@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getGcpData)
+	data.RegisterPlugin("gcp", getGcpData)
 }
 
 func getGcpData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

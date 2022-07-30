@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getTerminalData)
+	data.RegisterPlugin("linux tty", getTerminalData)
 }
 
 func getTerminalData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

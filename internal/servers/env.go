@@ -18,6 +18,7 @@ func GetEnv(log logr.Logger, r *gin.RouterGroup) {
 
 		// Have to register this as a plugin so that it's run in the pool with the rest, cause it needs to be in parallel with them cause it does i/o.
 		data.RegisterPlugin(
+			"http server context",
 			func(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 				extractors.RequestData(ctx, log, c.Request, trie.PrefixChan(vals, "Request"))
 			}, // partial application

@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	data.RegisterPlugin(getCpuidData)
+	data.RegisterPlugin("cpuid", getCpuidData)
 }
 
 func getCpuidData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {

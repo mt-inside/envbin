@@ -10,25 +10,29 @@ import (
 )
 
 type pluginfn func(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg)
+type plugin struct {
+	name string
+	fn   pluginfn
+}
 
 var (
-	plugins []pluginfn
+	plugins []plugin
 )
 
-func RegisterPlugin(p pluginfn) {
-	plugins = append(plugins, p)
+func RegisterPlugin(name string, fn pluginfn) {
+	plugins = append(plugins, plugin{name, fn})
 }
 
 func GetData(ctx context.Context, log logr.Logger) *trie.Trie {
 	wg := sync.WaitGroup{}
 	vals := make(chan trie.InsertMsg)
 
-	for _, p := range plugins {
+	for _, plugin := range plugins {
 		wg.Add(1)
-		f := p // Avoid capture of the loop variable
+		p := plugin // Avoid capture of the loop variable
 		go func() {
-			f(ctx, log, vals)
-			log.V(1).Info("Plugin done")
+			p.fn(ctx, log, vals)
+			log.V(1).Info("Plugin done", "name", p.name)
 			// If one of the plugins is sticking and you wanna see which one it is
 			// err := pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 			// if err != nil {

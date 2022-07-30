@@ -63,7 +63,7 @@ var (
 func s(root *jsonquery.Node, path string) string {
 	node := jsonquery.FindOne(root, path)
 	if node != nil {
-		return node.InnerText()
+		return node.Value().(string)
 	}
 	return "<none>"
 }
@@ -73,7 +73,7 @@ func b(node *jsonquery.Node, path string) bool {
 		return false // TODO this is why we need a proper formatter, because need to be able to print "unknown"
 	}
 
-	t, err := strconv.ParseBool(item.InnerText())
+	t, err := strconv.ParseBool(item.Value().(string))
 	if err != nil {
 		return false
 	}
@@ -86,7 +86,7 @@ func i(node *jsonquery.Node, path string) int64 { //nolint:deadcode
 		return 0
 	}
 
-	n, err := strconv.ParseInt(item.InnerText(), 10, 64)
+	n, err := strconv.ParseInt(item.Value().(string), 10, 64)
 	if err != nil {
 		return 0
 	}
@@ -99,7 +99,7 @@ func f(node *jsonquery.Node, path string) float64 {
 		return 0
 	}
 
-	n, err := strconv.ParseFloat(item.InnerText(), 64)
+	n, err := strconv.ParseFloat(item.Value().(string), 64)
 	if err != nil {
 		return 0
 	}

@@ -3,6 +3,7 @@ package fetchers
 import (
 	"context"
 	"fmt"
+	"math"
 	"net"
 	"os"
 	"strconv"
@@ -81,7 +82,7 @@ func getIfaces(log logr.Logger, vals chan<- trie.InsertMsg) {
 		if err == nil {
 			//fmt.Printf("cmd get: %+v\n", cmdGet)
 
-			if speed != 4294967295 {
+			if speed != math.MaxUint32 {
 				vals <- trie.Insert(trie.Some(strconv.FormatUint(uint64(speed), 10)), "Network", "Interfaces", k, "SpeedMbits")
 			}
 

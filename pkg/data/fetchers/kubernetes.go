@@ -7,7 +7,6 @@ package fetchers
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
@@ -81,7 +80,7 @@ func getK8sData(ctx context.Context, log logr.Logger, clientSet *kubernetes.Clie
 
 	// Namespace & Identity
 
-	saBytes, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	saBytes, _ := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
 	saToken := string(saBytes)
 	// TODO: unit test this with a ca.crt and satoek from a pod
 	token, err := jwt.ParseWithClaims(saToken, &k8sClaims{}, nil)

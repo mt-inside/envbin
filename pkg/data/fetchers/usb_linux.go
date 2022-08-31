@@ -23,6 +23,13 @@ func init() {
 	data.RegisterPlugin("linux usb", getUsbData)
 }
 
+// For unified topology:
+// - walk /sys/bus/usb/devices/usb*
+// - serial is the PCI address
+// - [this]/[this.devnum]-0:* are the configs & interfaces of the hub - useful; do this
+// - then [this]/[this.devnum]-[^0] - the direct ports
+// - then recurse
+// - this lib we're using does useful stuff looking up device IDs, decoding configs etc - see if it can target/find a specific device, if not, have a func that just loops them and matches physical path
 func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	prefix := []string{"Hardware", "Bus", "USB"}
 

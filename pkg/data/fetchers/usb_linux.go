@@ -52,11 +52,19 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 			continue // The virtual Root Hub devices, which are annoying
 		}
 
-		addr := fmt.Sprintf("%d-%s", d.Bus, phyAddr)
+		addr := []string{"Hardware", "Bus", "USB", "Busses", strconv.Itoa(d.Bus)}
+		for i, a := range strings.Split(phyAddr, ".") {
+			if i == 0 {
+				addr = append(addr, "Address", a)
+				continue
+			}
+			addr = append(addr, "Port", a)
+		}
+		node := trie.PrefixChan(vals, addr...)
 
-		vals <- trie.Insert(trie.Some(strconv.Itoa(d.Bus)), "Hardware", "Bus", "USB", addr, "Bus")
-		vals <- trie.Insert(trie.Some(phyAddr), "Hardware", "Bus", "USB", addr, "Physical Address")
-		vals <- trie.Insert(trie.Some(strconv.Itoa(d.Address)), "Hardware", "Bus", "USB", addr, "Logical Device")
+		node <- trie.Insert(trie.Some(strconv.Itoa(d.Bus)), "Bus")
+		node <- trie.Insert(trie.Some(phyAddr), "Physical Address")
+		node <- trie.Insert(trie.Some(strconv.Itoa(d.Address)), "Logical Device")
 
 		var m, p string
 		mx, ok := usbid.Vendors[d.Vendor]
@@ -73,13 +81,13 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 			p = unwrap(dev.Product())
 		}
 
-		vals <- trie.Insert(trie.Some(d.Vendor.String()), "Hardware", "Bus", "USB", addr, "VendorID")
-		vals <- trie.Insert(trie.Some(d.Product.String()), "Hardware", "Bus", "USB", addr, "ProductID")
-		vals <- trie.Insert(trie.Some(m), "Hardware", "Bus", "USB", addr, "Manufacturer")
-		vals <- trie.Insert(trie.Some(p), "Hardware", "Bus", "USB", addr, "Product")
-		vals <- trie.Insert(trie.Some(orElse(dev.SerialNumber())), "Hardware", "Bus", "USB", addr, "Serial")
-		vals <- trie.Insert(trie.Some(d.Spec.String()), "Hardware", "Bus", "USB", addr, "Spec")
-		vals <- trie.Insert(trie.Some(d.Speed.String()), "Hardware", "Bus", "USB", addr, "Speed")
+		node <- trie.Insert(trie.Some(d.Vendor.String()), "VendorID")
+		node <- trie.Insert(trie.Some(d.Product.String()), "ProductID")
+		node <- trie.Insert(trie.Some(m), "Manufacturer")
+		node <- trie.Insert(trie.Some(p), "Product")
+		node <- trie.Insert(trie.Some(orElse(dev.SerialNumber())), "Serial")
+		node <- trie.Insert(trie.Some(d.Spec.String()), "Spec")
+		node <- trie.Insert(trie.Some(d.Speed.String()), "Speed")
 
 		for _, c := range d.Configs {
 			pow := "0mA"
@@ -87,22 +95,23 @@ func getUsbData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 				pow = fmt.Sprintf("%dmA", c.MaxPower)
 			}
 
-			vals <- trie.Insert(trie.Some(pow), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Power")
-			vals <- trie.Insert(trie.Some(strconv.FormatBool(c.RemoteWakeup)), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Wakeup")
+			node <- trie.Insert(trie.Some(pow), "Configs", strconv.Itoa(c.Number), "Power")
+			node <- trie.Insert(trie.Some(strconv.FormatBool(c.RemoteWakeup)), "Configs", strconv.Itoa(c.Number), "Wakeup")
 			for _, i := range c.Interfaces {
 				// I've never seen a device with differing properties across alts of an interface, so we just read item 0. If you do need to iterate Alts, nb that you want a.Alternate, not a.Number
-				vals <- trie.Insert(trie.Some(usbid.Classify(i.AltSettings[0])), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Description")
+				node <- trie.Insert(trie.Some(usbid.Classify(i.AltSettings[0])), "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Description")
 				driver, err := findDriver(d.Bus, phyAddr, c.Number, i.Number)
 				if err == nil {
-					vals <- trie.Insert(trie.Some(driver), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
+					node <- trie.Insert(trie.Some(driver), "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
 				} else {
-					vals <- trie.Insert(trie.Error(err), "Hardware", "Bus", "USB", addr, "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
+					node <- trie.Insert(trie.Error(err), "Configs", strconv.Itoa(c.Number), "Interfaces", strconv.Itoa(i.Number), "Driver")
 				}
 			}
 		}
 	}
 }
 
+// returns address[.port[.port[...]]]
 func findPhysicalAddr(bus int, dev int) (string, error) {
 	// filename format: .../devices/<bus>-<address>[.<port>[.<port>...]]:<configuration>.<interface>
 	glob := fmt.Sprintf("/sys/bus/usb/devices/%d-*", bus)

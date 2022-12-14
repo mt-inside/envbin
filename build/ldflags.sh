@@ -1,8 +1,10 @@
+set -o errexit
+
 if [ -n "$1" ]
 then
     version="$1"
 else
-    version=$(git describe --tags --dirty)
+    version=$(git describe --tags --abbrev --dirty)
 fi
 
 buildTime=$(date +%s)

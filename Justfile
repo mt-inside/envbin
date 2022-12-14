@@ -1,5 +1,10 @@
-REPO:="docker.io/mtinside/envbin"
-TAG:="latest"
+set dotenv-load
+
+DH_USER := "mtinside"
+REPO:="docker.io/" + DH_USER + "/envbin"
+TAG:=`git describe --tags --abbrev`
+TAGD:=`git describe --tags --abbrev --dirty`
+CGR_ARCHS := "amd64" # "amd64,aarch64,armv7"
 
 default:
 	@just --list
@@ -37,6 +42,19 @@ run-dump-root: lint build-daemon
 
 run-client: lint
 	go run -ldflags "$(build/ldflags.sh)" ./cmd/client
+
+melange:
+	# keypair to verify the package between melange and apko. apko will very quietly refuse to find our apk if these args aren't present
+	docker run --rm -v "${PWD}":/work cgr.dev/chainguard/melange keygen
+	docker run --privileged --rm -v "${PWD}":/work cgr.dev/chainguard/melange build --arch {{CGR_ARCHS}} --signing-key melange.rsa melange.yaml
+
+package-cgr: melange
+	docker run --rm -v "${PWD}":/work cgr.dev/chainguard/apko build -k melange.rsa.pub --build-arch {{CGR_ARCHS}} apko.yaml {{REPO}}:{{TAG}} envbin.tar
+	docker load < envbin.tar
+publish-cgr: melange
+	docker run --rm -v "${PWD}":/work --entrypoint sh cgr.dev/chainguard/apko -c \
+	'echo "'${DH_TOKEN}'" | apko login docker.io -u {{DH_USER}} --password-stdin && \
+	apko publish apko.yaml {{REPO}}:{{TAG}} -k melange.rsa.pub --arch {{CGR_ARCHS}}'
 
 package:
 	docker buildx build --load -t {{REPO}}:{{TAG}} .

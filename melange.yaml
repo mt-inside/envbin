@@ -1,0 +1,29 @@
+package:
+  name: envbin
+  # TODO: take as arg or something
+  version: 0.0.6
+  description: Exposes its environment over an API
+  target-architecture: [all] # bails on a lot of them which aren't supported yet
+  copyright:
+    - paths: ["*"]
+      licence: Apache-2.0
+
+environment:
+  contents:
+    keyring:
+      - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    repositories:
+      # Since we build in Wolfi, we seem to need to _run_ in it too (ie use Wolfi in apko)
+      # Note that we have to restrict archs to amd64 atm, this isn't a melange or apko thing, it's a wolfi thing: they just don't have APKs in their repo for arm64 (ie https://packages.wolfi.dev/os/aarch64/APKINDEX.tar.gz doesn't exist)
+      - https://packages.wolfi.dev/os
+    packages:
+      - wolfi-base
+      - build-base
+      - git # To get version for build args
+      - go
+
+pipeline:
+  - name: Build
+    runs: |
+      # build, rather than install, to be able to control output dir
+      CGO_ENABLED=0 go build -o "${{targets.destdir}}/usr/bin/envbin" -a -ldflags "-w $(build/ldflags.sh)" ./cmd/daemon

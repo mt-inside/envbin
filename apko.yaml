@@ -5,7 +5,7 @@ contents:
     - https://packages.wolfi.dev/os
     - '@local /work/packages'
   packages:
-    - wolfi-base
+    # - wolfi-base - we use CGO_ENABLED=0, so envbin is statically-linked, and doesn't need libc. If you do re-enable this, note that it contains ca-certs
     - ca-certificates-bundle
     - 'envbin@local'
 

@@ -49,7 +49,7 @@ build-client-dev: test
 
 # Don't lint/test, because it doesn't work in various CI envs
 build-daemon-ci *ARGS:
-	go build {{LD_COMMON}} {{ARGS}} ./cmd/daemon
+	go build {{LD_COMMON}} -v {{ARGS}} ./cmd/daemon
 
 install: test
 	go install {{LD_COMMON}} ./cmd/daemon

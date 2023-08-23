@@ -12,8 +12,9 @@ import (
 	"github.com/antchfx/jsonquery"
 	"github.com/docker/go-units"
 	"github.com/fatih/color"
-	"github.com/mt-inside/go-usvc"
 	"github.com/urfave/cli/v2"
+
+	"github.com/mt-inside/go-usvc"
 
 	"github.com/mt-inside/envbin/pkg/data/fetchers"
 )
@@ -319,7 +320,7 @@ func renderPCI(root *jsonquery.Node) {
 }
 
 func renderUSB(root *jsonquery.Node) {
-	for _, dev := range jsonquery.Find(root, "Hardware/Bus/USB/*") {
+	for _, dev := range jsonquery.Find(root, "Hardware/Bus/USB/Busses/*/Address/*") {
 		white.Print(dev.Data)
 		whiteBold.Printf(" %s %s", s(dev, "Manufacturer"), s(dev, "Product"))
 

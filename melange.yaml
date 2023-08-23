@@ -1,7 +1,7 @@
 package:
   name: envbin
   epoch: 0
-  version: v0.0.7-16-g04e8232-dirty
+  version: v0.0.8
   description: Exposes its environment over an API
   url: https://github.com/mt-inside/envbin
   copyright:

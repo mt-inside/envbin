@@ -7,6 +7,9 @@ jobs:
     name: Lint and test
     runs-on: 'ubuntu-latest'
     steps:
+      - name: Libusb
+        run: apt install libusb-1.0-0-dev
+
       - name: Checkout
         uses: actions/checkout@v3
 

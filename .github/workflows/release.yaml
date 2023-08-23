@@ -11,7 +11,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: Libusb
-        run: sudo apt install --install-suggests libusb-1.0-0-dev
+        run: sudo apt install libusb-1.0-0 libusb-1.0-0-dev
 
       - name: C cross-compilers
         run: sudo apt install gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf

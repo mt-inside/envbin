@@ -43,8 +43,6 @@ jobs:
             ${{ github.workspace }}/envbin-Linux-x86_64
             ${{ github.workspace }}/envbin-Linux-arm64
             ${{ github.workspace }}/envbin-Linux-arm
-            ${{ github.workspace }}/envbin-Darwin-x86_64
-            ${{ github.workspace }}/envbin-Darwin-arm64
           fail_on_unmatched_files: true
           generate_release_notes: true
           # tag_name: test

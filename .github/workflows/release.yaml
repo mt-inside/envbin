@@ -25,19 +25,19 @@ jobs:
         uses: extractions/setup-just@v1
 
       - name: build-linux-amd64
-        run: GOOS="linux" GOARCH="amd64" just build-ci -o envbin-Linux-x86_64
+        run: GOOS="linux" GOARCH="amd64" just build-daemon-ci -o envbin-Linux-x86_64
 
       - name: build-linux-arm64
-        run: GOOS="linux" GOARCH="arm64" just build-ci -o envbin-Linux-arm64
+        run: GOOS="linux" GOARCH="arm64" just build-daemon-ci -o envbin-Linux-arm64
 
       - name: build-linux-arm
-        run: GOOS="linux" GOARCH="arm" just build-ci -o envbin-Linux-arm
+        run: GOOS="linux" GOARCH="arm" just build-daemon-ci -o envbin-Linux-arm
 
       - name: build-macos-amd64
-        run: GOOS="darwin" GOARCH="amd64" just build-ci -o envbin-Darwin-x86_64
+        run: GOOS="darwin" GOARCH="amd64" just build-daemon-ci -o envbin-Darwin-x86_64
 
       - name: build-macos-arm64
-        run: GOOS="darwin" GOARCH="arm64" just build-ci -o envbin-Darwin-arm64
+        run: GOOS="darwin" GOARCH="arm64" just build-daemon-ci -o envbin-Darwin-arm64
 
       - name: Upload
         uses: softprops/action-gh-release@v1

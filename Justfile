@@ -41,14 +41,18 @@ render-mod-graph:
 render-pkg-graph:
 	godepgraph -s -onlyprefixes github.com/mt-inside ./cmd/daemon | dot -Tpng -o pkg_graph.png
 
-build-daemon: lint
+build-daemon-dev: test
 	go build -tags native {{LD_COMMON}} ./cmd/daemon
 
-build-client: lint
+build-client-dev: test
 	go build {{LD_COMMON}} ./cmd/client
 
-install: lint
-	./deploy/git-hooks/install-local
+# Don't lint/test, because it doesn't work in various CI envs
+build-daemon-ci *ARGS:
+	go build {{LD_COMMON}} {{ARGS}} ./cmd/daemon
+
+install: test
+	go install {{LD_COMMON}} ./cmd/daemon
 
 run-server: lint
 	go run -tags native {{LD_COMMON}} ./cmd/daemon serve

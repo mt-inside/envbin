@@ -1,9 +1,9 @@
 name: release
 
-on: push
-  # push:
-  #   tags:
-  #     - 'v*.*.*'
+on:
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   binary:

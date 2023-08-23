@@ -20,6 +20,8 @@ environment:
       - go
       - just
       - git
+      - libusb-dev
+      - pkgconf
 pipeline:
   - name: Build
     runs: |

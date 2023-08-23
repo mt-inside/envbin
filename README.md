@@ -1,3 +1,18 @@
+## Use
+
+Run from container image:
+```bash
+docker run -t --rm ghcr.io/mt-inside/envbin:v0.0.8 dump
+```
+
+Download single, statically-linked binary.
+Binaries are not available for Mac, because reasons.
+```bash
+wget -O envbin https://github.com/mt-inside/envbin/releases/download/v0.0.8/envbin-$(uname -s)-$(uname -m)
+chmod u+x envbin
+./envbin dump
+```
+
 ### On builds, linking, and CGO
 
 gousb needs libusb, so we need CGO to call it.

@@ -3,11 +3,11 @@ contents:
     - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
   repositories:
     - https://packages.wolfi.dev/os
-    - '@local /work/packages'
+    - ./packages
   packages:
-    # - wolfi-base - we use CGO_ENABLED=0, so envbin is statically-linked, and doesn't need libc. If you do re-enable this, note that it contains ca-certs
+    - wolfi-baselayout #- we use CGO_ENABLED=0, so envbin is statically-linked, and doesn't need libc. If you do re-enable this, note that it contains ca-certs
     - ca-certificates-bundle
-    - 'envbin@local'
+    - envbin
 
 accounts:
   groups:
@@ -19,5 +19,7 @@ accounts:
       gid: 65532
   run-as: 65532
 
+# entrypoint is exactly that. You can provide args to it, but they're put in the OCI image as `entrypoint`, not split into `cmd`
 entrypoint:
-  command: /usr/bin/envbin serve
+  command: /usr/bin/envbin
+cmd: serve

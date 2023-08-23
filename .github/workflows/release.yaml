@@ -1,9 +1,9 @@
 name: release
 
-on:
-  push:
-    tags:
-      - 'v*.*.*'
+on: push
+  # push:
+  #   tags:
+  #     - 'v*.*.*'
 
 jobs:
   binary:
@@ -45,7 +45,7 @@ jobs:
             ${{ github.workspace }}/envbin-Linux-arm
           fail_on_unmatched_files: true
           generate_release_notes: true
-          # tag_name: test
+          tag_name: test
 
   # TODO: dockerhub too - needs secret
 

@@ -54,17 +54,17 @@ build-daemon-ci *ARGS:
 install: test
 	go install {{LD_COMMON}} ./cmd/daemon
 
-run-server: lint
+run-server: test
 	go run -tags native {{LD_COMMON}} ./cmd/daemon serve
-run-server-root: lint build-daemon
+run-server-root: build-daemon-dev
 	sudo ./daemon serve
 
-run-dump: lint
+run-dump: test
 	go run -tags native {{LD_COMMON}} ./cmd/daemon dump
-run-dump-root: lint build-daemon
+run-dump-root: build-daemon-dev
 	sudo ./daemon dump
 
-run-client: lint
+run-client: test
 	go run {{LD_COMMON}} ./cmd/client
 
 package: test

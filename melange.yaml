@@ -6,7 +6,7 @@ package:
   target-architecture: [all] # bails on a lot of them which aren't supported yet
   copyright:
     - paths: ["*"]
-      licence: Apache-2.0
+      license: Apache-2.0
 
 environment:
   contents:

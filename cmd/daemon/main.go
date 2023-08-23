@@ -4,9 +4,10 @@ import (
 	"os"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/mt-inside/envbin/pkg/data/fetchers"
 	"github.com/mt-inside/go-usvc"
 	"github.com/urfave/cli/v2"
+
+	"github.com/mt-inside/envbin/pkg/data/fetchers"
 )
 
 func init() {

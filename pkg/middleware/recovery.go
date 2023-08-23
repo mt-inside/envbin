@@ -1,8 +1,9 @@
 package middleware
 
 import (
-	"github.com/gorilla/handlers"
 	"net/http"
+
+	"github.com/gorilla/handlers"
 )
 
 // Ugly we have to do this and it's not in the library

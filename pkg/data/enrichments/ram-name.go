@@ -7,8 +7,9 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/mt-inside/envbin/pkg/data/trie"
 	"github.com/yumaojun03/dmidecode/parser/memory"
+
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func EnrichRamSpecs(

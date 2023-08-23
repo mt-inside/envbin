@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+
 	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 

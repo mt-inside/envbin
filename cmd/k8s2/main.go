@@ -16,7 +16,6 @@ import (
 	"github.com/docker/go-units"
 	"github.com/go-logr/logr"
 	"github.com/kr/pretty"
-	"github.com/mt-inside/envbin/pkg/utils"
 	"github.com/mt-inside/go-usvc"
 	"github.com/urfave/cli/v2"
 	corev1 "k8s.io/api/core/v1"
@@ -25,6 +24,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+
+	"github.com/mt-inside/envbin/pkg/utils"
 )
 
 type NodeBom struct {

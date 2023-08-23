@@ -7,9 +7,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/go-logr/logr"
+	"github.com/urfave/cli/v2"
+
 	"github.com/mt-inside/envbin/pkg/data"
 	"github.com/mt-inside/envbin/pkg/data/trie"
-	"github.com/urfave/cli/v2"
 )
 
 var Dump = &cli.Command{

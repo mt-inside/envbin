@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mt-inside/envbin/pkg/data/trie"
 	"github.com/mt-inside/go-usvc"
+
+	"github.com/mt-inside/envbin/pkg/data/trie"
 )
 
 func TestEnrichCpuModel(t *testing.T) {

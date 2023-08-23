@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"github.com/google/go-tpm/legacy/tpm2"
 	"github.com/google/go-tpm/tpm"
-	"github.com/google/go-tpm/tpm2"
 
 	"github.com/mt-inside/envbin/pkg/data"
 	"github.com/mt-inside/envbin/pkg/data/trie"

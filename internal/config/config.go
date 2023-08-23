@@ -7,8 +7,9 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
 	"github.com/jessevdk/go-flags"
-	"github.com/mt-inside/go-usvc"
 	"github.com/spf13/viper"
+
+	"github.com/mt-inside/go-usvc"
 )
 
 func LoadConfig(log logr.Logger) error {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
+
 	"github.com/mt-inside/envbin/pkg/data"
 	"github.com/mt-inside/envbin/pkg/data/extractors"
 	"github.com/mt-inside/envbin/pkg/data/trie"

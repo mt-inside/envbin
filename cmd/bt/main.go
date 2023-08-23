@@ -1,7 +1,10 @@
 package main
 
-import "tinygo.org/x/bluetooth"
-import "fmt"
+import (
+	"fmt"
+
+	"tinygo.org/x/bluetooth"
+)
 
 func main() {
 	var err error

@@ -1,6 +1,6 @@
 # Rearch
 
-TODO find old notes on this (EN? Notion? GH issues?)
+TODO find old notes on this (EN? Notion? GH issues? GH project!)
 
 I think (all in this repo, just packages & cmds)
 * envbin (libenv?) as a library, API call that returns the tree

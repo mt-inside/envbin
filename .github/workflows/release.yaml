@@ -1,9 +1,9 @@
 name: release
 
-on: push
-  # push:
-  #   tags:
-  #     - 'v*.*.*'
+on:
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   binary:
@@ -30,11 +30,12 @@ jobs:
       - name: build-linux-amd64
         run: GOOS="linux" GOARCH="amd64" CGO_ENABLED=1 just build-daemon-ci -o envbin-Linux-x86_64
 
-      - name: build-linux-arm64
-        run: GOOS="linux" GOARCH="arm64" CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CC_FOR_TARGET=aarch64-linux-gnu-gcc just build-daemon-ci -o envbin-Linux-arm64
+      # Would need an arm64 version of libusb. GH doesn't offer any runners but amd64. TODO: just emulate the whole system - build these in docker with qemu?
+      # - name: build-linux-arm64
+      #   run: GOOS="linux" GOARCH="arm64" CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CC_FOR_TARGET=aarch64-linux-gnu-gcc just build-daemon-ci -o envbin-Linux-arm64
 
-      - name: build-linux-arm
-        run: GOOS="linux" GOARCH="arm" CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc CC_FOR_TARGET=arm-linux-gnueabihf-gcc just build-daemon-ci -o envbin-Linux-arm
+      # - name: build-linux-arm
+      #   run: GOOS="linux" GOARCH="arm" CGO_ENABLED=1 CC=arm-linux-gnueabihf-gcc CC_FOR_TARGET=arm-linux-gnueabihf-gcc just build-daemon-ci -o envbin-Linux-arm
 
       - name: Upload
         uses: softprops/action-gh-release@v1
@@ -45,7 +46,7 @@ jobs:
             ${{ github.workspace }}/envbin-Linux-arm
           fail_on_unmatched_files: true
           generate_release_notes: true
-          tag_name: test
+          #tag_name: test
 
   # TODO: dockerhub too - needs secret
 

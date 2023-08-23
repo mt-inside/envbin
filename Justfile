@@ -42,26 +42,26 @@ render-pkg-graph:
 	godepgraph -s -onlyprefixes github.com/mt-inside ./cmd/daemon | dot -Tpng -o pkg_graph.png
 
 build-daemon: lint
-	go build -tags native {{LD_COMMON}} ./cmd/daemon
+	CGO_ENABLED=0 go build -tags native {{LD_COMMON}} ./cmd/daemon
 
 build-client: lint
-	go build {{LD_COMMON}} ./cmd/client
+	CGO_ENABLED=0 go build {{LD_COMMON}} ./cmd/client
 
 install: lint
-	./deploy/git-hooks/install-local
+	CGO_ENABLED=0 ./deploy/git-hooks/install-local
 
 run-server: lint
-	go run -tags native {{LD_COMMON}} ./cmd/daemon serve
+	CGO_ENABLED=0 go run -tags native {{LD_COMMON}} ./cmd/daemon serve
 run-server-root: lint build-daemon
 	sudo ./daemon serve
 
 run-dump: lint
-	go run -tags native {{LD_COMMON}} ./cmd/daemon dump
+	CGO_ENABLED=0 go run -tags native {{LD_COMMON}} ./cmd/daemon dump
 run-dump-root: lint build-daemon
 	sudo ./daemon dump
 
 run-client: lint
-	go run {{LD_COMMON}} ./cmd/client
+	CGO_ENABLED=0 go run {{LD_COMMON}} ./cmd/client
 
 package: test
 	# if there's >1 package in this directory, apko seems to pick the _oldest_ without fail

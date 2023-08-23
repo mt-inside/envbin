@@ -1,27 +1,17 @@
-name: Release to Dockerhub
+name: release
 
 on:
   push:
-    #tags: # all tags. Including lightweight (it's convention to make GH Releases on annotated tags, but it supports both)
-    #  - '*'
-
-# Note the commits operated on are based from GITHUB_REF, but I think we could just use `git describe` becuase I'm sure the repo is checked out to that point. eg
-#   git for-each-ref --count=1 --sort='-*authordate' --format='%(*refname:short)' 'refs/tags'
-#   git describe --abbrev=0 --tags $(git describe --tags --abbrev=0)^
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  make_release:
-    name: Make Release
+  container:
+    name: Build and publish container image
     runs-on: 'ubuntu-latest'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0 # gets all history, needed to see tags
-
-      - name: Get current tag
-        id: get_current_tag
-        run: echo "::set-output name=tag::$(git describe --tags)"
+        uses: actions/checkout@v3
 
       - name: Make GH release
         id: make_release
@@ -34,24 +24,27 @@ jobs:
           prerelease: false
           draft: true
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx # "Can't auto-push without this" - need the buildx "driver" not the docker one
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
+      - name: Build APK
+        id: melange
+        uses: chainguard-dev/actions/melange-build@main
         with:
-          username: mtinside
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          config: melange.yaml
+          archs: x86_64,aarch64
+          sign-with-temporary-key: true
 
-      # The .git dir doesn't make it to the actual build phase, so version info is blank
-      # Looks like a buildx thing? The Dockerfile is sound cause this works in local docker builds
-      - name: Make and push Docker image
-        uses: docker/build-push-action@v2 # implicity relies on /Dockerfile
+      - name: Build & Publish OCI
+        id: apko
+        # GH: chainguard-images/action/apko-publish
+        uses: distroless/actions/apko-publish@main
         with:
-          push: true
-          # docker/setup-qemu-action doesn't seem to be needed for this to work
-          platforms: linux/arm64/v8,linux/amd64 # distroless doesn't have linux/arm/v6,linux/arm/v7
-          tags: mtinside/envbin:${{ steps.get_current_tag.outputs.tag }}
+          config: apko.yaml
+          archs: x86_64,aarch64
+          # Will be a SHA, unless this commit is tagged. Which is ideal tbh
+          tag: ghcr.io/mt-inside/envbin:${{ github.ref_name }} ghcr.io/mt-inside/envbin:latest
+          # Default value for melange-build.signing-key-path
+          keyring-append: ${{ github.workspace }}/melange.rsa.pub
+
+      # Need to install cosign. Also what keymat does it sign with?
+      # - name: Sign OCI
+      #   shell: bash
+      #   run: COSIGN_EXPERIMENTAL=true cosign sign ${{ steps.apko.outputs.digest }}

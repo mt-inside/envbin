@@ -17,7 +17,7 @@ LD_STATIC := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TA
 MELANGE := "melange"
 APKO    := "apko"
 
-install-tools:
+tools-install:
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install honnef.co/go/tools/cmd/staticcheck@latest

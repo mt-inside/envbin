@@ -199,6 +199,9 @@ func render(c *cli.Context) error {
 }
 
 func renderProduct(node *jsonquery.Node) {
+	if node == nil {
+		return
+	}
 	white.Print(s(node, "Vendor"))
 	whiteBold.Print(" " + s(node, "Model"))
 	grey.Printf(" (%s, %s)", s(node, "SKU"), s(node, "Version"))

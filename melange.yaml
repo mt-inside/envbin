@@ -1,13 +1,13 @@
 package:
   name: envbin
   epoch: 0
-  version: 0.0.6
+  version: v0.0.7-16-g04e8232-dirty
   description: Exposes its environment over an API
   url: https://github.com/mt-inside/envbin
   copyright:
-    - paths: ["*"]
+    - paths:
+        - "*"
       license: Apache-2.0
-
 environment:
   contents:
     keyring:
@@ -20,7 +20,6 @@ environment:
       - go
       - just
       - git
-
 pipeline:
   - name: Build
     runs: |

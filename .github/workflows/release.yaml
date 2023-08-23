@@ -42,8 +42,8 @@ jobs:
         with:
           files: |
             ${{ github.workspace }}/envbin-Linux-x86_64
-            ${{ github.workspace }}/envbin-Linux-arm64
-            ${{ github.workspace }}/envbin-Linux-arm
+            # ${{ github.workspace }}/envbin-Linux-arm64
+            # ${{ github.workspace }}/envbin-Linux-arm
           fail_on_unmatched_files: true
           generate_release_notes: true
           #tag_name: test

@@ -44,11 +44,11 @@ func LoadConfig(log logr.Logger) error {
 	viper.SetDefault("ApiListenAddr", ":8081")
 
 	viper.SetDefault("Rate", 1000)
-	viper.SetDefault("DelayMS", 2000)
-	viper.SetDefault("ErrorRate", 0.5)
+	viper.SetDefault("DelayMS", 0)
+	viper.SetDefault("ErrorRate", 0.0)
 	viper.SetDefault("ErrorType", "http")
 
-	viper.SetDefault("CrashRate", 0.01)
+	viper.SetDefault("CrashRate", 0.0)
 	viper.SetDefault("Healthy", true)
 	viper.SetDefault("Ready", false)
 	viper.SetDefault("ReadyDelayMS", 5000)

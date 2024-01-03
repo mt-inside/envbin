@@ -21,11 +21,21 @@ func init() {
 	data.RegisterPlugin("darwin system profiler software", getSPSw)
 }
 
-/* Ways to get more info:
+/* TODO Ways to get more info:
+* - `sysctl hw`, and get
+*   - cache sizes
+*   - byte order (find equiv command on linux, and somewhere in the trie for it)
+*   - endianness (ditto ^^, and finally understand byte order vs endianess. Ask bb to explain)
+*   - make list of CPU feat flags, eg "hw.optional.arm.FEAT_$foo: 1" -> [..., $foo]
+*     - same for linux (can copy from /proc/cpuinfo)
 * - system_profiler will give you all you need and loads more. Dunno what API(s) it uses under the hood - could strace it)
 *   - The internet seems to thing that running it will lead to it writing its info in ~/Library/Prefs/com.apple.SystemProfiler.plist but doesn't seem to happen
 * - IOKitLib, callable from C (eg golang FFI: https://gist.github.com/csexton/56121dbb613df68f143162b60a2c694a)
 *   - `ioreg -l` dump some stuff to the terminal - all of ^^ ? (serial number is in there, along with model like from sysctl, nothing else)
+* Still looking for: (values for my mac)
+* - "Model number": Z15G000PRB/A
+* - other "model number": A2442
+* - part/order number: MKGQ3
  */
 
 // Data also available in sysctl, but everything in there is duplicated by one of the others

@@ -13,7 +13,8 @@ TAG:=`git describe --tags --always --abbrev`
 TAGD:=`git describe --tags --always --abbrev --dirty --broken`
 CGR_ARCHS := "aarch64,amd64" # "x86,armv7"
 LD_COMMON := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TAGD + "'\""
-LD_STATIC := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TAGD + "' -w -linkmode external -extldflags '-static'\""
+LD_RELEASE := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TAGD + "' -w -s\""
+LD_STATIC := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TAGD + "' -linkmode external -extldflags '-static'\""
 MELANGE := "melange"
 APKO    := "apko"
 
@@ -49,7 +50,7 @@ build-client-dev: test
 
 # Don't lint/test, because it doesn't work in various CI envs
 build-daemon-ci *ARGS:
-	go build -tags native {{LD_COMMON}} -v {{ARGS}} ./cmd/daemon
+	go build -tags native {{LD_RELEASE}} -v {{ARGS}} ./cmd/daemon
 
 install: test
 	go install {{LD_COMMON}} ./cmd/daemon

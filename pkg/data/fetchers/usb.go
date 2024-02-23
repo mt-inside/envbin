@@ -1,5 +1,4 @@
-//go:build native
-// +build native
+//go:build native && ((linux && amd64) || darwin)
 
 package fetchers
 

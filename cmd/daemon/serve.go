@@ -9,9 +9,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
-	"github.com/mt-inside/go-usvc"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
+
+	"github.com/mt-inside/go-usvc"
 
 	"github.com/mt-inside/envbin/internal/config"
 	"github.com/mt-inside/envbin/internal/servers"

@@ -22,4 +22,4 @@ Thus we don't try, and will get dynamically-linked binaries.
 libusb will need to be present when we cross-compile? Or do we just need headers?
 These binaries will need libusb, and the right version of the right libc at runtime, which isn't ideal.
 
-TODO The `native` tag ??
+The `native` tag tries to exclude things that are unlikely to work in a container or other sandbox, ie not running "natively" on the host.

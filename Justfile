@@ -51,7 +51,8 @@ build-client-dev: test
 
 # Don't lint/test, because it doesn't work in various CI envs
 build-daemon-ci *ARGS:
-	go build -tags native {{LD_RELEASE}} -v {{ARGS}} ./cmd/daemon
+	# No native tag, cause we're prolly building for a container image
+	go build {{LD_RELEASE}} -v {{ARGS}} ./cmd/daemon
 
 install: test
 	go install {{LD_COMMON}} ./cmd/daemon

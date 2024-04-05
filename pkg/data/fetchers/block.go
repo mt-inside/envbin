@@ -15,6 +15,7 @@ func init() {
 	data.RegisterPlugin("block devices", getBlockData)
 }
 
+// TODO: also get smart info from https://pkg.go.dev/github.com/anatol/smart.go
 func getBlockData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg) {
 	prefix := []string{"Hardware", "Block"}
 

@@ -11,7 +11,7 @@ DH_REPO:="docker.io/" + DH_USER + "/envbin"
 GH_REPO := "ghcr.io/" + GH_USER + "/envbin"
 TAG:=`git describe --tags --always --abbrev`
 TAGD:=`git describe --tags --always --abbrev --dirty --broken`
-CGR_ARCHS := "aarch64,amd64" # "x86,armv7"
+CGR_ARCHS := "amd64,aarch64"
 LD_COMMON := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TAGD + "'\""
 LD_RELEASE := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TAGD + "' -w -s\""
 LD_STATIC := "-ldflags \"-X 'github.com/mt-inside/envbin/pkg/data.Version=" + TAGD + "' -linkmode external -extldflags '-static'\""

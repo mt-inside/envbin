@@ -70,9 +70,51 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string, vals chan
 		// https://www.intel.co.uk/content/www/uk/en/processors/processor-numbers-data-center.html
 		if strings.Contains(name, "Platinum") || strings.Contains(name, "Gold") || strings.Contains(name, "Silver") || strings.Contains(name, "Bronze") {
 			// "Intel Xeon Scalable Processors"
-			var series, series_num, generation, sku, flags string
-			fmt.Sscanf(name, "Intel(R) Xeon(R) %s %1s%1s%2s%1s CPU", &series, &series_num, &generation, &sku, &flags)
+			var series, series_num, generation, sku string
+			_, err := fmt.Sscanf(name, "Intel(R) Xeon(R) %s %1s%1s%2s CPU", &series, &series_num, &generation, &sku)
+			if err != nil {
+				vals <- trie.Insert(trie.Error(err))
+			} else {
+				vals <- trie.Insert(trie.Some(series), "Series")
+				vals <- trie.Insert(trie.Some(sku), "SKU")
+				vals <- trie.Insert(trie.Some(generation), "Generation")
+				// TODO: flags. Are 0+ of them, dunno how to scan
+				//vals <- trie.Insert(trie.Some(flags), "Flags")
 
+				nGen, err := strconv.Atoi(generation)
+				if err != nil {
+					vals <- trie.Insert(trie.Error(err), "Microarchitecture")
+				} else {
+					vals <- trie.Insert(trie.Some(intelScalableXeonGens[nGen]), "Microarchitecture")
+				}
+			}
+		} else {
+			// "Intel Xeon Processors"
+			var series, ways, socket, sku, generation string
+			_, err := fmt.Sscanf(name, "Intel(R) Xeon(R) CPU %2s-%1s%1s%2s v%s", &series, &ways, &socket, &sku, &generation)
+			if err != nil {
+				vals <- trie.Insert(trie.Error(err))
+			} else {
+				vals <- trie.Insert(trie.Some(series), "Series")
+				vals <- trie.Insert(trie.Some(ways), "Ways")
+				vals <- trie.Insert(trie.Some(socket), "Socket")
+				vals <- trie.Insert(trie.Some(sku), "SKU")
+				vals <- trie.Insert(trie.Some(generation), "Generation")
+
+				nGen, err := strconv.Atoi(generation)
+				if err != nil {
+					vals <- trie.Insert(trie.Error(err), "Microarchitecture")
+				} else {
+					vals <- trie.Insert(trie.Some(intelXeonGens[nGen+1]), "Microarchitecture")
+				}
+			}
+		}
+	} else if strings.Contains(name, "Core(TM)") {
+		var series, sku, generation, flags string
+		_, err := fmt.Sscanf(name, "Intel(R) Core(TM) %2s-%1s%3s%1s", &series, &generation, &sku, &flags)
+		if err != nil {
+			vals <- trie.Insert(trie.Error(err))
+		} else {
 			vals <- trie.Insert(trie.Some(series), "Series")
 			vals <- trie.Insert(trie.Some(sku), "SKU")
 			vals <- trie.Insert(trie.Some(generation), "Generation")
@@ -82,64 +124,41 @@ func EnrichCpuModel(ctx context.Context, log logr.Logger, name string, vals chan
 			if err != nil {
 				vals <- trie.Insert(trie.Error(err), "Microarchitecture")
 			} else {
-				vals <- trie.Insert(trie.Some(intelScalableXeonGens[nGen]), "Microarchitecture")
+				vals <- trie.Insert(trie.Some(intelCoreGens[nGen]), "Microarchitecture")
 			}
-		} else {
-			// "Intel Xeon Processors"
-			var series, ways, socket, sku, generation string
-			fmt.Sscanf(name, "Intel(R) Xeon(R) CPU %2s-%1s%1s%2s v%s", &series, &ways, &socket, &sku, &generation)
-
-			vals <- trie.Insert(trie.Some(series), "Series")
-			vals <- trie.Insert(trie.Some(ways), "Ways")
-			vals <- trie.Insert(trie.Some(socket), "Socket")
-			vals <- trie.Insert(trie.Some(sku), "SKU")
-			vals <- trie.Insert(trie.Some(generation), "Generation")
-
-			nGen, err := strconv.Atoi(generation)
-			if err != nil {
-				vals <- trie.Insert(trie.Error(err), "Microarchitecture")
-			} else {
-				vals <- trie.Insert(trie.Some(intelXeonGens[nGen+1]), "Microarchitecture")
-			}
-		}
-	} else if strings.Contains(name, "Core(TM)") {
-		var series, sku, generation, flags string
-		fmt.Sscanf(name, "Intel(R) Core(TM) %2s-%1s%3s%1s", &series, &generation, &sku, &flags)
-
-		vals <- trie.Insert(trie.Some(series), "Series")
-		vals <- trie.Insert(trie.Some(sku), "SKU")
-		vals <- trie.Insert(trie.Some(generation), "Generation")
-		vals <- trie.Insert(trie.Some(flags), "Flags")
-
-		nGen, err := strconv.Atoi(generation)
-		if err != nil {
-			vals <- trie.Insert(trie.Error(err), "Microarchitecture")
-		} else {
-			vals <- trie.Insert(trie.Some(intelCoreGens[nGen]), "Microarchitecture")
 		}
 	} else if strings.Contains(name, "EPYC") {
 		var series, sku, generation string
-		fmt.Sscanf(name, "AMD EPYC %1s%2s%1s", &series, &sku, &generation)
-
-		vals <- trie.Insert(trie.Some(series), "Series")
-		vals <- trie.Insert(trie.Some(sku), "SKU")
-		vals <- trie.Insert(trie.Some(generation), "Generation")
-		vals <- trie.Insert(trie.Some(amdEpycGens[generation]), "Microarchitecture")
+		_, err := fmt.Sscanf(name, "AMD EPYC %1s%2s%1s", &series, &sku, &generation)
+		if err != nil {
+			vals <- trie.Insert(trie.Error(err))
+		} else {
+			vals <- trie.Insert(trie.Some(series), "Series")
+			vals <- trie.Insert(trie.Some(sku), "SKU")
+			vals <- trie.Insert(trie.Some(generation), "Generation")
+			vals <- trie.Insert(trie.Some(amdEpycGens[generation]), "Microarchitecture")
+		}
 	} else if strings.Contains(name, "Ryzen") {
 		var series, sku, generation string
-		fmt.Sscanf(name, "AMD Ryzen %s %1s%3s", &series, &generation, &sku)
-
-		vals <- trie.Insert(trie.Some(series), "Series")
-		vals <- trie.Insert(trie.Some(sku), "SKU")
-		vals <- trie.Insert(trie.Some(generation), "Generation")
-		vals <- trie.Insert(trie.Some(amdRyzenGens[generation]), "Microarchitecture")
+		_, err := fmt.Sscanf(name, "AMD Ryzen %s %1s%3s", &series, &generation, &sku)
+		if err != nil {
+			vals <- trie.Insert(trie.Error(err))
+		} else {
+			vals <- trie.Insert(trie.Some(series), "Series")
+			vals <- trie.Insert(trie.Some(sku), "SKU")
+			vals <- trie.Insert(trie.Some(generation), "Generation")
+			vals <- trie.Insert(trie.Some(amdRyzenGens[generation]), "Microarchitecture")
+		}
 	} else if strings.Contains(name, "Apple") {
 		var series, generation string
-		fmt.Sscanf(name, "Apple M%1s %s", &generation, &series)
-
-		vals <- trie.Insert(trie.Some(series), "Series")
-		vals <- trie.Insert(trie.Some(generation), "Generation")
-		vals <- trie.Insert(trie.Some(appleSiliconGens[generation]), "Microarchitecture")
+		_, err := fmt.Sscanf(name, "Apple M%1s %s", &generation, &series)
+		if err != nil {
+			vals <- trie.Insert(trie.Error(err))
+		} else {
+			vals <- trie.Insert(trie.Some(series), "Series")
+			vals <- trie.Insert(trie.Some(generation), "Generation")
+			vals <- trie.Insert(trie.Some(appleSiliconGens[generation]), "Microarchitecture")
+		}
 	}
 }
 

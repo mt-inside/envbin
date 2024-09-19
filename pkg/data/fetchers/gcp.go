@@ -21,11 +21,11 @@ func getGcpData(ctx context.Context, log logr.Logger, vals chan<- trie.InsertMsg
 		return
 	}
 
-	vals <- trie.Insert(unwrapGcp(metadata.ProjectID()), "Cloud", "GCP", "AccountID")
-	vals <- trie.Insert(unwrapGcp(metadata.Zone()), "Cloud", "GCP", "Zone")
-	vals <- trie.Insert(unwrapGcp(metadata.InstanceID()), "Cloud", "GCP", "Instance", "ID")
-	vals <- trie.Insert(unwrapGcp(metadata.InstanceName()), "Cloud", "GCP", "Instance", "Name")
-	vals <- trie.Insert(unwrapGcpSlice(metadata.InstanceTags()), "Cloud", "GCP", "Instance", "Tags")
+	vals <- trie.Insert(unwrapGcp(metadata.ProjectIDWithContext(ctx)), "Cloud", "GCP", "AccountID")
+	vals <- trie.Insert(unwrapGcp(metadata.ZoneWithContext(ctx)), "Cloud", "GCP", "Zone")
+	vals <- trie.Insert(unwrapGcp(metadata.InstanceIDWithContext(ctx)), "Cloud", "GCP", "Instance", "ID")
+	vals <- trie.Insert(unwrapGcp(metadata.InstanceNameWithContext(ctx)), "Cloud", "GCP", "Instance", "Name")
+	vals <- trie.Insert(unwrapGcpSlice(metadata.InstanceTagsWithContext(ctx)), "Cloud", "GCP", "Instance", "Tags")
 }
 
 func unwrapGcp(s string, err error) trie.Value {
